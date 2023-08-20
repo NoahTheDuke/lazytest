@@ -1,0 +1,2 @@
+{:lint-as {lazytest.describe/describe clojure.test/deftest
+           lazytest.describe/given clojure.core/let}}

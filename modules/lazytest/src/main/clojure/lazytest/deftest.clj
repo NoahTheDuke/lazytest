@@ -2,10 +2,8 @@
   "A drop-in replacement for clojure.test.  Supports the 'deftest',
   'is', 'are', and 'testing' macros.  Currently 'testing' doc strings
   do not appear in the report output."
-  (:use [clojure.string :only (join)]
-	lazytest.expect
-	lazytest.test-case
-	[lazytest.expect.thrown :only (throws? throws-with-msg?)])
+  (:require [clojure.string :refer [join]]
+    [lazytest.expect.thrown :refer [throws? throws-with-msg?]])
   (:require clojure.template))
 
 (def ^:dynamic *testing* nil)
@@ -40,10 +38,10 @@
   
   Example: (is (= 4 (+ 2 2)) \"Two plus two should be 4\")"
   ([expr]
-     `(expect (current-testing-string) ~expr))
+   `(expect (current-testing-string) ~expr))
   ([expr message]
-     `(testing ~message
-	(expect (current-testing-string) ~expr))))
+   `(testing ~message
+      (expect (current-testing-string) ~expr))))
 
 (defmacro are [argv expr & args]
   "Checks multiple assertions with a template expression.
@@ -62,9 +60,9 @@
 
 (defmacro deftest
   "Defines a test function with no arguments."
-  [sym & body]  
+  [sym & body]
   {:pre [(symbol? sym)]}
   `(def ~sym (vary-meta (test-case (fn [] ~@body))
-			merge
-			'~(meta sym)
-			{:name '~sym})))
+               merge
+               '~(meta sym)
+               {:name '~sym})))

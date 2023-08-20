@@ -1,13 +1,13 @@
 (ns lazytest.random
   "Composable generators for random data."
-  (:refer-clojure :exclude (double vector-of)))
+  (:refer-clojure :exclude [double vector-of]))
 
 (defn rand-int-in-range
   "Returns a random integer between min (inclusive) and max (exclusive)."
   [min max]
   {:pre [(integer? min)
-	 (integer? max)
-	 (<= min max)]}
+         (integer? max)
+         (<= min max)]}
   (+ min (rand-int (- max min))))
 
 (def ^{:doc "Default minimum for random integers"}
@@ -21,7 +21,7 @@
   are :min (inclusive) and :max (exclusive). Defaults are
   min-random-integer and max-random-integer."
   (let [{:keys [min max]
-	 :or {min min-random-integer, max max-random-integer}} options]
+         :or {min min-random-integer, max max-random-integer}} options]
     (fn [] (rand-int-in-range min max))))
 
 (defn rand-double-in-range
@@ -41,7 +41,7 @@
   and :max. Defaults are min-random-double and max-random-double."
   [& options]
   (let [{:keys [min max]
-	 :or {min min-random-double, max max-random-double}} options]
+         :or {min min-random-double, max max-random-double}} options]
     (fn [] (rand-double-in-range min max))))
 
 (def ^{:doc "Default minimum length for random collections"}
@@ -54,10 +54,10 @@
   "Returns a function whicn returns a sequence populated with the
   results of calling f a random number of times. options
   are :min (inclusive) and :max (exclusive) for the length of the
-  list, default to min-random-length and max-random-length."  
+  list, default to min-random-length and max-random-length."
   [f & options]
   (let [{:keys [min max]
-	 :or {min min-random-length, max max-random-length}} options]
+         :or {min min-random-length, max max-random-length}} options]
     (fn [] (repeatedly (rand-int-in-range min max) f))))
 
 (defn list-of
@@ -121,7 +121,7 @@
   \"lazytest.random.default-test-case-count\"; defaults to 50."
   []
   (Integer/parseInt
-   (System/getProperty "lazytest.describe.default-for-any-length" "50")))
+    (System/getProperty "lazytest.describe.default-for-any-length" "50")))
 
 (defn scaled-test-case-count
   "For generating randomized test cases involving n random variables,

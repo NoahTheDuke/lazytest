@@ -1,9 +1,10 @@
 (ns lazytest.describe
-  (:require [lazytest.random :as r])
-  (:use	lazytest.expect
-	lazytest.suite
-	lazytest.find
-	lazytest.test-case))
+  (:require
+    [clojure.string :as str]
+    [lazytest.expect :refer [expect]]
+    [lazytest.random :as r]
+    [lazytest.suite :refer [suite test-seq]]
+    [lazytest.test-case :refer [test-case]]))
 
 ;;; Utilities
 
@@ -17,57 +18,79 @@
 
 (defn- merged-metadata [body form docstring extra-attr-map]
   (merge (when (empty? body) {:pending true})
-	 {:doc docstring, :file *file*, :ns *ns*}
-	 (meta form)
-	 extra-attr-map))
+         {:doc docstring, :file *file*, :ns *ns*}
+         (meta form)
+         extra-attr-map))
 
 (defn- strcat
   "Concatenate strings, with spaces in between, skipping nil."
   [& args]
-  (apply str (interpose \space (remove nil? args))))
+  (str/join " " (remove nil? args)))
 
 ;;; Public API
 
 (defmacro testing
   "Like 'describe' but does not create a Var.  Used for nesting test
-  suites inside 'describe'."
+  suites inside 'describe'.
+
+  sym (optional) is a symbol; if present, it will be resolved in the current namespace
+  and prepended to the documentation string.
+
+  doc (optional) is a documentation string.
+
+  attr-map (optional) is a metadata map.
+
+  children are test cases (see 'it') or nested test suites (see 'testing')."
+  {:arglists '([& body]
+               [sym & body]
+               [sym doc & body]
+               [sym doc attr-map & body])}
   [& decl]
   (let [[sym decl] (get-arg symbol? decl)
-	[doc decl] (get-arg string? decl)
-	[attr-map children] (get-arg map? decl)
-	docstring (strcat (when sym (resolve sym)) doc)
-	metadata (merged-metadata children &form docstring attr-map)]
+        [doc decl] (get-arg string? decl)
+        [attr-map children] (get-arg map? decl)
+        docstring (strcat (when sym (resolve sym)) doc)
+        metadata (merged-metadata children &form docstring attr-map)]
     `(suite (fn []
-	      (test-seq
-	       (with-meta
-		 (flatten (list ~@children))
-		 ~metadata))))))
+              (test-seq
+                (with-meta
+                  (flatten (list ~@children))
+                  ~metadata))))))
 
 (defmacro describe
-  "Defines a suite of tests assigned to a Var with a generated name.
-  Evaluating the same 'describe' form multiple times yields multiple
-  Vars with different names.
+  "Defines a suite of tests assigned to a Var with the given name.
 
-  decl is: sym? doc? attr-map? children*
+  test-name is a symbol. If the symbol resolves, it will be appended with `-test` and
+  used as the var's name, and the fully-qualified symbol will be prepended to the
+  docstring. If the symbol doesn't resolve, it will be used as is.
 
-  sym (optional) is a symbol; it will be resolved in the current namespace and
-  prepended to the documentation string.
+  doc (optional) is a documentation string.
 
-  doc (optional) is a documentation string
+  attr-map (optional) is a metadata map.
 
-  attr-map (optional) is a metadata map
-
-  children are test cases (see 'it') or nested test suites (see 'testing')"
-  [& decl]
-  `(def ~(gensym) (testing ~@decl)))
+  children are test cases (see 'it') or nested test suites (see 'testing')."
+  {:arglists '([test-name & body]
+               [test-name doc & body]
+               [test-name doc attr-map & body])}
+  [test-name & body]
+  (let [resolved-name (when-let [r (resolve test-name)] (symbol r))
+        test-name (if (and resolved-name
+                           (not (str/ends-with? (str resolved-name) "-test")))
+                    (symbol (format "%s-%s-test"
+                              (namespace resolved-name)
+                              (name resolved-name)))
+                    test-name)
+        body (if resolved-name (cons resolved-name body) body)]
+    `(def ~test-name (testing ~@body))))
 
 (defmacro given
   "Like 'let' but returns the expressions of body in a list.
   Suitable for nesting inside 'describe' or 'testing'."
   [bindings & body]
   {:pre [(vector? bindings)
-	 (even? (count bindings))]}
-  `(let ~bindings (list ~@body)))
+         (even? (count bindings))]}
+  `(let ~bindings
+     (list ~@body)))
 
 (defmacro for-any
   "Bindings is a vector of name-value pairs, where the values are
@@ -76,12 +99,12 @@
   lazytest.random/default-test-case-count."
   [bindings & body]
   {:pre [(vector? bindings)
-	 (even? (count bindings))]}
+         (even? (count bindings))]}
   (let [c (r/scaled-test-case-count (/ (count bindings) 2) (r/default-test-case-count))
-	generated-bindings
-	(vec (mapcat (fn [[name generator]]
-		       [name `((r/sequence-of ~generator :min ~c :max ~c))])
-		     (partition 2 bindings)))]
+        generated-bindings
+        (vec (mapcat (fn [[name generator]]
+                       [name `((r/sequence-of ~generator :min ~c :max ~c))])
+               (partition 2 bindings)))]
     `(for ~generated-bindings
        (list ~@body))))
 
@@ -98,12 +121,12 @@
   indicate the test case passes or logical false to indicate failure."
   [& decl]
   (let [[doc decl] (get-arg string? decl)
-	[attr-map body] (get-arg map? decl)
-	assertion (first body)
-	metadata (merged-metadata body &form doc attr-map)]
+        [attr-map body] (get-arg map? decl)
+        assertion (first body)
+        metadata (merged-metadata body &form doc attr-map)]
     `(test-case (with-meta
-		  (fn [] (expect ~assertion))
-		  ~metadata))))
+                  (fn [] (expect ~assertion))
+                  ~metadata))))
 
 (defmacro do-it
   "Defines a single test case that may execute arbitrary code.
@@ -119,8 +142,8 @@
   throwing any exceptions, the test case has passed."
   [& decl]
   (let [[doc decl] (get-arg string? decl)
-	[attr-map body] (get-arg map? decl)
-	metadata (merged-metadata body &form doc attr-map)]
+        [attr-map body] (get-arg map? decl)
+        metadata (merged-metadata body &form doc attr-map)]
     `(test-case (with-meta
-		  (fn [] ~@body)
-		  ~metadata))))
+                  (fn [] ~@body)
+                  ~metadata))))

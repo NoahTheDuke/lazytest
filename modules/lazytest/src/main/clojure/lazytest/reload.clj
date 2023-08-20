@@ -1,13 +1,13 @@
 (ns lazytest.reload
   (:require [clojure.set :as set]
-	    [clojure.string :as str]))
+    [clojure.string :as str]))
 
 (defn- remove-from-loaded-libs
   "Removes symbols from the set in the private Ref clojure.core/*loaded-libs*"
   [& syms]
   (dosync
-   (alter @#'clojure.core/*loaded-libs*
-	  set/difference (set syms))))
+    (alter @#'clojure.core/*loaded-libs*
+      set/difference (set syms))))
 
 (defn- basename
   "Converts a namespace name symbol to a String file path, without
@@ -23,7 +23,7 @@
   (when-let [u (.. Thread currentThread getContextClassLoader (getResource path))]
     (when (= "file" (.getProtocol u))
       (when-let [p (.getPath u)]
-	(java.io.File. p)))))
+        (java.io.File. p)))))
 
 (defn- find-source-file
   "Attempts to find the source .clj file for the namespace with the
@@ -37,7 +37,7 @@
   the classpath."
   [sym]
   (boolean (.. Thread currentThread getContextClassLoader
-	       (getResource (str (basename sym) ".class")))))
+             (getResource (str (basename sym) ".class")))))
 
 (defn- ensure-source-file-newer
   "If the given namespace name has an AOT-compiled .class file,
@@ -48,7 +48,7 @@
   (when (has-class-file? sym)
     (if-let [f (find-source-file sym)]
       (when-not (.setLastModified f (System/currentTimeMillis))
-	(println "WARNING: failed to update timestamp on source file for namespace" sym))
+        (println "WARNING: failed to update timestamp on source file for namespace" sym))
       (println "WARNING: failed to find normal source file for namespace" sym))))
 
 (defn reload

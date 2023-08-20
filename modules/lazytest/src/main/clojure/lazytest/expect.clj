@@ -5,20 +5,20 @@
   "Returns a map of the names of local bindings to their values."
   [env]
   (reduce (fn [m sym] (assoc m `'~sym sym))
-	  {} (keys env)))
+    {} (keys env)))
 
 (defn- function-call?
   "True if form is a list representing a normal function call."
   [form]
   (and (seq? form)
-       (let [sym (first form)]
-	 (and (symbol? sym)
-	      (let [v (resolve sym)]
-		(and (var? v)
-		     (bound? v)
-		     (not (:macro (meta v)))
-		     (let [f (var-get v)]
-		       (fn? f))))))))
+    (let [sym (first form)]
+      (and (symbol? sym)
+        (let [v (resolve sym)]
+          (and (var? v)
+            (bound? v)
+            (not (:macro (meta v)))
+            (let [f (var-get v)]
+              (fn? f))))))))
 
 (defmacro expect
   "Evaluates expression.  If it returns logical true, returns that
@@ -28,35 +28,35 @@
   itself will be merged into the failure map."
   ([expr] `(expect nil ~expr))
   ([docstring expr]
-     (if (function-call? expr)
-       ;; Normal function call
-       `(let [doc# ~docstring
-	      f# ~(first expr)
-	      args# (list ~@(rest expr))
-	      result# (apply f# args#)]
-	  (or result#
-	      (throw (ExpectationFailed.
-		      (merge '~(meta &form)
-			     '~(meta expr)
-			     {:form '~expr
-			      :locals ~(local-bindings &env)
-			      :bindings (get-thread-bindings)
-			      :evaluated (list* f# args#)
-			      :result result#
-			      :file ~*file*
-			      :ns '~(ns-name *ns*)}
-			     (when doc# {:doc doc#}))))))
-       ;; Unknown type of expression
-       `(let [doc# ~docstring
-	      result# ~expr]
-	  (or result#
-	      (throw (ExpectationFailed.
-		      (merge '~(meta &form)
-			     '~(meta expr)
-			     {:form '~expr
-			      :locals ~(local-bindings &env)
-			      :bindings (get-thread-bindings)
-			      :result result#
-			      :file ~*file*
-			      :ns '~(ns-name *ns*)}
-			     (when doc# {:doc doc#})))))))))
+   (if (function-call? expr)
+     ;; Normal function call
+     `(let [doc# ~docstring
+            f# ~(first expr)
+            args# (list ~@(rest expr))
+            result# (apply f# args#)]
+        (or result#
+          (throw (ExpectationFailed.
+                   (merge '~(meta &form)
+                     '~(meta expr)
+                     {:form '~expr
+                      :locals ~(local-bindings &env)
+                      :bindings (get-thread-bindings)
+                      :evaluated (list* f# args#)
+                      :result result#
+                      :file ~*file*
+                      :ns '~(ns-name *ns*)}
+                     (when doc# {:doc doc#}))))))
+     ;; Unknown type of expression
+     `(let [doc# ~docstring
+            result# ~expr]
+        (or result#
+          (throw (ExpectationFailed.
+                   (merge '~(meta &form)
+                     '~(meta expr)
+                     {:form '~expr
+                      :locals ~(local-bindings &env)
+                      :bindings (get-thread-bindings)
+                      :result result#
+                      :file ~*file*
+                      :ns '~(ns-name *ns*)}
+                     (when doc# {:doc doc#})))))))))

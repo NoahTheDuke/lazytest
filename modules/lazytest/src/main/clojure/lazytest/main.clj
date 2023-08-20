@@ -1,18 +1,18 @@
 (ns lazytest.main
   "Command-line test launcher."
   (:gen-class)
-  (:use lazytest.results
-	lazytest.tracker
-	lazytest.runner.console
-	lazytest.report.nested
-	[clojure.java.io :only (file)]))
-
+  (:require
+    [clojure.java.io :as io]
+    [lazytest.runner.console :refer [run-tests]]
+    [lazytest.tracker :refer [tracker]]
+    [lazytest.report.nested :refer [report]]
+    [lazytest.results :refer [summary-exit-value summarize]]))
 
 (defn -main
-  "Run with directories as arguments.  Runs all tests in those
+  "Run with directories as arguments. Runs all tests in those
   directories; returns 0 if all tests pass."
   [& dirnames]
-  (let [namespaces ((tracker (map file dirnames) 0))]
+  (let [namespaces ((tracker (map io/file dirnames) 0))]
     (apply require namespaces)
     (let [results (apply run-tests namespaces)]
       (report results)

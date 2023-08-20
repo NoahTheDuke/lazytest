@@ -1,9 +1,11 @@
 (ns examples.random-test
-  (:use lazytest.describe
-	[lazytest.random :as r]))
+  (:refer-clojure :exclude [double vector-of])
+  (:require
+    [lazytest.describe :refer [describe for-any it]]
+    [lazytest.random :as r]))
 
 (describe string-of
-  (for-any [s (r/string-of (pick letter digit))]
+  (for-any [s (r/string-of (r/pick r/letter r/digit))]
     (it "is a string"
       (string? s))
     (it "has only letters and digits"

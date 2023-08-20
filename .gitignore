@@ -1,2 +1,7 @@
 target
 /TAGS
+.cpcache
+.clj-kondo/.cache
+.lsp/.cache
+.rebel_readline_history
+.nrepl-port

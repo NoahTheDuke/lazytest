@@ -1,0 +1,18 @@
+{:paths ["modules/lazytest/src/main/clojure" "resources" "target/classes"]
+ :deps {org.clojure/clojure {:mvn/version "1.11.1"}
+        org.clojure/tools.namespace {:mvn/version "1.4.4"}}
+ :deps/prep-lib {:ensure "target/classes"
+                 :alias :build
+                 :fn compile-java}
+ :aliases
+ {:repl {:extra-deps {nrepl/nrepl {:mvn/version "1.0.0"}
+                      com.bhauman/rebel-readline {:mvn/version "0.1.4"}}
+         :main-opts  ["-m" "nrepl.cmdline"
+                      "--interactive"
+                      "-f" "rebel-readline.main/-main"]}
+  :test {:extra-paths ["modules/lazytest/src/test/clojure"]}
+  :runner {:main-opts ["-m" "lazytest.main" "modules/lazytest/src/test/clojure/lazytest"]}
+  :watch {:main-opts ["-m" "lazytest.watch" "modules/lazytest/src/test/clojure/lazytest"]}
+  :build {:deps {io.github.clojure/tools.build {:git/tag "v0.9.4"
+                                                :git/sha "76b78fe"}}
+          :ns-default build}}}

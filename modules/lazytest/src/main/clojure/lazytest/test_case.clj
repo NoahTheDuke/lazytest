@@ -26,16 +26,16 @@
 
   thrown is the exception (Throwable) thrown by a failing test case."
   ([pass? source]
-     {:pre [(or (true? pass?) (false? pass?))
-	    (test-case? source)]}
-     (with-meta {:pass? pass?, :source source}
-       {:type ::test-case-result}))
+   {:pre [(or (true? pass?) (false? pass?))
+          (test-case? source)]}
+   (with-meta {:pass? pass? :source source}
+              {:type ::test-case-result}))
   ([pass? source thrown]
-     {:pre [(or (true? pass?) (false? pass?))
-	    (test-case? source)
-	    (instance? Throwable thrown)]}
-     (with-meta {:pass? pass?, :source source, :thrown thrown}
-       {:type ::test-case-result})))
+   {:pre [(boolean? pass?)
+          (test-case? source)
+          (instance? Throwable thrown)]}
+   (with-meta {:pass? pass? :source source :thrown thrown}
+              {:type ::test-case-result})))
 
 (defn test-case-result?
   "True if x is a test case result."
@@ -53,6 +53,6 @@
   {:pre [(test-case? f)]
    :post [(test-case-result? %)]}
   (try (f)
-       (test-case-result true f)
-       (catch Throwable t
-	 (test-case-result false f t))))
+    (test-case-result true f)
+    (catch Throwable t
+      (test-case-result false f t))))

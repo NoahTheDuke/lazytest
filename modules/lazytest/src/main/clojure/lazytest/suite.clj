@@ -21,13 +21,13 @@
   Metadata on the test sequence provides identifying information
   for the test suite, such as :name and :doc."
   [s]
-  {:pre [(seq? s)]}
+  {:pre [(sequential? s)]}
   (vary-meta s assoc ::test-seq true))
 
 (defn test-seq?
   "True if s is a test sequence."
   [s]
-  (and (seq? s) (::test-seq (meta s))))
+  (and (sequential? s) (::test-seq (meta s))))
 
 (defn suite-result
   "Creates a suite result map with keys :source and :children.
@@ -37,9 +37,9 @@
   children is a sequence of test results and/or suite results."
   [source children]
   {:pre [(test-seq? source)
-	 (seq? children)]}
+         (sequential? children)]}
   (with-meta {:source source, :children children}
-    {:type ::suite-result}))
+             {:type ::suite-result}))
 
 (defn suite-result?
   "True if x is a suite result."
@@ -61,6 +61,6 @@
   (if (suite? ste)
     (let [test-seq (expand-suite ste)]
       (with-meta
-	(map expand-tree test-seq)
-	(meta test-seq)))
+        (mapv expand-tree test-seq)
+        (meta test-seq)))
     ste))

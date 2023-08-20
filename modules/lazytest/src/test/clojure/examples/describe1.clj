@@ -6,7 +6,7 @@
     (= 7 (+ 3 4))))
 
 (describe + "given any 2 integers"
-  (for [x (range 5), y (range 5)]
+  (for [x (range 5) y (range 5)]
     (it "is commutative"
       (= (+ x y) (+ y x)))))
 
@@ -24,12 +24,12 @@
 
 (describe "The do-it macro"
   (do-it "allows arbitrary code"
-	 (println "Hello, do-it!")
-	 (println "This test will succeed because it doesn't throw.")))
+    (println "Hello, do-it!")
+    (println "This test will succeed because it doesn't throw.")))
 
 (describe "The square root of two"
   (given [root (Math/sqrt 2)]
-	 (it "is less than two"
-	   (< root 2))
-	 (it "is more than one"
-	   (> root 1))))
+    (it "is less than two"
+      (< root 2))
+    (it "is more than one"
+      (> root 1))))

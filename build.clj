@@ -13,7 +13,7 @@
 
 (defn compile-java [opts]
   (clean opts)
-  (b/javac {:src-dirs ["modules/lazytest/src/main/java"]
+  (b/javac {:src-dirs ["src/java"]
             :class-dir class-dir
             :basis basis
             :javac-opts ["--release" "11"]})

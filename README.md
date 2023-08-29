@@ -1,14 +1,21 @@
-# Lazytest
+# Lazytest: A new test framework for Clojure
 
-Lazytest: Testing backend for Clojure
+A competitor to `clojure.test`, aiming to be feature-rich and easily extensible.
 
-## One Backend, Many Testing Styles
+## Why a new test framework? Isn't `clojure.test` good enough? How will you succeed when `Midje` and `expectations` failed?
 
-Lazytest aims to be a generic library that can support many different
-modes and styles of testing. It defines a few generic representations
-for executable tests (see "Lazytest Internals", below). Any testing
-code that can be compiled into these representations can take
-advantage of Lazytest's running and reporting tools.
+Lazytest is designed to be a standalone test system for Clojure, disconnected from the
+built-in `clojure.test`. `clojure.test` has existed since 1.1 and while it's both
+ubiquitous and useful, it has a number of
+[problems](https://stuartsierra.com/2010/07/05/lazytest-status-report).
+
+Both `Midje` and `expectations` attempted to correct some of those issues and they made
+good progress, but `Midje` relied on non-list style (`test => expected`) and neither
+worked well with modern repl-driven development practices (using `gynsym`s instead of
+named test vars).
+
+I like the ideas put forth in Sandra's post above about Lazytest and hope to experiment
+with achieving them 10 years later.
 
 ## Testing with 'describe'
 

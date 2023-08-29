@@ -1,7 +1,8 @@
 (ns examples.difference
-  (:use lazytest.describe))
+  (:require
+    [lazytest.describe :refer [describe it]]))
 
-(describe "Differences among"
+(describe differences-test "Differences among"
   (it "simple values"
     (= 1 2))
   (it "simple computed values"

@@ -1,7 +1,8 @@
-(ns examples.suite1
-  (:use lazytest.suite
-    lazytest.test-case
-    lazytest.expect))
+(ns examples.suite
+  (:require
+    [lazytest.expect :refer [expect]]
+    [lazytest.suite :refer [suite test-seq]]
+    [lazytest.test-case :refer [test-case]]))
 
 (defn common-test-cases [x]
   (list
@@ -32,7 +33,7 @@
       (vary-meta
         (test-seq (map (fn [tc]
                          tc)
-                    (common-test-cases 3)))
+                       (common-test-cases 3)))
         assoc :doc "Three"))))
 
 (def s4

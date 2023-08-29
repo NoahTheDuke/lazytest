@@ -10,7 +10,7 @@
 
 (defn- get-arg
   "Pops first argument from args if (pred arg) is true.
-  Returns a vector [this-arg remaining-args] or [nil args]."
+  Returns a vector [first-arg remaining-args] or [nil args]."
   [pred args]
   (if (pred (first args))
     [(first args) (next args)]
@@ -18,7 +18,7 @@
 
 (defn- merged-metadata [body form docstring extra-attr-map]
   (merge (when (empty? body) {:pending true})
-         {:doc docstring, :file *file*, :ns *ns*}
+         {:doc docstring :file *file* :ns *ns*}
          (meta form)
          extra-attr-map))
 
@@ -41,14 +41,12 @@
   attr-map (optional) is a metadata map.
 
   children are test cases (see 'it') or nested test suites (see 'testing')."
-  {:arglists '([& body]
-               [sym & body]
-               [sym doc & body]
-               [sym doc attr-map & body])}
-  [& decl]
-  (let [[sym decl] (get-arg symbol? decl)
-        [doc decl] (get-arg string? decl)
-        [attr-map children] (get-arg map? decl)
+  {:arglists '([& children]
+               [?sym ?doc ?attr-map & children])}
+  [& body]
+  (let [[sym body] (get-arg symbol? body)
+        [doc body] (get-arg string? body)
+        [attr-map children] (get-arg map? body)
         docstring (strcat (when sym (resolve sym)) doc)
         metadata (merged-metadata children &form docstring attr-map)]
     `(suite (fn []
@@ -60,27 +58,28 @@
 (defmacro describe
   "Defines a suite of tests assigned to a Var with the given name.
 
-  test-name is a symbol. If the symbol resolves, it will be appended with `-test` and
-  used as the var's name, and the fully-qualified symbol will be prepended to the
-  docstring. If the symbol doesn't resolve, it will be used as is.
+  test-name is a symbol.
 
   doc (optional) is a documentation string.
 
   attr-map (optional) is a metadata map.
 
   children are test cases (see 'it') or nested test suites (see 'testing')."
-  {:arglists '([test-name & body]
-               [test-name doc & body]
-               [test-name doc attr-map & body])}
+  {:arglists '([test-name & children]
+               [test-name ?sym ?doc ?attr-map & children])}
   [test-name & body]
-  (let [resolved-name (when-let [r (resolve test-name)] (symbol r))
-        test-name (if (and resolved-name
-                           (not (str/ends-with? (str resolved-name) "-test")))
-                    (symbol (format "%s-%s-test"
-                              (namespace resolved-name)
-                              (name resolved-name)))
-                    test-name)
-        body (if resolved-name (cons resolved-name body) body)]
+  (let [[sym body] (get-arg symbol? body)
+        [doc body] (get-arg string? body)
+        [attr-map body] (get-arg map? body)
+        attr-map (when attr-map
+                   (if-let [focus (:focus (meta sym))]
+                     (assoc attr-map :focus focus)
+                     attr-map))
+        body (cond-> []
+               sym (conj sym)
+               doc (conj doc)
+               attr-map (conj attr-map)
+               body (concat body))]
     `(def ~test-name (testing ~@body))))
 
 (defmacro given
@@ -111,7 +110,7 @@
 (defmacro it
   "Defines a single test case.
 
-  decl is: doc? attr-map? expr
+  body is: doc? attr-map? expr
 
   doc (optional) is a documentation string
 
@@ -119,9 +118,11 @@
 
   expr is a single expression, which must return logical true to
   indicate the test case passes or logical false to indicate failure."
-  [& decl]
-  (let [[doc decl] (get-arg string? decl)
-        [attr-map body] (get-arg map? decl)
+  {:arglists '([expr]
+               [?doc ?attr-map expr])}
+  [& body]
+  (let [[doc body] (get-arg string? body)
+        [attr-map body] (get-arg map? body)
         assertion (first body)
         metadata (merged-metadata body &form doc attr-map)]
     `(test-case (with-meta
@@ -131,7 +132,7 @@
 (defmacro do-it
   "Defines a single test case that may execute arbitrary code.
 
-  decl is: doc? attr-map? body*
+  body is: doc? attr-map? body*
 
   doc (optional) is a documentation string
 
@@ -140,9 +141,11 @@
   body is any code, which must throw an exception (such as with
   'expect') to indicate failure.  If the code completes without
   throwing any exceptions, the test case has passed."
-  [& decl]
-  (let [[doc decl] (get-arg string? decl)
-        [attr-map body] (get-arg map? decl)
+  {:arglists '([& body]
+               [?doc ?attr-map & body])}
+  [& body]
+  (let [[doc body] (get-arg string? body)
+        [attr-map body] (get-arg map? body)
         metadata (merged-metadata body &form doc attr-map)]
     `(test-case (with-meta
                   (fn [] ~@body)

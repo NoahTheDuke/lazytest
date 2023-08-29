@@ -1,8 +1,11 @@
 (ns lazytest.expect-asserts
-  (:use lazytest.expect
-    lazytest.expect.thrown)
+  (:require
+    [lazytest.expect :refer [expect]]
+    [lazytest.expect.thrown :refer [throws? throws-with-msg? causes?]]) 
   (:import
     (lazytest ExpectationFailed)))
+
+(set! *warn-on-reflection* true)
 
 (expect (= 1 1))
 (expect (not= 1 2))
@@ -25,7 +28,7 @@
            false
            (catch ExpectationFailed err err))]
   (assert e1)
-  (let [reason (.reason e1)]
+  (let [reason (.reason ^ExpectationFailed e1)]
     (assert (= '(= 1 2) (:form reason)))
     (assert (= (list = 1 2) (:evaluated reason)))
     (assert (false? (:result reason)))))
@@ -34,15 +37,7 @@
            false
            (catch ExpectationFailed err err))]
   (assert e3)
-  (let [reason (.reason e3)]
+  (let [reason (.reason ^ExpectationFailed e3)]
     (assert (= '(instance? java.lang.String 42) (:form reason)))
     (assert (= (list instance? java.lang.String 42) (:evaluated reason)))
     (assert (false? (:result reason)))))
-
-(let [x (+ 3 4)]
-  (let [e4 (try (expect (zero? (* x 2)))
-             false
-             (catch ExpectationFailed err err))]
-    (assert e4)
-    (let [reason (.reason e4)]
-      (assert (= {'x 7} (:locals reason))))))

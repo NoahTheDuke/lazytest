@@ -10,9 +10,10 @@
   "Tests for Clojure multimethods and hierarchies, adapted from the
   original clojure.test-clojure.multimethods, written by Frantisek
   Sodomka, Robert Lachlan, and Stuart Halloway."
-  (:use lazytest.describe
-    lazytest.expect.thrown)
-  (:require [clojure.set :as set]))
+  (:require
+    [clojure.set :as set]
+    [lazytest.describe :refer [given testing it describe]]
+    [lazytest.expect.thrown :refer [throws-with-msg?]]))
 
 (defn hierarchy-tags
   "Return all tags in a derivation hierarchy"
@@ -76,7 +77,7 @@
         (for [tag tags]
           (it (not (contains? (descendants h tag) tag))))))))
 
-(describe "Cycles are forbidden: a tag"
+(describe cycles-test "Cycles are forbidden: a tag"
   (given [family (reduce #(apply derive (cons %1 %2)) (make-hierarchy)
                    [[::parent-1 ::ancestor-1]
                     [::parent-1 ::ancestor-2]
@@ -90,7 +91,7 @@
       (throws-with-msg? Throwable #"Cyclic derivation: :examples.multimethods/child has :examples.multimethods/ancestor-1 as ancestor"
         #(derive family ::ancestor-1 ::child)))))
 
-(describe "Using diamond inheritance"
+(describe diamong-inheritance-test "Using diamond inheritance"
   (given [diamond (reduce #(apply derive (cons %1 %2)) (make-hierarchy)
                     [[::mammal ::animal]
                      [::bird ::animal]
@@ -109,7 +110,7 @@
         (it "griffin is still an animal, via mammal"
           (isa? bird-no-more ::griffin ::animal))))))
 
-(describe "Derivation bridges to Java inheritance:"
+(describe derivation-test "Derivation bridges to Java inheritance:"
   (given [h (derive (make-hierarchy) java.util.Map ::map)]
     (it "a Java class can be isa? a tag"
       (isa? h java.util.Map ::map))
@@ -117,23 +118,3 @@
       (isa? h java.util.HashMap ::map))
     (it "...but not its superclasses!"
       (not (isa? h java.util.Collection ::map)))))
-
-;; (describe "The global hierarchy"
-;;   (with [(global-stub #'clojure.core/global-hierarchy (make-hierarchy))]
-;;      (testing "(stubbed)"
-;;        (is-valid-hierarchy @#'clojure.core/global-hierarchy)
-;;        (with [(before (derive ::lion ::cat)
-;;                       (derive ::manx ::cat))]
-;;              (testing "when you add some derivations..."
-;;                (testing "...isa? sees the derivations"
-;;                  (it (isa? ::lion ::cat))
-;;                  (it (not (isa? ::cat ::lion))))
-;;                (testing "... you can traverse the derivations"
-;;                  (it (= #{::manx ::lion} (descendants ::cat)))
-;;                  (it (= #{::cat} (parents ::manx)))
-;;                  (it (= #{::cat} (ancestors ::manx))))
-;;                (with [(before (underive ::manx ::cat))]
-;;                      (testing "then, remove a derivation, traversals update accordingly"
-;;                        (it (= #{::lion} (descendants ::cat)))
-;;                        (it (nil? (parents ::manx)))
-;;                        (it (nil? (ancestors ::manx))))))))))

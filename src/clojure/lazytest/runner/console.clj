@@ -51,7 +51,3 @@
   "Run tests defined in all namespaces."
   []
   (run-tests))
-
-(comment
-  (require '[examples.readme :as readme])
-  (run-test-var readme/addition-test))

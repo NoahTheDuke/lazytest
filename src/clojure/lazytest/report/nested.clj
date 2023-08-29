@@ -97,8 +97,8 @@
       (when (and (= = (first (:evaluated reason)))
               (= 3 (count (:evaluated reason))))
         (apply print-equality-failed (rest (:evaluated reason)))))
-    (println (colorize "Local bindings:" :cyan))
-    (pprint (:locals reason))))
+    #_(println (colorize "Local bindings:" :cyan))
+    #_(pprint (:locals reason))))
 
 (defn- report-test-case-failure [result docs]
   (when (not (:pass? result))

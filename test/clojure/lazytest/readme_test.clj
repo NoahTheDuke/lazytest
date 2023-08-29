@@ -1,4 +1,4 @@
-(ns examples.readme 
+(ns lazytest.readme-test
   (:require
     [lazytest.describe :refer [describe it given do-it testing]]
     [lazytest.expect :refer [expect]]))
@@ -13,7 +13,7 @@
   "Addition"
   (testing "of integers"
     (it "computes small sums"
-      (= 3 (+ 2 2)))
+      (= 3 (+ 1 2)))
     (it "computes large sums"
       (= 7000 (+ 3000 4000))))
   (testing "of floats"
@@ -29,9 +29,10 @@
     (it "is more than one"
       (> root 1))))
 
-
-(describe arithmetic-test "Arithmetic"
-  (do-it "after printing"
-    (expect (= 4 (+ 2 2)))
-    (println "Hello, World!")
-    (expect (= -1 (- 4 5)))))
+(describe do-it-test "do-it handles side-effects:"
+  (let [state (atom 0)]
+    (do-it "arbitrary code"
+      (expect (= 4 (+ 2 2)))
+      (swap! state inc)
+      (it "can even be used in later tests"
+        (= 1 @state)))))

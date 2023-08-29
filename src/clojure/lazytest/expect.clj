@@ -39,7 +39,7 @@
                    (merge '~(meta &form)
                      '~(meta expr)
                      {:form '~expr
-                      :locals ~(local-bindings &env)
+                      ; :locals ~(local-bindings &env)
                       :bindings (get-thread-bindings)
                       :evaluated (list* f# args#)
                       :result result#
@@ -54,7 +54,7 @@
                    (merge '~(meta &form)
                      '~(meta expr)
                      {:form '~expr
-                      :locals ~(local-bindings &env)
+                      ; :locals ~(local-bindings &env)
                       :bindings (get-thread-bindings)
                       :result result#
                       :file ~*file*

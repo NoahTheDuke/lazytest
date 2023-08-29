@@ -1,2 +1,4 @@
-{:lint-as {lazytest.describe/describe clojure.test/deftest
-           lazytest.describe/given clojure.core/let}}
+{:lint-as {lazytest.describe/describe clojure.core/def
+           lazytest.describe/given clojure.core/let}
+ :linters {:clojure-lsp/unused-public-var {:level :off}
+           :unresolved-namespace {:exclude [user]}}}

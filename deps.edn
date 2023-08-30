@@ -5,16 +5,31 @@
                  :alias :build
                  :fn compile-java}
  :aliases
- {:repl {:extra-deps {nrepl/nrepl {:mvn/version "1.0.0"}
+ {;; Development tools.
+  :dev {:extra-paths ["dev"]
+        :extra-deps {org.clojure/spec.alpha {:mvn/version "0.3.218"}
+                     criterium/criterium {:mvn/version "0.4.6"}
+                     com.clojure-goes-fast/clj-java-decompiler {:mvn/version "0.3.4"}}}
+
+  ;; I like nrepl and rebel-readline.
+  :repl {:extra-deps {nrepl/nrepl {:mvn/version "1.0.0"}
                       com.bhauman/rebel-readline {:mvn/version "0.1.4"}}
          :main-opts  ["-m" "nrepl.cmdline"
                       "--interactive"
                       "-f" "rebel-readline.main/-main"]}
+
+  ;; Run the tests with `-M:test:runner`.
+  ;; Run and watch the test suite with `-M:test:watch`.
   :test {:extra-paths ["test/clojure"]}
   :runner {:main-opts ["-m" "lazytest.main" "test/clojure/lazytest"]}
   :watch {:main-opts ["-m" "lazytest.watch" "test/clojure/lazytest"]}
-  :examples {:extra-paths ["."]
-             :main-opts ["-m" "lazytest.main" "examples"]}
+
+  ;; Run the -T:build code.
+  ;; Pass in one of the public functions: compile-java, uberjar, etc
   :build {:deps {io.github.clojure/tools.build {:git/tag "v0.9.4"
                                                 :git/sha "76b78fe"}}
-          :ns-default build}}}
+          :ns-default build}
+
+  ;; Run examples
+  :examples {:extra-paths ["."]
+             :main-opts ["-m" "lazytest.main" "examples"]}}}

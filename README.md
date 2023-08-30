@@ -2,7 +2,10 @@
 
 A competitor to `clojure.test`, aiming to be feature-rich and easily extensible.
 
-## Why a new test framework? Isn't `clojure.test` good enough? How will you succeed when `Midje` and `expectations` failed?
+## Why a new test framework?
+
+> Isn't `clojure.test` good enough? How will you succeed when `Midje` and `expectations`
+> failed?
 
 Lazytest is designed to be a standalone test system for Clojure, disconnected from the
 built-in `clojure.test`. `clojure.test` has existed since 1.1 and while it's both

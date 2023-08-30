@@ -1,12 +1,6 @@
 (ns lazytest.expect
   (:import (lazytest ExpectationFailed)))
 
-(defn- local-bindings
-  "Returns a map of the names of local bindings to their values."
-  [env]
-  (reduce (fn [m sym] (assoc m `'~sym sym))
-    {} (keys env)))
-
 (defn- function-call?
   "True if form is a list representing a normal function call."
   [form]
@@ -35,28 +29,24 @@
             args# (list ~@(rest expr))
             result# (apply f# args#)]
         (or result#
-          (throw (ExpectationFailed.
-                   (merge '~(meta &form)
-                     '~(meta expr)
-                     {:form '~expr
-                      ; :locals ~(local-bindings &env)
-                      :bindings (get-thread-bindings)
-                      :evaluated (list* f# args#)
-                      :result result#
-                      :file ~*file*
-                      :ns '~(ns-name *ns*)}
-                     (when doc# {:doc doc#}))))))
+            (throw (ExpectationFailed.
+                     (merge '~(meta &form)
+                            '~(meta expr)
+                            {:form '~expr
+                             :evaluated (list* f# args#)
+                             :result result#
+                             :file ~*file*
+                             :ns '~(ns-name *ns*)}
+                            (when doc# {:doc doc#}))))))
      ;; Unknown type of expression
      `(let [doc# ~docstring
             result# ~expr]
         (or result#
-          (throw (ExpectationFailed.
-                   (merge '~(meta &form)
-                     '~(meta expr)
-                     {:form '~expr
-                      ; :locals ~(local-bindings &env)
-                      :bindings (get-thread-bindings)
-                      :result result#
-                      :file ~*file*
-                      :ns '~(ns-name *ns*)}
-                     (when doc# {:doc doc#})))))))))
+            (throw (ExpectationFailed.
+                     (merge '~(meta &form)
+                            '~(meta expr)
+                            {:form '~expr
+                             :result result#
+                             :file ~*file*
+                             :ns '~(ns-name *ns*)}
+                            (when doc# {:doc doc#})))))))))

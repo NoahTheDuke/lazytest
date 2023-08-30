@@ -1,4 +1,14 @@
 (ns lazytest.report.nested
+  "Nested doc printout:
+
+  Namespaces
+    lazytest.readme-test
+      The square root of two
+        <green>is less than two
+        <green>is more than one
+  ...
+
+  "
   (:require
     [clojure.data :refer [diff]]
     [clojure.pprint :refer [pprint]]
@@ -6,9 +16,11 @@
     [lazytest.color :refer [colorize]]
     [lazytest.results :refer [summarize]]
     [lazytest.suite :refer [suite-result?]]
-    [lazytest.test-case :refer [test-case-result?]]))
+    [clojure.string :as str]))
 
 (set! *warn-on-reflection* true)
+
+(defmulti nested :type)
 
 (defn- identifier [result]
   (let [m (meta (:source result))]
@@ -19,54 +31,26 @@
 (declare report-result)
 
 (defn- indent [n]
-  (dotimes [_ n] (print "    ")))
+  (print (apply str (repeat n "  "))))
 
-(defn- report-counted-suite-result [result depth]
-  (indent depth)
-  (let [children (:children result)
-        total (count children)
-        passed (count (filter :pass? children))
-        failed (count (remove :pass? children))]
-    (cond
-      (zero? total)
-      (println (colorize (str (identifier result) " (no cases run)") :yellow))
-      (zero? failed)
-      (println (colorize (str (identifier result) " (" passed " cases passed)") :green))
-      :else
-      (println (colorize (str (identifier result) " (" failed " out of " total " cases failed)") :red)))))
-
-(defn- report-normal-suite-result [result depth]
+(defn- report-suite-result [result depth]
   (indent depth)
   (println (identifier result))
   (doseq [child (:children result)]
     (report-result child (inc depth))))
 
-(defn- unnamed-test-case-result? [x]
-  (and (test-case-result? x)
-    (nil? (identifier x))))
-
-(defn- collapsable?
-  "True if the suite result should be collapsed into \"X cases
-  passed\" instead of printing a line for each test case."
-  [ste-result]
-  (or (every? unnamed-test-case-result? (:children ste-result))
-    (and (pos? (count (:children ste-result)))
-         (> 0.25 (/ (count (distinct (map identifier (:children ste-result))))
-                    (count (:children ste-result)))))))
-
-(defn- report-suite-result [result depth]
-  (if (collapsable? result)
-    (report-counted-suite-result result depth)
-    (report-normal-suite-result result depth)))
-
 (defn- report-test-case-result [result depth]
   (indent depth)
-  (println (colorize (str (identifier result)) (if (:pass? result) :green :red))))
+  (println (colorize (str (identifier result))
+                     (if (:pass? result) :green :red))))
 
 (defn- report-result [result depth]
   (if (suite-result? result)
     (report-suite-result result depth)
     (report-test-case-result result depth)))
+
+(defmethod nested :pass [result]
+  (report-result result 0))
 
 ;;; Failures
 
@@ -86,7 +70,7 @@
     (pprint arg)))
 
 (defn- print-expectation-failed [^lazytest.ExpectationFailed err]
-  (let [reason (. err reason)]
+  (let [reason (.reason err)]
     (println "at" (:file reason) "line" (:line reason))
     (println (colorize "Expression:" :cyan))
     (pprint (:form reason))
@@ -95,44 +79,44 @@
     (when (:evaluated reason)
       (print-evaluated-arguments reason)
       (when (and (= = (first (:evaluated reason)))
-              (= 3 (count (:evaluated reason))))
-        (apply print-equality-failed (rest (:evaluated reason)))))
-    #_(println (colorize "Local bindings:" :cyan))
-    #_(pprint (:locals reason))))
+                 (= 3 (count (:evaluated reason))))
+        (apply print-equality-failed (rest (:evaluated reason)))))))
 
 (defn- report-test-case-failure [result docs]
   (when (not (:pass? result))
     (let [docs (conj docs (identifier result))
-          docstring (interpose " " (remove nil? docs))
+          docstring (str "FAILURE: " (str/join " " (remove nil? docs)))
           error (:thrown result)]
-      (println (colorize (apply str "FAILURE: " docstring) :red))
+      (println (colorize docstring :red))
       (if (instance? lazytest.ExpectationFailed error)
         (print-expectation-failed error)
         (print-cause-trace error))
       (newline))))
 
-(defn- report-failures [result docs]
+(defn- report-failure [result docs]
   (if (suite-result? result)
     (doseq [child (:children result)]
-      (report-failures child (conj docs (identifier result))))
+      (report-failure child (conj docs (identifier result))))
     (report-test-case-failure result docs)))
+
+(defmethod nested :fail [result]
+  (report-failure result []))
 
 ;;; Summary
 
-(defn- print-summary [summary]
-  (let [{:keys [total fail]} summary]
-    (let [count-msg (str "Ran " total " test cases.")]
-      (println (if (zero? total)
-                 (colorize count-msg :yellow)
-                 count-msg)))
+(defmethod nested :summary [summary]
+  (let [{:keys [total fail]} summary
+        count-msg (str "Ran " total " test cases.")]
+    (println (if (zero? total)
+               (colorize count-msg :yellow)
+               count-msg))
     (println (colorize (str fail " failures.")
                (if (zero? fail) :green :red)))))
 
 ;;; Entry point
 
-(defn report [& results]
-  (doseq [r results] (report-result r 0))
+(defn report [result]
+  (nested (assoc result :type :pass))
   (newline)
-  (doseq [r results] (report-failures r []))
-  (print-summary (apply summarize results)))
-
+  (nested (assoc result :type :fail))
+  (nested (summarize result)))

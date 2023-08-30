@@ -42,7 +42,7 @@
 
   children are test cases (see 'it') or nested test suites (see 'testing')."
   {:arglists '([& children]
-               [?sym ?doc ?attr-map & children])}
+               [sym? doc? attr-map? & children])}
   [& body]
   (let [[sym body] (get-arg symbol? body)
         [doc body] (get-arg string? body)
@@ -66,7 +66,7 @@
 
   children are test cases (see 'it') or nested test suites (see 'testing')."
   {:arglists '([test-name & children]
-               [test-name ?sym ?doc ?attr-map & children])}
+               [test-name sym? doc? attr-map? & children])}
   [test-name & body]
   (let [[sym body] (get-arg symbol? body)
         [doc body] (get-arg string? body)
@@ -119,7 +119,7 @@
   expr is a single expression, which must return logical true to
   indicate the test case passes or logical false to indicate failure."
   {:arglists '([expr]
-               [?doc ?attr-map expr])}
+               [doc? attr-map? expr])}
   [& body]
   (let [[doc body] (get-arg string? body)
         [attr-map body] (get-arg map? body)
@@ -142,7 +142,7 @@
   'expect') to indicate failure.  If the code completes without
   throwing any exceptions, the test case has passed."
   {:arglists '([& body]
-               [?doc ?attr-map & body])}
+               [doc? attr-map? & body])}
   [& body]
   (let [[doc body] (get-arg string? body)
         [attr-map body] (get-arg map? body)

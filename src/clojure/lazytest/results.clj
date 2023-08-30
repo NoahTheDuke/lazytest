@@ -11,12 +11,16 @@
 (defn summarize
   "Given a sequence of suite results, returns a map of counts with
   keys :total, :pass, and :fail."
-  [& results]
+  [results]
   (let [test-case-results (remove suite-result? (mapcat result-seq results))
         total (count test-case-results)
         passed (count (filter :pass? test-case-results))
         failed (- total passed)]
-    {:results results :total total :pass passed :fail failed}))
+    {:type :summary
+     :results results
+     :total total
+     :pass passed
+     :fail failed}))
 
 (defn summary-exit-value
   "Given a summary map as returned by summarize, returns 0 if there

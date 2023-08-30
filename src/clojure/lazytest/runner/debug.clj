@@ -1,17 +1,17 @@
 (ns lazytest.runner.debug
-  (:use lazytest.find
-    lazytest.suite
-    lazytest.test-case
-    lazytest.focus
-    [clojure.stacktrace :only (print-cause-trace)])
+  (:require
+    [clojure.stacktrace :refer [print-cause-trace]]
+    [lazytest.find :refer [find-suite]]
+    [lazytest.suite :refer [suite-result suite?]]
+    [lazytest.test-case :refer [test-case? try-test-case]])
   (:import lazytest.ExpectationFailed))
 
 (defn identifier [x]
   (let [m (meta x)]
     (str (or (:name m)
-           (:doc m)
-           (:nested-doc m)
-           (System/identityHashCode x))
+             (:doc m)
+             (:nested-doc m)
+             (System/identityHashCode x))
       " (" (:file m) ":" (:line m) ")")))
 
 (defn run-test-case [tc]

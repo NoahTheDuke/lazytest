@@ -1,5 +1,4 @@
 (ns examples.random-test
-  (:refer-clojure :exclude [double vector-of])
   (:require
     [lazytest.describe :refer [describe for-any it]]
     [lazytest.random :as r]))

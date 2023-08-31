@@ -20,7 +20,7 @@
   `(decompiler/decompile ~form))
 
 (defmacro quick-bench
-  "Convenience macro for benchmarking an expression, expr.  Results are reported
+  "Convenience macro for benchmarking an expression, expr. Results are reported
   to *out* in human readable format. Options for report format are: :os,
   :runtime, and :verbose."
   [expr & opts]

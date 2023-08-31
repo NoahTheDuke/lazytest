@@ -1,9 +1,9 @@
 (ns lazytest.test-case)
 
 (defn test-case
-  "Sets metadata on function f identifying it as a test case.  A test
+  "Sets metadata on function f identifying it as a test case. A test
   case function may execute arbitrary code and may have side effects.
-  It should throw an exception to indicate failure.  Returning without
+  It should throw an exception to indicate failure. Returning without
   throwing an exception indicates success.
 
   Additional identifying metadata may be placed on the function, such
@@ -43,7 +43,7 @@
   (and (map? x) (isa? (type x) ::test-case-result)))
 
 (defn try-test-case
-  "Executes a test case function.  Catches all Throwables.  Returns a
+  "Executes a test case function. Catches all Throwables. Returns a
    map with the following key-value pairs:
 
      :source - the input function

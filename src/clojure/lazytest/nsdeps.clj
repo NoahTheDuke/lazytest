@@ -21,6 +21,6 @@
 
 (defn deps-from-ns-decl
   "Given a (quoted) ns declaration, returns a set of symbols naming
-  the dependencies of that namespace.  Handles :use and :require clauses."
+  the dependencies of that namespace. Handles :use and :require clauses."
   [decl]
   (apply union (map deps-from-ns-form decl)))

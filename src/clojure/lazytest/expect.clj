@@ -15,10 +15,10 @@
               (fn? f))))))))
 
 (defmacro expect
-  "Evaluates expression.  If it returns logical true, returns that
-  result.  If the expression returns logical false, throws
+  "Evaluates expression. If it returns logical true, returns that
+  result. If the expression returns logical false, throws
   lazytest.ExpectationFailed with an attached map describing the
-  reason for failure.  Metadata on expr and on the 'expect' form
+  reason for failure. Metadata on expr and on the 'expect' form
   itself will be merged into the failure map."
   ([expr] `(expect nil ~expr))
   ([docstring expr]

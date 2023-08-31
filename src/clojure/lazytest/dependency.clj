@@ -41,7 +41,7 @@
   (update-in graph [key x] union #{y}))
 
 (defn depend
-  "Adds to the dependency graph that x depends on deps.  Forbids
+  "Adds to the dependency graph that x depends on deps. Forbids
   circular dependencies."
   ([graph x] graph)
   ([graph x dep]

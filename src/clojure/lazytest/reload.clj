@@ -42,7 +42,7 @@
 (defn- ensure-source-file-newer
   "If the given namespace name has an AOT-compiled .class file,
   attempts to find the .clj source file and set its modification time
-  to the current time.  Ensures future loads will use the .clj source
+  to the current time. Ensures future loads will use the .clj source
   file and not the AOT-compiled .class file."
   [sym]
   (when (has-class-file? sym)

@@ -30,7 +30,7 @@
 ;;; Public API
 
 (defmacro testing
-  "Like 'describe' but does not create a Var.  Used for nesting test
+  "Like 'describe' but does not create a Var. Used for nesting test
   suites inside 'describe'.
 
   sym (optional) is a symbol; if present, it will be resolved in the current namespace
@@ -139,7 +139,7 @@
   attr-map (optional) is a metadata map
 
   body is any code, which must throw an exception (such as with
-  'expect') to indicate failure.  If the code completes without
+  'expect') to indicate failure. If the code completes without
   throwing any exceptions, the test case has passed."
   {:arglists '([& body]
                [doc? attr-map? & body])}

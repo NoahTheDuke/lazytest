@@ -58,7 +58,7 @@
         (throw t)))))
 
 (defn ok?
-  "Calls f and discards its return value.  Returns true if f does not
+  "Calls f and discards its return value. Returns true if f does not
   throw any exceptions."
   [f]
   (f) true)

@@ -1,11 +1,11 @@
 {
   "doc/*.md": {"type": "doc"},
   "README.md": {"type": "doc"},
-  "modules/lazytest/src/main/clojure/*.clj": {
+  "src/clojure/*.clj": {
       "type": "source",
       "alternate": "modules/lazytest/src/test/clojure/{}_test.clj"
   },
-  "modules/lazytest/src/test/clojure/*_test.clj": {
+  "test/clojure/*_test.clj": {
       "type": "test",
       "alternate": "modules/lazytest/src/main/clojure/{}.clj"
   }

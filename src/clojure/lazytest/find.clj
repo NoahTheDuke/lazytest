@@ -22,7 +22,7 @@
   Returns nil if the namespace has no test suites.
 
   By default, recurses on all Vars in a namespace looking for values
-  for which lazytest.suite/suite? is true.  If a namesapce
+  for which lazytest.suite/suite? is true. If a namesapce
   has :test-suite metadata, uses that value instead.
 
   Always returns nil for the clojure.core namespace, to avoid special

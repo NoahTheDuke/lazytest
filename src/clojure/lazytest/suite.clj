@@ -1,7 +1,7 @@
 (ns lazytest.suite)
 
 (defn suite
-  "Sets metadata on function f identifying it as a test suite.  A test
+  "Sets metadata on function f identifying it as a test suite. A test
   suite function must be free of side effects and must return a
   test sequence (see test-seq)."
   [f]

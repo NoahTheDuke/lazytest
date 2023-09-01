@@ -40,7 +40,7 @@
 
 (defn run-test-var
   [v]
-  (let [tree (-> (suite v)
+  (let [tree (-> (suite @v)
                  (expand-tree)
                  (test-seq))
         result (run-test-seq tree)]

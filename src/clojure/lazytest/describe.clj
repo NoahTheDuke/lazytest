@@ -17,8 +17,10 @@
     [nil args]))
 
 (defn- merged-metadata [body form docstring extra-attr-map]
-  (merge (when (empty? body) {:pending true})
-         {:doc docstring :file *file* :ns *ns*}
+  (merge {:doc (not-empty docstring)
+          :file *file*
+          :ns *ns*}
+         (when (empty? body) {:pending true})
          (meta form)
          extra-attr-map))
 

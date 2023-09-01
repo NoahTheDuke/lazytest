@@ -34,10 +34,13 @@
   (print (apply str (repeat n "  "))))
 
 (defn- report-suite-result [result depth]
-  (indent depth)
-  (println (identifier result))
-  (doseq [child (:children result)]
-    (report-result child (inc depth))))
+  (let [id (identifier result)]
+    (when id
+      (indent depth)
+      (println id))
+    (let [depth (if id (inc depth) depth)]
+      (doseq [child (:children result)]
+        (report-result child depth)))))
 
 (defn- report-test-case-result [result depth]
   (indent depth)
@@ -83,7 +86,7 @@
         (apply print-equality-failed (rest (:evaluated reason)))))))
 
 (defn- report-test-case-failure [result docs]
-  (when (not (:pass? result))
+  (when-not (:pass? result)
     (let [docs (conj docs (identifier result))
           docstring (str "FAILURE: " (str/join " " (remove nil? docs)))
           error (:thrown result)]
@@ -119,4 +122,4 @@
   (nested (assoc result :type :pass))
   (newline)
   (nested (assoc result :type :fail))
-  (nested (summarize result)))
+  (nested (summarize [result])))

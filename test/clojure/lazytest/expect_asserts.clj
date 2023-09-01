@@ -28,7 +28,7 @@
            false
            (catch ExpectationFailed err err))]
   (assert e1)
-  (let [reason (.reason ^ExpectationFailed e1)]
+  (let [reason (ex-data e1)]
     (assert (= '(= 1 2) (:form reason)))
     (assert (= (list = 1 2) (:evaluated reason)))
     (assert (false? (:result reason)))))
@@ -37,7 +37,7 @@
            false
            (catch ExpectationFailed err err))]
   (assert e3)
-  (let [reason (.reason ^ExpectationFailed e3)]
+  (let [reason (ex-data e3)]
     (assert (= '(instance? java.lang.String 42) (:form reason)))
     (assert (= (list instance? java.lang.String 42) (:evaluated reason)))
     (assert (false? (:result reason)))))

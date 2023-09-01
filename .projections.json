@@ -3,10 +3,10 @@
   "README.md": {"type": "doc"},
   "src/clojure/*.clj": {
       "type": "source",
-      "alternate": "modules/lazytest/src/test/clojure/{}_test.clj"
+      "alternate": "test/clojure/{}_test.clj"
   },
   "test/clojure/*_test.clj": {
       "type": "test",
-      "alternate": "modules/lazytest/src/main/clojure/{}.clj"
+      "alternate": "src/clojure/{}.clj"
   }
 }

@@ -1,9 +1,30 @@
 package lazytest;
 
-public class ExpectationFailed extends AssertionError {
-    public final Object reason;
+import clojure.lang.IExceptionInfo;
+import clojure.lang.IPersistentMap;
 
-    public ExpectationFailed(Object reason) {
-	this.reason = reason;
+public class ExpectationFailed extends Throwable implements IExceptionInfo {
+    public final IPersistentMap reason;
+
+    public ExpectationFailed(IPersistentMap reason) {
+        super("Expectation Failed");
+
+        if (reason == null) {
+            throw new IllegalArgumentException("Additional data must be non-nil.");
+        }
+        this.reason = reason;
+    }
+
+    public IPersistentMap getData() {
+        return reason;
+    }
+
+    @Override
+    public synchronized Throwable fillInStackTrace() {
+        return this;
+    }
+
+    public String toString() {
+        return "lazytest.ExpectationFailed: " + reason.toString();
     }
 }

@@ -1,4 +1,6 @@
-(ns lazytest.test-case)
+(ns lazytest.test-case
+  (:import
+    (lazytest ExpectationFailed)))
 
 (defn test-case
   "Sets metadata on function f identifying it as a test case. A test
@@ -25,16 +27,12 @@
   source is the test case object that returned this result.
 
   thrown is the exception (Throwable) thrown by a failing test case."
-  ([pass? source]
-   {:pre [(or (true? pass?) (false? pass?))
-          (test-case? source)]}
-   (with-meta {:pass? pass? :source source}
-              {:type ::test-case-result}))
-  ([pass? source thrown]
-   {:pre [(boolean? pass?)
+  ([type' source] (test-case-result type' source nil))
+  ([type' source thrown]
+   {:pre [(#{:pass :fail :error} type')
           (test-case? source)
-          (instance? Throwable thrown)]}
-   (with-meta {:pass? pass? :source source :thrown thrown}
+          (or (nil? thrown) (instance? Throwable thrown))]}
+   (with-meta {:type type' :source source :thrown thrown}
               {:type ::test-case-result})))
 
 (defn test-case-result?
@@ -53,6 +51,8 @@
   {:pre [(test-case? f)]
    :post [(test-case-result? %)]}
   (try (f)
-    (test-case-result true f)
+    (test-case-result :pass f)
+    (catch ExpectationFailed ex
+      (test-case-result :fail f ex))
     (catch Throwable t
-      (test-case-result false f t))))
+      (test-case-result :error f t))))

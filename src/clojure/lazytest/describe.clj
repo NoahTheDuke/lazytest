@@ -142,7 +142,10 @@
 
   body is any code, which must throw an exception (such as with
   'expect') to indicate failure. If the code completes without
-  throwing any exceptions, the test case has passed."
+  throwing any exceptions, the test case has passed.
+
+  NOTE: Because failure requires an exception, no assertions after
+  the thrown exception will be run."
   {:arglists '([& body]
                [doc? attr-map? & body])}
   [& body]

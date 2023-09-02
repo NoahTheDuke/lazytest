@@ -17,15 +17,17 @@
 (defmacro base-fields
   "Useful for all expectations. Sets the base
   properties on the ExpectationFailed."
-  [&form exp doc & body]
-  `(merge '~(meta &form)
-          '~(meta exp)
-          (select-keys '~(meta &form) [:line :column])
-          {:form ~exp
-           :file ~*file*
-           :ns '~(ns-name *ns*)}
-          ~(when doc {:doc doc})
-          ~@body))
+  [&form expr doc & body]
+  (let [mform (meta &form)
+        mexpr (meta expr)]
+    `(merge ~mform
+            ~mexpr
+            (select-keys ~mform [:line :column])
+            {:form ~expr
+             :file ~*file*
+             :ns '~(ns-name *ns*)}
+            ~(when doc {:doc doc})
+            ~@body)))
 
 (defn expect-fn
   [&form docstring expr]

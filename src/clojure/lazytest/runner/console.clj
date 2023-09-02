@@ -1,49 +1,35 @@
 (ns lazytest.runner.console
   (:require
-    [clojure.test]
     [lazytest.color :refer [colorize]]
-    [lazytest.find :refer [find-suite]]
-    [lazytest.focus :refer [filter-tree focused?]]
-    [lazytest.suite :refer [expand-tree suite-result test-seq? test-seq suite]]
-    [lazytest.test-case :refer [test-case? try-test-case]]))
+    [lazytest.focus :refer [focused?]]
+    [lazytest.runner :as runner]
+    [lazytest.suite :refer [suite-result?]]))
 
-(defn- run-test-case [tc]
-  (let [result (try-test-case tc)]
-    (if (:pass? result)
-      (print (colorize "." :green))
-      (print (colorize "F" :red)))
-    (flush)
-    result))
+(declare report-result)
 
-(defn- run-test-seq [s]
-  (let [results
-        (mapv (fn [x]
-                (cond
-                  (test-seq? x) (run-test-seq x)
-                  (test-case? x) (run-test-case x)
-                  :else (throw (IllegalArgumentException.
-                                 "Non-test given to run-suite."))))
-              s)]
-    (suite-result s results)))
+(defn- report-test-case-result [result]
+  (condp = (:type result)
+    :pass (print (colorize "." :green))
+    :fail (print (colorize "F" :red))
+    :error (print (colorize "E" :red))))
+
+(defn- report-suite-result [result]
+  (run! report-result (:children result))
+  (flush))
+
+(defn- report-result [result]
+  (if (suite-result? result)
+    (report-suite-result result)
+    (report-test-case-result result)))
 
 (defn run-tests
   "Runs tests defined in the given namespaces, with colored green dots
   indicating passing tests and red 'F's indicating falied tests."
   [& namespaces]
-  (let [ste (apply find-suite namespaces)
-        tree (filter-tree (expand-tree ste))]
-    (when (focused? tree)
+  (let [result (apply runner/run-tests namespaces)]
+    (when (focused? result)
       (println "=== FOCUSED TESTS ONLY ==="))
-    (let [result (run-test-seq tree)]
-      (newline)
-      result)))
-
-(defn run-test-var
-  [v]
-  (let [tree (-> (suite @v)
-                 (expand-tree)
-                 (test-seq))
-        result (run-test-seq tree)]
+    (report-result result)
     (newline)
     result))
 
@@ -51,3 +37,10 @@
   "Run tests defined in all namespaces."
   []
   (run-tests))
+
+(defn run-test-var
+  [v]
+  (let [result (runner/run-test-var v)]
+    (report-result result)
+    (newline)
+    result))

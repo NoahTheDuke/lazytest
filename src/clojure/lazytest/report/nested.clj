@@ -20,15 +20,13 @@
 
 (set! *warn-on-reflection* true)
 
-(defmulti nested :type)
-
 (defn- identifier [result]
   (let [m (meta (:source result))]
     (or (:doc m) (:name m))))
 
 ;;; Nested doc printout
 
-(declare report-result)
+(declare report-docs)
 
 (defn- indent [n]
   (print (apply str (repeat n "  "))))
@@ -40,20 +38,17 @@
       (println id))
     (let [depth (if id (inc depth) depth)]
       (doseq [child (:children result)]
-        (report-result child depth)))))
+        (report-docs child depth)))))
 
 (defn- report-test-case-result [result depth]
   (indent depth)
   (println (colorize (str (identifier result))
-                     (if (:pass? result) :green :red))))
+                     (if (= :pass (:type result)) :green :red))))
 
-(defn- report-result [result depth]
+(defn- report-docs [result depth]
   (if (suite-result? result)
     (report-suite-result result depth)
     (report-test-case-result result depth)))
-
-(defmethod nested :pass [result]
-  (report-result result 0))
 
 ;;; Failures
 
@@ -63,8 +58,9 @@
     (pprint a)
     (println (colorize "Only in second argument:" :cyan))
     (pprint b)
-    (println (colorize "The same in both:" :cyan))
-    (pprint same)))
+    (when (some? same)
+      (println (colorize "The same in both:" :cyan))
+      (pprint same))))
 
 (defn- print-evaluated-arguments [reason]
   (println (colorize "Evaluated arguments:" :cyan))
@@ -72,8 +68,8 @@
     (print "* ")
     (pprint arg)))
 
-(defn- print-expectation-failed [^lazytest.ExpectationFailed err]
-  (let [reason (.reason err)]
+(defn- print-expectation-failed [err]
+  (let [reason (ex-data err)]
     (println "at" (:file reason) "line" (:line reason))
     (println (colorize "Expression:" :cyan))
     (pprint (:form reason))
@@ -86,40 +82,41 @@
         (apply print-equality-failed (rest (:evaluated reason)))))))
 
 (defn- report-test-case-failure [result docs]
-  (when-not (:pass? result)
+  (when-not (= :pass (:type result))
     (let [docs (conj docs (identifier result))
-          docstring (str "FAILURE: " (str/join " " (remove nil? docs)))
+          report-type (:type result)
+          docstring (format
+                     "%s: %s"
+                     (if (= :fail report-type) "FAILURE" "ERROR")
+                     (str/join " " (remove nil? docs)))
           error (:thrown result)]
       (println (colorize docstring :red))
-      (if (instance? lazytest.ExpectationFailed error)
+      (if (= :fail report-type)
         (print-expectation-failed error)
         (print-cause-trace error))
       (newline))))
 
-(defn- report-failure [result docs]
+(defn- report-failures [result docs]
   (if (suite-result? result)
     (doseq [child (:children result)]
-      (report-failure child (conj docs (identifier result))))
+      (report-failures child (conj docs (identifier result))))
     (report-test-case-failure result docs)))
-
-(defmethod nested :fail [result]
-  (report-failure result []))
 
 ;;; Summary
 
-(defmethod nested :summary [summary]
-  (let [{:keys [total fail]} summary
+(defn report-summary [summary]
+  (let [{:keys [total not-passing]} summary
         count-msg (str "Ran " total " test cases.")]
     (println (if (zero? total)
                (colorize count-msg :yellow)
                count-msg))
-    (println (colorize (str fail " failures.")
-               (if (zero? fail) :green :red)))))
+    (println (colorize (str not-passing " failures.")
+               (if (zero? not-passing) :green :red)))))
 
 ;;; Entry point
 
 (defn report [result]
-  (nested (assoc result :type :pass))
+  (report-docs result 0)
   (newline)
-  (nested (assoc result :type :fail))
-  (nested (summarize [result])))
+  (report-failures result [])
+  (report-summary (summarize [result])))

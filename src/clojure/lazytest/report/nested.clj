@@ -102,21 +102,11 @@
       (report-failures child (conj docs (identifier result))))
     (report-test-case-failure result docs)))
 
-;;; Summary
-
-(defn report-summary [summary]
-  (let [{:keys [total not-passing]} summary
-        count-msg (str "Ran " total " test cases.")]
-    (println (if (zero? total)
-               (colorize count-msg :yellow)
-               count-msg))
-    (println (colorize (str not-passing " failures.")
-               (if (zero? not-passing) :green :red)))))
-
 ;;; Entry point
 
-(defn report [result]
-  (report-docs result 0)
+(defn report [results]
+  (report-docs results 0)
   (newline)
-  (report-failures result [])
-  (report-summary (summarize [result])))
+  (report-failures results [])
+  (flush)
+  results)

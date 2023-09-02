@@ -1,5 +1,6 @@
 {:paths ["src/clojure" "resources" "target/classes"]
  :deps {org.clojure/clojure {:mvn/version "1.11.1"}
+        org.clojure/tools.cli {:mvn/version "1.0.219"}
         org.clojure/tools.namespace {:mvn/version "1.4.4"}}
  :deps/prep-lib {:ensure "target/classes"
                  :alias :build
@@ -21,8 +22,8 @@
   ;; Run the tests with `-M:test:runner`.
   ;; Run and watch the test suite with `-M:test:watch`.
   :test {:extra-paths ["test/clojure"]}
-  :runner {:main-opts ["-m" "lazytest.main" "test/clojure/lazytest"]}
-  :watch {:main-opts ["-m" "lazytest.watch" "test/clojure/lazytest"]}
+  :runner {:main-opts ["-m" "lazytest.main"]}
+  :watch {:main-opts ["-m" "lazytest.watch"]}
 
   ;; Run the -T:build code.
   ;; Pass in one of the public functions: compile-java, uberjar, etc

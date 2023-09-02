@@ -12,7 +12,7 @@
   "Given a sequence of suite results, returns a map of counts with
   keys :total, :pass, and :fail."
   [results]
-  (let [test-case-results (remove suite-result? (mapcat result-seq results))
+  (let [test-case-results (remove suite-result? (result-seq results))
         total (count test-case-results)
         {:keys [pass fail error]} (group-by :type test-case-results)]
     {:type :summary

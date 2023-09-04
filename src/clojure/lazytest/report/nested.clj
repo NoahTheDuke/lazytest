@@ -22,7 +22,7 @@
 
 (defn- identifier [result]
   (let [m (meta (:source result))]
-    (or (:doc m) (:name m))))
+    (or (:doc m) (:ns-name m))))
 
 ;;; Nested doc printout
 

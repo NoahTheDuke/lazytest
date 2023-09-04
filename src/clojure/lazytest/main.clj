@@ -15,10 +15,14 @@
   "Run with directories as arguments. Runs all tests in those
   directories; returns 0 if all tests pass."
   [& args]
-  (let [{:keys [dir output]} (validate-opts args)
-        namespaces ((tracker (map io/file dir) 0))]
-    (apply require namespaces)
-    (let [results (apply run-tests namespaces)
+  (let [{:keys [dir output
+                exit-message ok]} (validate-opts args)]
+    (when exit-message
+      (println exit-message)
+      (System/exit (if ok 0 1)))
+    (let [namespaces ((tracker (map io/file dir) 0))
+          _ (apply require namespaces)
+          results (apply run-tests namespaces)
           summary (summarize results)]
       (case output
         "console" (console/report results)

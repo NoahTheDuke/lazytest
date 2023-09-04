@@ -1,25 +1,26 @@
 (ns lazytest.report.console
   (:require
-    [lazytest.color :refer [colorize]]
-    [lazytest.focus :refer [focused?]]
-    [lazytest.suite :refer [suite-result?]]))
+   [lazytest.color :refer [colorize]]
+   [lazytest.focus :refer [focused?]]
+   [lazytest.suite :as s]
+   [lazytest.test-case :as tc]))
 
-(declare report-result)
+(defn- dispatch [result] (:type (meta result)))
 
-(defn- report-test-case-result [result]
-  (condp = (:type result)
-    :pass (print (colorize "." :green))
-    :fail (print (colorize "F" :red))
-    :error (print (colorize "E" :red))))
+(defmulti console #'dispatch)
 
-(defn- report-suite-result [result]
-  (run! report-result (:children result))
+(defmethod console ::s/suite-result
+  [result]
+  (run! console (:children result))
   (flush))
 
-(defn- report-result [result]
-  (if (suite-result? result)
-    (report-suite-result result)
-    (report-test-case-result result)))
+(defmethod console ::tc/test-case-result
+  [result]
+  (case (:type result)
+    :pass (print (colorize "." :green))
+    :fail (print (colorize "F" :red))
+    :error (print (colorize "E" :red))
+    nil))
 
 (defn report
   "Print test results, with colored green dots indicating passing tests and red 'F's
@@ -27,6 +28,6 @@
   [results]
   (when (focused? results)
     (println "=== FOCUSED TESTS ONLY ==="))
-  (report-result results)
+  (console results)
   (newline)
   results)

@@ -19,7 +19,7 @@
   A test sequence is a sequence of test cases and/or test suites.
 
   Metadata on the test sequence provides identifying information
-  for the test suite, such as :name and :doc."
+  for the test suite, such as :ns-name and :doc."
   [s]
   {:pre [(sequential? s)]}
   (vary-meta s assoc ::test-seq true))

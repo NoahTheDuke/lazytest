@@ -9,8 +9,8 @@
 
 (defn identifier [x]
   (let [m (meta x)]
-    (str (or (:name m)
-             (:doc m)
+    (str (or (:doc m)
+             (:ns-name m)
              (System/identityHashCode x))
       " (" (:file m) ":" (:line m) ")")))
 

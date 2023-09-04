@@ -9,7 +9,7 @@
   throwing an exception indicates success.
 
   Additional identifying metadata may be placed on the function, such
-  as :name and :doc."
+  as :ns-name and :doc."
   [f]
   {:pre [(fn? f)]}
   (vary-meta f assoc ::test-case true))

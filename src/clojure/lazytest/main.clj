@@ -23,14 +23,13 @@
 
 (defn run [{:keys [dir output]}]
   (let [nses (require-dirs dir)
-        results (apply run-tests nses)
-        summary (summarize results)]
+        results (apply run-tests nses)]
     (case output
       "console" (console/report results)
       "nested" (nested/report results)
       nil)
     (summary/report results)
-    (System/exit (summary-exit-value summary))))
+    (summarize results)))
 
 (defn -main
   "Run with directories as arguments. Runs all tests in those
@@ -39,5 +38,5 @@
   (let [{:keys [exit-message ok] :as opts} (validate-opts args)]
     (if exit-message
       (do (println exit-message)
-          (System/exit (if ok 0 1)))
-      (run opts))))
+        (System/exit (if ok 0 1)))
+      (System/exit (summary-exit-value (run opts))))))

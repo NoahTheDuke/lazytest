@@ -2,11 +2,12 @@
   (:require
    [clojure.data :refer [diff]]
    [clojure.pprint :as pp]
+   [clojure.stacktrace :refer [print-cause-trace]]
+   [clojure.string :as str]
    [lazytest.color :refer [colorize]]
    [lazytest.results :refer [summarize]]
-   [clojure.string :as str]
-   [clojure.stacktrace :refer [print-cause-trace]]
-   [lazytest.suite :refer [suite-result?]]))
+   [lazytest.suite :as s]
+   [lazytest.test-case :as tc]))
 
 (defn- identifier [result]
   (let [m (meta (:source result))]
@@ -31,40 +32,51 @@
     (print "* ")
     (pp/pprint arg)))
 
-(defn- report-test-case-failure [result docs]
-  (when-not (= :pass (:type result))
-    (let [docs (conj docs (identifier result))
-          report-type (:type result)
-          docstring (format
-                     "%s: %s"
-                     (if (= :fail report-type) "FAILURE" "ERROR")
-                     (str/join " " (remove nil? docs)))
-          error (:thrown result)
-          reason (ex-data error)]
-      (println (colorize docstring :red))
-      (printf "in %s:%s\n" (:file result) (:line result))
-      (if (= :fail report-type)
-        (do (println (colorize "Expression:" :cyan)
-                     (pprint-out (:form reason)))
-          (println (colorize "Result:" :cyan)
-                   (pprint-out (:result reason)))
-          (when (:evaluated reason)
-            (print-evaluated-arguments reason)
-            (when (and (= = (first (:evaluated reason)))
-                       (= 3 (count (:evaluated reason))))
-              (apply print-equality-failed (rest (:evaluated reason))))))
-        (print-cause-trace error))
-      (newline))))
+(defn- report-test-case-failure [result]
+  (let [docs (conj (:docs result) (identifier result))
+        report-type (:type result)
+        docstring (format
+                   "%s: %s"
+                   (if (= :fail report-type) "FAILURE" "ERROR")
+                   (str/join " " (remove nil? docs)))
+        error (:thrown result)
+        reason (ex-data error)]
+    (println (colorize docstring :red))
+    (printf "in %s:%s\n" (:file result) (:line result))
+    (if (= :fail report-type)
+      (do (println (colorize "Expression:" :cyan)
+                   (pprint-out (:form reason)))
+        (println (colorize "Result:" :cyan)
+                 (pprint-out (:result reason)))
+        (when (:evaluated reason)
+          (print-evaluated-arguments reason)
+          (when (and (= = (first (:evaluated reason)))
+                     (= 3 (count (:evaluated reason))))
+            (apply print-equality-failed (rest (:evaluated reason))))))
+      (print-cause-trace error))
+    (newline)))
 
-(defn- report-failures [result docs]
-  (if (suite-result? result)
-    (doseq [child (:children result)]
-      (report-failures child (conj docs (identifier result))))
-    (report-test-case-failure result docs)))
+(defn- dispatch [result]
+  (:type (meta result)))
+
+(defmulti summary
+  {:arglists '([{:keys [source children docs] :as result}])}
+  #'dispatch)
+
+(defmethod summary ::s/suite-result
+  [{:keys [docs children] :as results}]
+  (doseq [child children
+          :let [docs (conj docs (identifier results))
+                child (assoc child :docs docs)]]
+    (summary child)))
+
+(defmethod summary ::tc/test-case-result
+  [result]
+  (when-not (= :pass (:type result))
+    (report-test-case-failure result)))
 
 (defn report [results]
-  (let [summary (summarize results)
-        {:keys [total not-passing]} summary
+  (let [{:keys [total not-passing]} (summarize results)
         count-msg (str "Ran " total " test cases.")]
     (println (if (zero? total)
                (colorize count-msg :yellow)
@@ -73,5 +85,5 @@
                        (if (zero? not-passing) :green :red)))
     (newline)
     (when (pos? not-passing)
-      (report-failures results [])
+      (summary (assoc results :docs []))
       (flush))))

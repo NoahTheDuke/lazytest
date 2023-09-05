@@ -15,9 +15,7 @@
   (let [test-case-results (remove suite-result? (result-seq results))
         total (count test-case-results)
         {:keys [pass fail error]} (group-by :type test-case-results)]
-    {:type :summary
-     :results results
-     :total total
+    {:total total
      :pass (count pass)
      :fail (count fail)
      :error (count error)

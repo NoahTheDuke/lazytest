@@ -1,21 +1,20 @@
 # Lazytest: A new test framework for Clojure
 
-A competitor to `clojure.test`, aiming to be feature-rich and easily extensible.
+An alternative to `clojure.test`, aiming to be feature-rich and easily extensible.
 
 ## Why a new test framework?
 
-> Isn't `clojure.test` good enough? How will you succeed when `Midje` and `expectations`
-> failed?
+> Isn't `clojure.test` good enough?
 
 Lazytest is designed to be a standalone test system for Clojure, disconnected from the
 built-in `clojure.test`. `clojure.test` has existed since 1.1 and while it's both
 ubiquitous and useful, it has a number of
 [problems](https://stuartsierra.com/2010/07/05/lazytest-status-report).
 
-Both `Midje` and `expectations` attempted to correct some of those issues and they made
-good progress, but `Midje` relied on non-list style (`test => expected`) and neither
-worked well with modern repl-driven development practices (using `gynsym`s instead of
-named test vars).
+Other alternatives such as `Midje` and `expectations` have attempted to correct some of
+those issues and they made good progress, but many (such as `Midje`) relied on non-list
+style (`test => expected`) and most don't worked well with modern repl-driven
+development practices (using `gynsym`s instead of named test vars).
 
 I like the ideas put forth in Sandra's post above about Lazytest and hope to experiment
 with achieving them 10 years later.
@@ -26,7 +25,7 @@ The `lazytest.describe` namespace mimics the behavior-driven testing
 style popularized by libraries such as [RSpec](http://rspec.info).
 
 Use the `describe` macro to create a group of tests. Start the group
-with a name and a documentation string.
+with a name and an optional documentation string.
 
 ```clojure
 (ns examples.readme.groups
@@ -38,7 +37,7 @@ with a name and a documentation string.
 Within a `describe` group, use the `it` macro to create a single test
 example. Start your example with a documentation string describing
 what should happen, followed by an expression to test what you think
-should be true.
+should be logically true.
 
 ```clojure
 (describe +-test "with integers"

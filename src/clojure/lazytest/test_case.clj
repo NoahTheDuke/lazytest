@@ -32,8 +32,10 @@
    {:pre [(#{:pass :fail :error} type')
           (test-case? source)
           (or (nil? thrown) (instance? Throwable thrown))]}
-   (with-meta {:type type' :source source :thrown thrown}
-              {:type ::test-case-result})))
+   (let [{:keys [file line]} (meta source)]
+     (with-meta {:type type' :source source :thrown thrown
+                 :file file :line line}
+       {:type ::test-case-result}))))
 
 (defn test-case-result?
   "True if x is a test case result."

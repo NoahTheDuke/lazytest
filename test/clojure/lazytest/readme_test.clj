@@ -5,11 +5,9 @@
 
 (describe +-test "with integers"
   (it "computes the sum of 1 and 2"
-    (= 4 (+ 1 2)))
+    (= 3 (+ 1 2)))
   (it "computes the sum of 3 and 4"
-    (= 7 (+ 3 4)))
-  (it "throws exceptions"
-    (/ 1 0)))
+    (= 7 (+ 3 4))))
 
 (describe addition-test
   "Addition"

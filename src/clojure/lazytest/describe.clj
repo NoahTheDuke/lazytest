@@ -127,8 +127,10 @@
         [attr-map body] (get-arg map? body)
         assertion (first body)
         metadata (merged-metadata body &form doc attr-map)]
+    (when (and (seq? assertion) (symbol? (first assertion)))
+      (assert (not= "expect" (name (first assertion)))))
     `(test-case (with-meta
-                  (fn [] (expect ~assertion))
+                  (fn [] (expect ~doc ~assertion))
                   ~metadata))))
 
 (defmacro do-it

@@ -18,16 +18,13 @@
   "Useful for all expectations. Sets the base
   properties on the ExpectationFailed."
   [&form expr doc & body]
-  (let [mform (meta &form)
-        mexpr (meta expr)]
-    `(merge ~mform
-            ~mexpr
-            (select-keys ~mform [:line :column])
-            {:form ~expr
-             :file ~*file*
-             :ns '~(ns-name *ns*)}
-            ~(when doc {:doc doc})
-            ~@body)))
+  `(merge ~(meta &form)
+          ~(meta expr)
+          {:form ~expr
+           :file ~*file*
+           :ns '~(ns-name *ns*)}
+          ~(when doc {:doc doc})
+          ~@body))
 
 (defn expect-fn
   [&form docstring expr]

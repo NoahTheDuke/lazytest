@@ -7,7 +7,9 @@
 
 (defn- dispatch [result] (:type (meta result)))
 
-(defmulti console #'dispatch)
+(defmulti console
+  {:arglists '([{:keys [source children depth] :as result}])}
+  #'dispatch)
 
 (defmethod console ::s/suite-result
   [result]

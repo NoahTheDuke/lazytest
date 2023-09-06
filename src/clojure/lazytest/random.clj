@@ -16,10 +16,11 @@
 (def ^{:doc "Default maximum for random integers"}
      max-random-integer (/ (dec Integer/MAX_VALUE) 2))
 
-(defn integer [& options]
+(defn integer
   "Returns a function which returns a random integer. options
   are :min (inclusive) and :max (exclusive). Defaults are
   min-random-integer and max-random-integer."
+  [& options]
   (let [{:keys [min max]
          :or {min min-random-integer, max max-random-integer}} options]
     (fn [] (rand-int-in-range min max))))
@@ -79,7 +80,7 @@
 (defn map-of
   "Like sequence-of; returns a map. f must return a key-value pair."
   [f & options]
-  (comp #(into {} %) (apply sequence-of options)))
+  (comp #(into {} %) (apply sequence-of f options)))
 
 (defn string-of
   "Like sequence-of; returns a string."
@@ -131,3 +132,19 @@
   total."
   [n total]
   (.intValue (Math/ceil (Math/pow total (/ 1.0 n)))))
+
+(defmacro for-any
+  "Bindings is a vector of name-value pairs, where the values are
+  generator functions such as those in lazytest.random. The number of
+  test cases generated depends on the number of bindings and
+  lazytest.random/default-test-case-count."
+  [bindings & body]
+  {:pre [(vector? bindings)
+         (even? (count bindings))]}
+  (let [c (scaled-test-case-count (/ (count bindings) 2) (default-test-case-count))
+        generated-bindings
+        (vec (mapcat (fn [[name generator]]
+                       [name `((sequence-of ~generator :min ~c :max ~c))])
+               (partition 2 bindings)))]
+    `(for ~generated-bindings
+       (list ~@body))))

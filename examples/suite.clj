@@ -1,17 +1,17 @@
 (ns examples.suite
   (:require
-    [lazytest.expect :refer [expect]]
-    [lazytest.suite :refer [suite test-seq]]
-    [lazytest.test-case :refer [test-case]]))
+   [lazytest.describe :refer [describe testing]]
+   [lazytest.expect :refer [expect]]
+   [lazytest.suite :refer [suite test-seq]]
+   [lazytest.test-case :refer [test-case]]))
 
 (defn common-test-cases [x]
-  (list
-    (vary-meta
-      (test-case #(expect (= x 1)))
-      assoc :doc "x equals one")
-    (vary-meta
-      (test-case #(expect (= x 2)))
-      assoc :doc "x equals two")))
+  [(vary-meta
+    (test-case #(expect (= x 1)))
+    assoc :doc (str x " equals one"))
+   (vary-meta
+    (test-case #(expect (= x 2)))
+    assoc :doc (str x " equals two"))])
 
 (def s1
   (suite
@@ -21,24 +21,8 @@
         assoc :doc "One"))))
 
 (def s2
-  (suite
-    (fn []
-      (vary-meta
-        (test-seq (common-test-cases 2))
-        assoc :doc "Two"))))
+  (testing "Two"
+    (common-test-cases 2)))
 
-(def s3
-  (suite
-    (fn []
-      (vary-meta
-        (test-seq (map (fn [tc]
-                         tc)
-                       (common-test-cases 3)))
-        assoc :doc "Three"))))
-
-(def s4
-  (vary-meta
-    (suite
-      (fn []
-        (test-seq (common-test-cases 4))))
-    assoc :doc "Four"))
+(describe s3 "Three"
+  (map (fn [tc] (common-test-cases tc)) (range 3 5)))

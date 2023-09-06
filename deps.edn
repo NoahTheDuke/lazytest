@@ -33,4 +33,4 @@
 
   ;; Run examples
   :examples {:extra-paths ["."]
-             :main-opts ["-m" "lazytest.main" "examples"]}}}
+             :main-opts ["-m" "lazytest.main"]}}}

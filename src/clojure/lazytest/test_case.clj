@@ -19,6 +19,10 @@
   [x]
   (and (fn? x) (::test-case (meta x))))
 
+(defn- extract-file-and-line [source thrown]
+  (let [m (or (ex-data thrown) (meta source))]
+    (select-keys m [:line :file])))
+
 (defn test-case-result
   "Creates a test case result map with keys :pass?, :source, and :thrown.
 
@@ -32,7 +36,7 @@
    {:pre [(#{:pass :fail :error} type')
           (test-case? source)
           (or (nil? thrown) (instance? Throwable thrown))]}
-   (let [{:keys [file line]} (meta source)]
+   (let [{:keys [file line]} (extract-file-and-line source thrown)]
      (with-meta {:type type' :source source :thrown thrown
                  :file file :line line}
        {:type ::test-case-result}))))

@@ -10,9 +10,7 @@
   (update m k fconj v))
 
 (def cli-options
-  [["-d" "--dir DIR" "Directory containing tests."
-    :default #{"test"}
-    :parse-fn str
+  [["-d" "--dir DIR" "Directory containing tests. (Defaults to \"test\".)"
     :assoc-fn update-args]
    ["-n" "--namespace NS-SYM" "Test namespace to only run."
     :parse-fn symbol

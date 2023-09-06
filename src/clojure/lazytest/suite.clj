@@ -38,7 +38,7 @@
   [source children]
   {:pre [(test-seq? source)
          (sequential? children)]}
-  (with-meta {:source source, :children children}
+  (with-meta {:source source :children children}
              {:type ::suite-result}))
 
 (defn suite-result?

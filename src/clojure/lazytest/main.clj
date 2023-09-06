@@ -16,7 +16,7 @@
   (mapv second (keep read-file-ns-decl (find-sources dirs))))
 
 (defn require-dirs [dir]
-  (let [dirs (map io/file dir)
+  (let [dirs (map io/file (or dir #{"test"}))
         nses (find-ns-decls dirs)]
     (apply require nses)
     nses))

@@ -18,13 +18,14 @@
   "Useful for all expectations. Sets the base
   properties on the ExpectationFailed."
   [&form expr doc & body]
-  `(merge ~(meta &form)
-          ~(meta expr)
-          {:form ~expr
-           :file ~*file*
-           :ns '~(ns-name *ns*)}
-          ~(when doc {:doc doc})
-          ~@body))
+  `(ExpectationFailed.
+    (merge ~(meta &form)
+           ~(meta expr)
+           {:form ~expr
+            :file ~*file*
+            :ns '~(ns-name *ns*)}
+           ~(when doc {:doc doc})
+           ~@body)))
 
 (defn expect-fn
   [&form docstring expr]
@@ -33,19 +34,17 @@
          args# (list ~@(rest expr))
          result# (apply f# args#)]
      (or result#
-         (throw (ExpectationFailed.
-                  (base-fields ~&form '~expr ~docstring
-                               {:evaluated (list* f# args#)
-                                :result result#}))))))
+         (throw (base-fields ~&form '~expr ~docstring
+                             {:evaluated (list* f# args#)
+                              :result result#})))))
 
 (defn expect-any
   [&form docstring expr]
   `(let [doc# ~docstring
          result# ~expr]
      (or result#
-         (throw (ExpectationFailed.
-                  (base-fields ~&form '~expr ~docstring
-                               {:result result#}))))))
+         (throw (base-fields ~&form '~expr ~docstring
+                             {:result result#})))))
 
 (defmacro expect
   "Evaluates expression. If it returns logical true, returns that

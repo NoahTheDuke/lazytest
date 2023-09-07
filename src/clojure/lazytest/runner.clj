@@ -5,9 +5,21 @@
     [lazytest.suite :refer [expand-tree suite-result test-seq? test-seq suite]]
     [lazytest.test-case :refer [test-case? try-test-case]]))
 
+(defn dispatch [m] (-> m meta :type))
+(defmulti run-hook #'dispatch)
+
+(defmethod run-hook :default [_])
+(defmethod run-hook :lazytest/run [_])
+(defmethod run-hook :lazytest/suite [_])
+(defmethod run-hook :lazytest/ns-suite [_])
+(defmethod run-hook :lazytest/test-seq [_])
+(defmethod run-hook :lazytest/test-var [_])
+(defmethod run-hook :lazytest/test-case [_])
+
 (defn- run-test-seq [s]
   (let [results
         (mapv (fn [x]
+                (run-hook x)
                 (cond
                   (test-seq? x) (run-test-seq x)
                   (test-case? x) (try-test-case x)

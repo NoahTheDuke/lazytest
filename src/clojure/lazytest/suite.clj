@@ -6,7 +6,7 @@
   test sequence (see test-seq)."
   [f]
   {:pre [(fn? f)]}
-  (vary-meta f assoc ::suite true))
+  (vary-meta f #(conj {::suite true :type :lazytest/suite} %)))
 
 (defn suite?
   "True if x is a test suite."
@@ -22,7 +22,7 @@
   for the test suite, such as :ns-name and :doc."
   [s]
   {:pre [(sequential? s)]}
-  (vary-meta s assoc ::test-seq true))
+  (vary-meta s #(conj {::test-seq true :type :lazytest/test-seq} %)))
 
 (defn test-seq?
   "True if s is a test sequence."

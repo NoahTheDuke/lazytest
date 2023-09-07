@@ -72,10 +72,9 @@
   (let [[sym body] (get-arg symbol? body)
         [doc body] (get-arg string? body)
         [attr-map body] (get-arg map? body)
-        attr-map (when attr-map
-                   (if-let [focus (:focus (meta sym))]
-                     (assoc attr-map :focus focus)
-                     attr-map))
+        focus (:focus (meta test-name))
+        attr-map (cond-> attr-map
+                   focus (assoc :focus focus))
         body (cond-> []
                sym (conj sym)
                doc (conj doc)

@@ -12,4 +12,10 @@
               (expect (= 1 2))
               (throw (ex-info "never reached" {}))))
       (catch ExpectationFailed e
-        (= '(= 1 2) (:form (ex-data e)))))))
+        (= '(= 1 2) (:form (ex-data e))))))
+  (let [state (atom 0)]
+    (do-it "arbitrary code"
+     (expect (= 4 (+ 2 2)))
+     (swap! state inc)
+     (it "can even be used in later tests"
+      (= 1 @state)))))

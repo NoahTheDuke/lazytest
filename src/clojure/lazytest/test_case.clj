@@ -12,7 +12,7 @@
   as :ns-name and :doc."
   [f]
   {:pre [(fn? f)]}
-  (vary-meta f assoc ::test-case true))
+  (vary-meta f assoc ::test-case true :type :lazytest/test-case))
 
 (defn test-case?
   "True if x is a test case."

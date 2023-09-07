@@ -5,3 +5,4 @@ target
 .lsp/.cache
 .rebel_readline_history
 .nrepl-port
+.obsidian

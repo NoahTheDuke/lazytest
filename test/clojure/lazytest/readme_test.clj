@@ -28,11 +28,3 @@
       (< root 2))
     (it "is more than one"
       (> root 1))))
-
-(describe do-it-test "do-it handles side-effects:"
-  (let [state (atom 0)]
-    (do-it "arbitrary code"
-      (expect (= 4 (+ 2 2)))
-      (swap! state inc)
-      (it "can even be used in later tests"
-        (= 1 @state)))))

@@ -15,10 +15,9 @@
 
 (def s1
   (suite
-    (fn []
-      (vary-meta
-        (test-seq (common-test-cases 1))
-        assoc :doc "One"))))
+   (vary-meta
+    (test-seq (common-test-cases 1))
+    assoc :doc "One")))
 
 (def s2
   (testing "Two"

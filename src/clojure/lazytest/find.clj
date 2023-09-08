@@ -31,20 +31,17 @@
     (when-not (= (the-ns 'clojure.core) n)
       (or (:test-suite (meta n))
           (when-let [s (test-seq-for-ns n)]
-            (suite
-             (vary-meta
-              (fn [] (test-seq s))
-              assoc :type :lazytest/ns-suite :ns-name (ns-name n))))))))
+            (vary-meta
+             (suite (test-seq s))
+             assoc :type :lazytest/ns-suite :ns-name (ns-name n)))))))
 
 (defn- suite-for-namespaces [names]
-  (suite (with-meta (fn [] (test-seq (keep find-ns-suite names)))
-           {:type :lazytest/run
-            :doc "Namespaces"})))
+  (vary-meta (suite (test-seq (keep find-ns-suite names)))
+             assoc :type :lazytest/run :doc "Namespaces"))
 
 (defn- all-ns-suite []
-  (suite (with-meta (fn [] (test-seq (keep find-ns-suite (all-ns))))
-           {:type :lazytest/run
-            :doc "All Namespaces"})))
+  (vary-meta (suite (test-seq (keep find-ns-suite (all-ns))))
+             assoc :type :lazytest/run :doc "All Namespaces"))
 
 (defn find-suite
   "Returns test suite containing suites for the given namespaces.

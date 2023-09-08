@@ -2,7 +2,7 @@
   (:require
     [lazytest.find :refer [find-suite]]
     [lazytest.focus :refer [filter-tree focused?]]
-    [lazytest.suite :refer [expand-tree suite-result test-seq? test-seq suite]]
+    [lazytest.suite :refer [expand-tree suite-result test-seq? test-seq]]
     [lazytest.test-case :refer [test-case? try-test-case]]))
 
 (defn dispatch [m] (-> m meta :type))
@@ -46,7 +46,7 @@
 (defn run-test-var
   [v]
   {:pre [(var? v)]}
-  (let [tree (-> (suite @v)
+  (let [tree (-> (vary-meta @v assoc :lazytest.suite/suite true)
                  (expand-tree)
                  (test-seq))]
     (run-test-seq tree)))

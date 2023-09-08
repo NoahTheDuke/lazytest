@@ -2,7 +2,7 @@
   (:require
    [clojure.stacktrace :refer [print-cause-trace]]
    [lazytest.find :refer [find-suite]]
-   [lazytest.suite :refer [expand-tree suite suite-result suite? test-seq]]
+   [lazytest.suite :refer [expand-tree suite-result suite? test-seq]]
    [lazytest.test-case :refer [test-case? try-test-case]])
   (:import
    (lazytest ExpectationFailed)))
@@ -50,7 +50,7 @@
 (defn run-test-var
   [v]
   {:pre [(var? v)]}
-  (let [tree (-> (suite @v)
+  (let [tree (-> (vary-meta @v assoc :lazytest.suite/suite true)
                  (expand-tree)
                  (test-seq))]
-    (run-suite tree)))
+    (run-suite (fn [] tree))))

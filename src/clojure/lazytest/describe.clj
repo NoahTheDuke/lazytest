@@ -50,11 +50,10 @@
         [attr-map children] (get-arg map? body)
         docstring (strcat (when sym (resolve sym)) doc)
         metadata (merged-metadata children &form docstring attr-map)]
-    `(suite (fn []
-              (test-seq
-                (with-meta
-                  (flatten (list ~@children))
-                  ~metadata))))))
+    `(suite (test-seq
+             (with-meta
+               (flatten (list ~@children))
+               ~metadata)))))
 
 (defmacro describe
   "Defines a suite of tests assigned to a Var with the given name.

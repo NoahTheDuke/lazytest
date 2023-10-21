@@ -12,7 +12,7 @@
   (b/delete {:path "target"})
   opts)
 
-(defn compile-java [opts]
+(defn javac [opts]
   (clean opts)
   (println "Compilng src/java")
   (b/javac {:src-dirs ["src/java"]

@@ -30,7 +30,7 @@
   [throwable]
   (lazy-seq
     (when throwable
-      (cons throwable (cause-seq (.getCause throwable))))))
+      (cons throwable (cause-seq (ex-cause throwable))))))
 
 (defn causes?
   "Calls f with no arguments; returns true if it throws an exception
@@ -54,7 +54,7 @@
   (try (f) false
     (catch Throwable t
       (if-let [cause (some #(when (instance? c %) %) (cause-seq t))]
-        (expect (re-find re (.getMessage cause)))
+        (expect (re-find re (ex-message cause)))
         (throw t)))))
 
 (defn ok?

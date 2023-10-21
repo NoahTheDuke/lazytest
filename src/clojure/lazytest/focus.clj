@@ -20,5 +20,5 @@
   [s]
   (if (and (sequential? s) (not (focused? s)))
     (filter-focused
-      (with-meta (map filter-tree s) (meta s)))
+      (with-meta (mapv filter-tree s) (meta s)))
     s))

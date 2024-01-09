@@ -1,7 +1,6 @@
 (ns lazytest.describe
   (:require
     [clojure.string :as str]
-    [lazytest.expect :refer [expect]]
     [lazytest.suite :refer [suite test-seq]]
     [lazytest.test-case :refer [test-case]]))
 
@@ -52,7 +51,7 @@
         metadata (merged-metadata children &form docstring attr-map)]
     `(suite (test-seq
              (with-meta
-               (flatten (list ~@children))
+               (flatten [~@children])
                ~metadata)))))
 
 (defmacro describe
@@ -82,42 +81,16 @@
     `(def ~test-name (testing ~@body))))
 
 (defmacro given
-  "Like 'let' but returns the expressions of body in a list.
+  "Like 'let' but returns the expressions of body in a vector.
   Suitable for nesting inside 'describe' or 'testing'."
   [bindings & body]
   {:pre [(vector? bindings)
          (even? (count bindings))]}
   `(let ~bindings
-     (list ~@body)))
+     [~@body]))
 
 (defmacro it
-  "Defines a single test case.
-
-  body is: doc? attr-map? expr
-
-  doc (optional) is a documentation string
-
-  attr-map (optional) is a metadata map
-
-  expr is a single expression, which must return logical true to
-  indicate the test case passes or logical false to indicate failure."
-  {:arglists '([expr]
-               [doc? attr-map? expr])}
-  [& body]
-  (let [[doc body] (get-arg string? body)
-        [attr-map body] (get-arg map? body)
-        assertion (first body)
-        metadata (merged-metadata body &form doc attr-map)]
-    (when (and (seq? assertion) (symbol? (first assertion)))
-      (assert (not= "expect" (name (first assertion)))))
-    `(test-case (with-meta
-                  (fn [] (expect ~doc ~assertion))
-                  ~metadata))))
-
-(defmacro do-it
   "Defines a single test case that may execute arbitrary code.
-
-  body is: doc? attr-map? body*
 
   doc (optional) is a documentation string
 

@@ -29,8 +29,4 @@
   ;; Pass in one of the public functions: javac, uberjar, etc
   :build {:deps {io.github.clojure/tools.build {:git/tag "v0.9.4"
                                                 :git/sha "76b78fe"}}
-          :ns-default build}
-
-  ;; Run examples
-  :examples {:extra-paths ["."]
-             :main-opts ["-m" "lazytest.main"]}}}
+          :ns-default build}}}

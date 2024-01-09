@@ -33,8 +33,7 @@
   thrown is the exception (Throwable) thrown by a failing test case."
   ([type' source] (test-case-result type' source nil))
   ([type' source thrown]
-   {:pre [(#{:pass :fail :error} type')
-          (test-case? source)
+   {:pre [(test-case? source)
           (or (nil? thrown) (instance? Throwable thrown))]}
    (let [{:keys [file line]} (extract-file-and-line source thrown)]
      (with-meta {:type type' :source source :thrown thrown

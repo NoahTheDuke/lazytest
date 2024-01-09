@@ -1,6 +1,6 @@
-(ns examples.describe
+(ns examples.base
   (:require
-    [lazytest.describe :refer [describe it testing do-it given]]))
+    [lazytest.describe :refer [describe it testing given]]))
 
 (describe +-example "given any 2 integers"
   (it "computes the sum of 3 and 4"
@@ -19,8 +19,8 @@
     (it "computes sums of large numbers"
         (= 7000000.0 (+ 3000000.0 4000000.0)))))
 
-(describe do-it-example "The do-it macro"
-  (do-it "allows arbitrary code"
+(describe it-example "The it macro"
+  (it "allows arbitrary code"
     (println "Hello, do-it!")
     (println "This test will succeed because it doesn't throw.")))
 

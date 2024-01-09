@@ -1,7 +1,6 @@
 (ns lazytest.readme-test
   (:require
-    [lazytest.describe :refer [describe it given do-it testing]]
-    [lazytest.expect :refer [expect]]))
+    [lazytest.describe :refer [describe it given testing]]))
 
 (describe +-test "with integers"
   (it "computes the sum of 1 and 2"

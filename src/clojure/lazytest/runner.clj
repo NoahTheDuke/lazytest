@@ -3,7 +3,8 @@
     [lazytest.find :refer [find-suite]]
     [lazytest.focus :refer [filter-tree focused?]]
     [lazytest.suite :refer [expand-tree suite-result test-seq? test-seq]]
-    [lazytest.test-case :refer [test-case? try-test-case]]))
+    [lazytest.test-case :refer [test-case? try-test-case]]
+    [malli.experimental :as mx]))
 
 (defn dispatch [m] (-> m meta :type))
 (defmulti run-hook #'dispatch)
@@ -43,9 +44,8 @@
   []
   (run-tests))
 
-(defn run-test-var
-  [v]
-  {:pre [(var? v)]}
+(mx/defn run-test-var
+  [v :- [:fn var?]]
   (let [tree (-> (vary-meta @v assoc :lazytest.suite/suite true)
                  (expand-tree)
                  (test-seq))]

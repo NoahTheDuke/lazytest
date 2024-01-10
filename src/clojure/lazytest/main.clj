@@ -5,6 +5,7 @@
    [clojure.java.io :as io]
    [clojure.tools.namespace.file :refer [read-file-ns-decl]]
    [lazytest.cli :refer [validate-opts]]
+   [lazytest.malli]
    [lazytest.report.console :as console]
    [lazytest.report.nested :as nested]
    [lazytest.report.summary :as summary]

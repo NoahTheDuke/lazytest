@@ -1,8 +1,10 @@
 (ns lazytest.test-case
+  (:require
+    [malli.experimental :as mx])
   (:import
     (lazytest ExpectationFailed)))
 
-(defn test-case
+(mx/defn test-case
   "Sets metadata on function f identifying it as a test case. A test
   case function may execute arbitrary code and may have side effects.
   It should throw an exception to indicate failure. Returning without
@@ -10,8 +12,7 @@
 
   Additional identifying metadata may be placed on the function, such
   as :ns-name and :doc."
-  [f]
-  {:pre [(fn? f)]}
+  [f :- fn?]
   (vary-meta f assoc ::test-case true :type :lazytest/test-case))
 
 (defn test-case?
@@ -23,7 +24,7 @@
   (let [m (or (ex-data thrown) (meta source))]
     (select-keys m [:line :file])))
 
-(defn test-case-result
+(mx/defn test-case-result
   "Creates a test case result map with keys :pass?, :source, and :thrown.
 
   pass? is true if the test case passed successfully, false otherwise.
@@ -32,9 +33,9 @@
 
   thrown is the exception (Throwable) thrown by a failing test case."
   ([type' source] (test-case-result type' source nil))
-  ([type' source thrown]
-   {:pre [(test-case? source)
-          (or (nil? thrown) (instance? Throwable thrown))]}
+  ([type'
+    source :- [:fn test-case?]
+    thrown :- [:maybe :lt/throwable]]
    (let [{:keys [file line]} (extract-file-and-line source thrown)]
      (with-meta {:type type' :source source :thrown thrown
                  :file file :line line}
@@ -45,16 +46,14 @@
   [x]
   (and (map? x) (isa? (type x) ::test-case-result)))
 
-(defn try-test-case
+(mx/defn try-test-case
   "Executes a test case function. Catches all Throwables. Returns a
    map with the following key-value pairs:
 
      :source - the input function
      :pass?  - true if the function ran without throwing
      :thrown - the Throwable instance if thrown"
-  [f]
-  {:pre [(test-case? f)]
-   :post [(test-case-result? %)]}
+  [f :- [:fn test-case?]]
   (try (f)
     (test-case-result :pass f)
     (catch ExpectationFailed ex

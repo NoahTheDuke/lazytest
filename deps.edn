@@ -1,7 +1,8 @@
 {:paths ["src/clojure" "resources" "target/classes"]
  :deps {org.clojure/clojure {:mvn/version "1.11.1"}
         org.clojure/tools.cli {:mvn/version "1.0.219"}
-        org.clojure/tools.namespace {:mvn/version "1.4.4"}}
+        org.clojure/tools.namespace {:mvn/version "1.4.4"}
+        metosin/malli {:mvn/version "0.13.0"}}
  :deps/prep-lib {:ensure "target/classes"
                  :alias :build
                  :fn compile-java}
@@ -20,10 +21,8 @@
                       "-f" "rebel-readline.main/-main"]}
 
   ;; Run the tests with `-M:test:runner`.
-  ;; Run and watch the test suite with `-M:test:watch`.
   :test {:extra-paths ["test/clojure"]}
   :runner {:main-opts ["-m" "lazytest.main"]}
-  :watch {:main-opts ["-m" "lazytest.watch"]}
 
   ;; Run the -T:build code.
   ;; Pass in one of the public functions: javac, uberjar, etc

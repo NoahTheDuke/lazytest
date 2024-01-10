@@ -1,14 +1,15 @@
-(ns lazytest.suite)
+(ns lazytest.suite 
+  (:require
+    [malli.experimental :as mx]))
 
-(defn test-seq
+(mx/defn test-seq
   "Adds metadata to sequence s identifying it as a test sequence.
 
   A test sequence is a sequence of test cases and/or test suites.
 
   Metadata on the test sequence provides identifying information
   for the test suite, such as :ns-name and :doc."
-  [s]
-  {:pre [(sequential? s)]}
+  [s :- sequential?]
   (vary-meta s assoc ::test-seq true :type :lazytest/test-seq))
 
 (defn test-seq?
@@ -27,15 +28,14 @@
   [x]
   (and (fn? x) (::suite (meta x))))
 
-(defn suite-result
+(mx/defn suite-result
   "Creates a suite result map with keys :source and :children.
 
   source is the test sequence, with identifying metadata.
 
   children is a sequence of test results and/or suite results."
-  [source children]
-  {:pre [(test-seq? source)
-         (sequential? children)]}
+  [source :- [:fn test-seq?]
+   children :- sequential?]
   (with-meta {:source source :children children}
              {:type ::suite-result}))
 
@@ -44,12 +44,10 @@
   [x]
   (isa? (type x) ::suite-result))
 
-(defn expand-suite
+(mx/defn expand-suite :- [:fn test-seq?]
   "Expands a test suite, returning a test sequence. Copies metadata
   from the suite function to the resulting test sequence."
-  [ste]
-  {:pre [(suite? ste)]
-   :post [(test-seq? %)]}
+  [ste :- [:fn suite?]]
   (vary-meta (ste) merge (dissoc (meta ste) ::suite)))
 
 (defn expand-tree

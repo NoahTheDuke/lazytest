@@ -84,8 +84,6 @@
   "Like 'let' but returns the expressions of body in a vector.
   Suitable for nesting inside 'describe' or 'testing'."
   [bindings & body]
-  {:pre [(vector? bindings)
-         (even? (count bindings))]}
   `(let ~bindings
      [~@body]))
 

@@ -1,4 +1,5 @@
 target
+classes
 /TAGS
 .cpcache
 .clj-kondo/.cache
@@ -6,3 +7,4 @@ target
 .rebel_readline_history
 .nrepl-port
 .obsidian
+.clj-kondo/metosin/malli-types-clj/

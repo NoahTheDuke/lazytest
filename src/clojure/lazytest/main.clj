@@ -2,16 +2,22 @@
   "Command-line test launcher."
   (:gen-class)
   (:require
-   [clojure.java.io :as io]
-   [clojure.tools.namespace.file :refer [read-file-ns-decl]]
-   [lazytest.cli :refer [validate-opts]]
-   [lazytest.malli]
-   [lazytest.report.console :as console]
-   [lazytest.report.nested :as nested]
-   [lazytest.report.summary :as summary]
-   [lazytest.results :refer [summarize summary-exit-value]]
-   [lazytest.runner :refer [run-tests]]
-   [lazytest.tracker :refer [find-sources]]))
+    [clojure.java.io :as io]
+    [clojure.tools.namespace.file :refer [read-file-ns-decl]]
+    [clojure.tools.namespace.find :refer [find-sources-in-dir]]
+    [lazytest.cli :refer [validate-opts]]
+    [lazytest.malli]
+    [lazytest.report.console :as console]
+    [lazytest.report.nested :as nested]
+    [lazytest.report.summary :as summary]
+    [lazytest.results :refer [summarize summary-exit-value]]
+    [lazytest.runner :refer [run-tests]]
+    [malli.core]
+    [malli.experimental :as mx]))
+
+(mx/defn find-sources
+  [dirs :- [:sequential :lt/file]]
+  (mapcat find-sources-in-dir dirs))
 
 (defn find-ns-decls [dirs]
   (mapv second (keep read-file-ns-decl (find-sources dirs))))

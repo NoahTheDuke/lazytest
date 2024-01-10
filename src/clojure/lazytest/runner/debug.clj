@@ -1,17 +1,18 @@
 (ns lazytest.runner.debug
   (:require
-   [clojure.stacktrace :refer [print-cause-trace]]
-   [lazytest.find :refer [find-suite]]
-   [lazytest.suite :refer [expand-tree suite-result suite? test-seq]]
-   [lazytest.test-case :refer [test-case? try-test-case]])
+    [clojure.stacktrace :refer [print-cause-trace]]
+    [lazytest.find :refer [find-suite]]
+    [lazytest.suite :refer [expand-tree suite-result suite? test-seq]]
+    [lazytest.test-case :refer [test-case? try-test-case]]
+    [malli.experimental :as mx])
   (:import
-   (lazytest ExpectationFailed)))
+    (lazytest ExpectationFailed)))
 
 (defn identifier [x]
   (let [m (meta x)]
     (str (or (:doc m)
-             (:ns-name m)
-             (System/identityHashCode x))
+           (:ns-name m)
+           (System/identityHashCode x))
       " (" (:file m) ":" (:line m) ")")))
 
 (defn run-test-case [tc]
@@ -47,10 +48,9 @@
   []
   (run-tests))
 
-(defn run-test-var
-  [v]
-  {:pre [(var? v)]}
+(mx/defn run-test-var
+  [v :- :lt/var]
   (let [tree (-> (vary-meta @v assoc :lazytest.suite/suite true)
-                 (expand-tree)
-                 (test-seq))]
+               (expand-tree)
+               (test-seq))]
     (run-suite (fn [] tree))))

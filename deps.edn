@@ -5,9 +5,9 @@
         metosin/malli {:mvn/version "0.13.0"}}
  :deps/prep-lib {:ensure "target/classes"
                  :alias :build
-                 :fn compile-java}
+                 :fn javac}
  :aliases
- {;; Development tools.
+ {;; Development tools
   :dev {:extra-paths ["dev"]
         :extra-deps {org.clojure/spec.alpha {:mvn/version "0.3.218"}
                      criterium/criterium {:mvn/version "0.4.6"}

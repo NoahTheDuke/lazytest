@@ -8,9 +8,18 @@
     ;; Built-in schemas
     (m/default-schemas)
     ;; Custom schemas
-    {:lt/throwable [:fn
+    {:lt/file [:fn
+               {:error/fn
+                (fn [{:keys [value]} _x]
+                  (str "Expected a java.io.File, given " (type value)))}
+               (fn [v] (instance? java.io.File v))]
+     :lt/throwable [:fn
                     {:error/fn
                      (fn [{:keys [value]} _x]
-                       (prn _x)
                        (str "Expected a throwable, given " (type value)))}
-                    (fn [v] (instance? Throwable v))]}))
+                    (fn [v] (instance? Throwable v))]
+     :lt/var [:fn
+              {:error/fn
+               (fn [{:keys [value]} _x]
+                 (str "Expected a Var, given " (type value)))}
+              var?]}))

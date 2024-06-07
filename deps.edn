@@ -1,15 +1,15 @@
 {:paths ["src/clojure" "resources" "target/classes"]
  :deps {org.clojure/clojure {:mvn/version "1.11.1"}
-        org.clojure/tools.cli {:mvn/version "1.0.219"}
-        org.clojure/tools.namespace {:mvn/version "1.4.4"}
-        metosin/malli {:mvn/version "0.13.0"}}
+        org.clojure/tools.cli {:mvn/version "1.1.230"}
+        org.clojure/tools.namespace {:mvn/version "1.5.0"}
+        metosin/malli {:mvn/version "0.16.1"}}
  :deps/prep-lib {:ensure "target/classes"
                  :alias :build
                  :fn javac}
  :aliases
  {;; Development tools
   :dev {:extra-paths ["dev"]
-        :extra-deps {org.clojure/spec.alpha {:mvn/version "0.3.218"}
+        :extra-deps {org.clojure/spec.alpha {:mvn/version "0.5.238"}
                      criterium/criterium {:mvn/version "0.4.6"}
                      com.clojure-goes-fast/clj-java-decompiler {:mvn/version "0.3.4"}}}
 
@@ -26,6 +26,5 @@
 
   ;; Run the -T:build code.
   ;; Pass in one of the public functions: javac, uberjar, etc
-  :build {:deps {io.github.clojure/tools.build {:git/tag "v0.9.4"
-                                                :git/sha "76b78fe"}}
+  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.3"}}
           :ns-default build}}}

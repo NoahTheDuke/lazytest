@@ -1,10 +1,10 @@
 (ns lazytest.runner
   (:require
-    [lazytest.find :refer [find-suite]]
-    [lazytest.focus :refer [filter-tree focused?]]
-    [lazytest.suite :refer [expand-tree suite-result test-seq? test-seq]]
-    [lazytest.test-case :refer [test-case? try-test-case]]
-    [malli.experimental :as mx]))
+   [lazytest.find :refer [find-suite]]
+   [lazytest.focus :refer [filter-tree focused?]]
+   [lazytest.suite :refer [expand-tree suite-result test-seq test-seq?]]
+   [lazytest.test-case :refer [test-case? try-test-case]]
+   [malli.experimental :as mx]))
 
 (defn dispatch [m] (-> m meta :type))
 (defmulti run-hook #'dispatch)
@@ -24,8 +24,7 @@
                 (cond
                   (test-seq? x) (run-test-seq x)
                   (test-case? x) (try-test-case x)
-                  :else (throw (IllegalArgumentException.
-                                 "Non-test given to run-suite."))))
+                  :else (throw (ex-info "Non-test given to run-suite." {:test x}))))
               s)]
     (suite-result s results)))
 

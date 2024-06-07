@@ -1,7 +1,8 @@
 (ns lazytest.expect-asserts
   (:require
     [lazytest.expect :refer [expect]]
-    [lazytest.expect.thrown :refer [throws? throws-with-msg? causes?]]) 
+    [lazytest.expect.thrown :refer [throws? throws-with-msg? causes?]]
+    [lazytest.describe :refer [describe given it]]) 
   (:import
     (lazytest ExpectationFailed)))
 
@@ -24,20 +25,22 @@
                  (catch IllegalArgumentException e
                    (throw (RuntimeException. "wrapped stuff" e)))))))
 
-(let [e1 (try (expect (= 1 2))
-           false
-           (catch ExpectationFailed err err))]
-  (assert e1)
-  (let [reason (ex-data e1)]
-    (assert (= '(= 1 2) (:form reason)))
-    (assert (= (list = 1 2) (:evaluated reason)))
-    (assert (false? (:result reason)))))
-
-(let [e3 (try (expect (instance? java.lang.String 42))
-           false
-           (catch ExpectationFailed err err))]
-  (assert e3)
-  (let [reason (ex-data e3)]
-    (assert (= '(instance? java.lang.String 42) (:form reason)))
-    (assert (= (list instance? java.lang.String 42) (:evaluated reason)))
-    (assert (false? (:result reason)))))
+(describe expect-data-test
+  (given [e1 (try (expect (= 1 2))
+               false
+               (catch ExpectationFailed err err))
+          reason (ex-data e1)]
+    (it "is correctly formed"
+      (expect e1)
+      (expect (= '(= 1 2) (:form reason)))
+      (expect (= (list = 1 2) (:evaluated reason)))
+      (expect (false? (:result reason)))))
+  (given [e3 (try (expect (instance? java.lang.String 42))
+               false
+               (catch ExpectationFailed err err))
+          reason (ex-data e3)]
+    (it "is correctly formed"
+      (expect e3)
+      (expect (= '(instance? java.lang.String 42) (:form reason)))
+      (expect (= (list instance? java.lang.String 42) (:evaluated reason)))
+      (expect (false? (:result reason))))))

@@ -1,3 +1,5 @@
+This file documents the original Alesandra Sierra development, which ended in 2013. It is kept for posterity.
+
 v2.0.0-SNAPSHOT
 
  * Remove contexts and `given`

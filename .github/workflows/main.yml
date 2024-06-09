@@ -42,5 +42,5 @@ jobs:
 
       - name: tests
         run: |
-          clojure -T:build javac
+          clojure -T:prep javac
           clojure -M:dev:test:runner

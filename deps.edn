@@ -4,7 +4,7 @@
         org.clojure/tools.namespace {:mvn/version "1.5.0"}
         metosin/malli {:mvn/version "0.16.1"}}
  :deps/prep-lib {:ensure "target/classes"
-                 :alias :build
+                 :alias :prep
                  :fn javac}
  :aliases
  {;; Development tools
@@ -24,7 +24,17 @@
   :test {:extra-paths ["test/clojure"]}
   :runner {:main-opts ["-m" "lazytest.main"]}
 
-  ;; Run the -T:build code.
-  ;; Pass in one of the public functions: javac, uberjar, etc
-  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.3"}}
-          :ns-default build}}}
+  ;; Build a jar or uberjar with `-M:build jar/uberjar`
+  :build {:deps {io.github.noahtheduke/clein {:mvn/version "0.1.2"}}
+          :main-opts ["-m" "noahtheduke.clein"]}
+  :clein/build
+  {:lib io.github.noahtheduke/lazytest
+   :url "https://github.com/noahtheduke/lazytest"
+   :version "./resources/LAZYTEST_VERSION"
+   :src-paths ["src/clojure" "resources"]
+   :license {:name "EPL-1.0"
+             :url "https://www.eclipse.org/legal/epl-v10.html"}}
+
+  ;; Compile the ExpectationFailed class with `-T:prep javac`
+  :prep {:deps {io.github.clojure/tools.build {:mvn/version "0.10.3"}}
+         :ns-default prep}}}

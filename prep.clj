@@ -1,11 +1,8 @@
-(ns build
-  (:refer-clojure :exclude [test])
+(ns prep
   (:require [clojure.tools.build.api :as b]))
 
-(def lib 'net.clojars.noahtheduke/lazytest)
-(def version "0.1.0-SNAPSHOT")
 (def class-dir "target/classes")
-(def basis (b/create-basis {:project "deps.edn"}))
+(def basis (delay (b/create-basis {:project "deps.edn"})))
 
 (defn clean [opts]
   (println "Cleaning target")
@@ -16,7 +13,7 @@
   (clean opts)
   (println "Compilng src/java")
   (b/javac {:src-dirs ["src/java"]
-            :class-dir class-dir
+            :class-dir @class-dir
             :basis basis
             :javac-opts ["--release" "11"]})
   (println "Compilation complete")

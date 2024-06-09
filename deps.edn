@@ -31,7 +31,6 @@
   {:lib io.github.noahtheduke/lazytest
    :url "https://github.com/noahtheduke/lazytest"
    :version "./resources/LAZYTEST_VERSION"
-   :src-paths ["src/clojure" "resources"]
    :license {:name "EPL-1.0"
              :url "https://www.eclipse.org/legal/epl-v10.html"}}
 

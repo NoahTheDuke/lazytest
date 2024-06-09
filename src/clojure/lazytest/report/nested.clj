@@ -45,9 +45,10 @@
 
 (defmethod nested ::tc/test-case-result
   [result]
-  (indent (:depth result))
-  (println (colorize (str (identifier result))
-                     (if (= :pass (:type result)) :green :red))))
+  (when (identifier result)
+    (indent (:depth result))
+    (println (colorize (str (identifier result))
+                       (if (= :pass (:type result)) :green :red)))))
 
 ;;; Entry point
 

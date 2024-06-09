@@ -12,8 +12,21 @@
   Sodomka, Robert Lachlan, and Stuart Halloway."
   (:require
     [clojure.set :as set]
-    [lazytest.describe :refer [given testing it describe]]
-    [lazytest.expect.thrown :refer [throws-with-msg?]]))
+    [lazytest.core :refer [defdescribe describe given throws-with-msg? expect-it]]))
+
+(defdescribe cycles-test "Cycles are forbidden: a tag"
+  (given [family (reduce #(apply derive (cons %1 %2)) (make-hierarchy)
+                   [[::parent-1 ::ancestor-1]
+                    [::parent-1 ::ancestor-2]
+                    [::parent-2 ::ancestor-2]
+                    [::child ::parent-2]
+                    [::child ::parent-1]])]
+    (expect-it "cannot be its own parent"
+      (throws-with-msg? Throwable #"\(not= tag parent\)"
+        #(derive family ::child ::child)))
+    (expect-it "cannot be its own ancestor"
+      (throws-with-msg? Throwable #"Cyclic derivation: :multimethods/child has :multimethods/ancestor-1 as ancestor"
+        #(derive family ::ancestor-1 ::child)))))
 
 (defn hierarchy-tags
   "Return all tags in a derivation hierarchy"
@@ -41,80 +54,66 @@
     (or (apply descendants args) #{})))
 
 (defn is-valid-hierarchy [h]
-  (testing "it is a valid hierarchy"
+  (describe "it is a valid hierarchy"
     (given [tags (hierarchy-tags h)]
-      (testing "ancestors are the transitive closure of parents"
+      (describe "ancestors are the transitive closure of parents"
         (for [tag tags]
-          (it (= (transitive-closure tag #(parents h %))
-                (or (ancestors h tag) #{})))))
-      (testing "ancestors are transitive"
+          (expect-it (= (transitive-closure tag #(parents h %))
+                        (or (ancestors h tag) #{})))))
+      (describe "ancestors are transitive"
         (for [tag tags]
-          (it (= (transitive-closure tag #(ancestors h %))
-                (or (ancestors h tag) #{})))))
-      (testing "tag descendants are transitive"
+          (expect-it (= (transitive-closure tag #(ancestors h %))
+                        (or (ancestors h tag) #{})))))
+      (describe "tag descendants are transitive"
         (for [tag tags]
-          (it (= (transitive-closure tag #(tag-descendants h %))
-                (or (tag-descendants h tag) #{})))))
-      (testing "a tag isa? all of its parents"
+          (expect-it (= (transitive-closure tag #(tag-descendants h %))
+                        (or (tag-descendants h tag) #{})))))
+      (describe "a tag isa? all of its parents"
         (for [tag tags
               :let [parents (parents h tag)]
               parent parents]
-          (it (isa? h tag parent))))
-      (testing "a tag isa? all of its ancestors"
+          (expect-it (isa? h tag parent))))
+      (describe "a tag isa? all of its ancestors"
         (for [tag tags
               :let [ancestors (ancestors h tag)]
               ancestor ancestors]
-          (it (isa? h tag ancestor))))
-      (testing "all my descendants have me as an ancestor"
+          (expect-it (isa? h tag ancestor))))
+      (describe "all my descendants have me as an ancestor"
         (for [tag tags
               :let [descendants (descendants h tag)]
               descendant descendants]
-          (it (isa? h descendant tag))))
-      (testing "there are no cycles in parents"
+          (expect-it (isa? h descendant tag))))
+      (describe "there are no cycles in parents"
         (for [tag tags]
-          (it (not (contains? (transitive-closure tag #(parents h %)) tag)))))
-      (testing "there are no cycles in descendants"
+          (expect-it (not (contains? (transitive-closure tag #(parents h %)) tag)))))
+      (describe "there are no cycles in descendants"
         (for [tag tags]
-          (it (not (contains? (descendants h tag) tag))))))))
+          (expect-it (not (contains? (descendants h tag) tag))))))))
 
-(describe cycles-test "Cycles are forbidden: a tag"
-  (given [family (reduce #(apply derive (cons %1 %2)) (make-hierarchy)
-                   [[::parent-1 ::ancestor-1]
-                    [::parent-1 ::ancestor-2]
-                    [::parent-2 ::ancestor-2]
-                    [::child ::parent-2]
-                    [::child ::parent-1]])]
-    (it "cannot be its own parent"
-      (throws-with-msg? Throwable #"\(not= tag parent\)"
-        #(derive family ::child ::child)))
-    (it "cannot be its own ancestor"
-      (throws-with-msg? Throwable #"Cyclic derivation: :examples.multimethods/child has :examples.multimethods/ancestor-1 as ancestor"
-        #(derive family ::ancestor-1 ::child)))))
-
-(describe diamong-inheritance-test "Using diamond inheritance"
+(defdescribe diamong-inheritance-test "Using diamond inheritance"
   (given [diamond (reduce #(apply derive (cons %1 %2)) (make-hierarchy)
                     [[::mammal ::animal]
                      [::bird ::animal]
                      [::griffin ::mammal]
                      [::griffin ::bird]])]
     (is-valid-hierarchy diamond)
-    (it "a griffin is a mammal, indirectly through mammal and bird"
+    (expect-it "a griffin is a mammal, indirectly through mammal and bird"
       (isa? diamond ::griffin ::animal))
-    (it "a griffin is a bird"
+    (expect-it "a griffin is a bird"
       (isa? diamond ::griffin ::bird))
-    (testing "after underive"
+    (describe "after underive"
       (given [bird-no-more (underive diamond ::griffin ::bird)]
         (is-valid-hierarchy bird-no-more)
-        (it "griffin is no longer a bird"
+        (expect-it "griffin is no longer a bird"
           (not (isa? bird-no-more ::griffin ::bird)))
-        (it "griffin is still an animal, via mammal"
+        (expect-it "griffin is still an animal, via mammal"
           (isa? bird-no-more ::griffin ::animal))))))
 
-(describe derivation-test "Derivation bridges to Java inheritance:"
+(defdescribe derivation-test "Derivation bridges to Java inheritance:"
   (given [h (derive (make-hierarchy) java.util.Map ::map)]
-    (it "a Java class can be isa? a tag"
+    (expect-it "a Java class can be isa? a tag"
       (isa? h java.util.Map ::map))
-    (it "if a Java class isa? a tag, so are its subclasses..."
+    (expect-it "if a Java class isa? a tag, so are its subclasses..."
       (isa? h java.util.HashMap ::map))
-    (it "...but not its superclasses!"
+    (expect-it "...but not its superclasses!"
       (not (isa? h java.util.Collection ::map)))))

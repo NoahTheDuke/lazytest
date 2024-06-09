@@ -10,7 +10,7 @@
   metadata added to the sequence; else return s unchanged."
   [s]
   (if-let [fs (seq (filter focused? s))]
-    (vary-meta fs assoc :focus true)
+    (with-meta fs (assoc (meta s) :focus true))
     s))
 
 (defn filter-tree

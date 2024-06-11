@@ -1,6 +1,6 @@
 (ns lazytest.find
   (:require
-    [lazytest.suite :refer [suite suite? test-seq]]
+    [lazytest.suite :refer [suite suite? test-seq test-seq?]]
     [lazytest.test-case :refer [test-case?]]
     [malli.experimental :as mx]))
 
@@ -10,7 +10,7 @@
   [this-var :- :lt/var]
   (when (bound? this-var)
     (let [value (var-get this-var)]
-      (when (or (suite? value) (test-case? value))
+      (when (or (suite? value) (test-seq? value) (test-case? value))
         (vary-meta value assoc :type :lazytest/test-var :var this-var)))))
 
 (defn- test-seq-for-ns [this-ns]
@@ -32,21 +32,22 @@
   Always returns nil for the clojure.core namespace, to avoid special
   Vars such as *1, *2, *3"
   [n]
-  (let [n (the-ns n)]
-    (when-not (= (the-ns 'clojure.core) n)
-      (or (:test-suite (meta n))
+  (when-not (= (the-ns 'clojure.core) n)
+    (or (:test-suite (meta n))
         (when-let [s (test-seq-for-ns n)]
           (vary-meta
             (suite (test-seq s))
-            assoc :type :lazytest/ns-suite :ns-name (ns-name n)))))))
+            assoc :type :lazytest/ns-suite :ns-name (ns-name n))))))
 
 (defn- suite-for-namespaces [names]
-  (vary-meta (suite (test-seq (keep find-ns-suite names)))
-    assoc :type :lazytest/run :doc "Namespaces"))
+  (let [nses (mapv the-ns names)]
+    (vary-meta (suite (test-seq (keep find-ns-suite nses)))
+               assoc :type :lazytest/run :nses nses :doc "Namespaces")))
 
 (defn- all-ns-suite []
-  (vary-meta (suite (test-seq (keep find-ns-suite (all-ns))))
-    assoc :type :lazytest/run :doc "All Namespaces"))
+  (let [nses (all-ns)]
+    (vary-meta (suite (test-seq (keep find-ns-suite nses)))
+               assoc :type :lazytest/run :nses nses :doc "All Namespaces")))
 
 (defn find-suite
   "Returns test suite containing suites for the given namespaces.

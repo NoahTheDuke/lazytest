@@ -30,6 +30,6 @@
   [results]
   (when (focused? results)
     (println "=== FOCUSED TESTS ONLY ==="))
-  (console results)
-  (newline)
+  #_(console results)
+  #_(newline)
   results)

@@ -1,4 +1,4 @@
-(ns lazytest.results 
+(ns lazytest.results
   (:require
     [lazytest.suite :refer [suite-result?]]))
 

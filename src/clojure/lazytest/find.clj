@@ -11,10 +11,14 @@
   (when (bound? this-var)
     (let [value (var-get this-var)]
       (when (or (suite? value) (test-case? value))
-        (vary-meta value assoc :type :lazytest/test-var)))))
+        (vary-meta value assoc :type :lazytest/test-var :var this-var)))))
 
 (defn- test-seq-for-ns [this-ns]
-  (seq (keep find-var-test-value (vals (ns-interns this-ns)))))
+  (->> (ns-interns this-ns)
+       (vals)
+       (sort-by (comp (juxt :line :column) meta))
+       (keep find-var-test-value)
+       seq))
 
 (mx/defn find-ns-suite :- [:maybe [:fn suite?]]
   "Returns a test suite for the namespace.

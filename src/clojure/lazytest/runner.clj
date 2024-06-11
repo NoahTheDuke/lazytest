@@ -11,22 +11,23 @@
 
 (defmethod run-hook :default [_])
 (defmethod run-hook :lazytest/run [_])
-(defmethod run-hook :lazytest/suite [_])
 (defmethod run-hook :lazytest/ns-suite [_])
+(defmethod run-hook :lazytest/suite [_])
 (defmethod run-hook :lazytest/test-seq [_])
 (defmethod run-hook :lazytest/test-var [_])
 (defmethod run-hook :lazytest/test-case [_])
 
-(defn- run-test-seq [s]
-  (let [results
-        (mapv (fn [x]
-                (run-hook x)
-                (cond
-                  (test-seq? x) (run-test-seq x)
-                  (test-case? x) (try-test-case x)
-                  :else (throw (ex-info "Non-test given to run-suite." {:test x}))))
-              s)]
-    (suite-result s results)))
+(defn- run-test-seq [tests]
+  (letfn [(run [x]
+            (run-hook x)
+            (cond
+              (test-seq? x) (wrap-results x)
+              (test-case? x) (try-test-case x)
+              :else (throw (ex-info "Non-test given to run-suite." {:obj x}))))
+          (wrap-results [s]
+            (suite-result s (mapv run s)))]
+    (run-hook tests)
+    (wrap-results tests)))
 
 (defn run-tests
   "Runs tests defined in the given namespaces."

@@ -59,6 +59,6 @@
   (if (suite? ste)
     (let [test-seq' (expand-suite ste)]
       (with-meta
-        (mapv expand-tree test-seq')
+        (map expand-tree test-seq')
         (meta test-seq')))
     ste))

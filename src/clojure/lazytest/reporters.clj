@@ -215,7 +215,7 @@
 (defmethod nested* :error [context result] (print-test-result context result))
 
 (def nested
-  [focused nested* summary])
+  [focused nested* results summary])
 
 ;; CLOJURE-TEST
 ;; Attempts to mirror clojure.test's default reporter

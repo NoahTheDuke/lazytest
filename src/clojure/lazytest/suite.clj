@@ -36,7 +36,9 @@
   children is a sequence of test results and/or suite results."
   [source :- [:fn test-seq?]
    children :- sequential?]
-  (with-meta {:source source :children children}
+  (with-meta {:type ::suite-result
+              :source source
+              :children children}
              {:type ::suite-result}))
 
 (defn suite-result?

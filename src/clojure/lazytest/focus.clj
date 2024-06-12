@@ -9,7 +9,7 @@
   "If any items in sequence s are focused, return them, with focus
   metadata added to the sequence; else return s unchanged."
   [s]
-  (if-let [fs (seq (filter focused? s))]
+  (if-let [fs (not-empty (filterv focused? s))]
     (with-meta fs (assoc (meta s) :focus true))
     s))
 

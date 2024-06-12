@@ -4,7 +4,7 @@
   (:import
     (lazytest ExpectationFailed)))
 
-(mx/defn test-case
+(defmacro test-case
   "Sets metadata on function f identifying it as a test case. A test
   case function may execute arbitrary code and may have side effects.
   It should throw an exception to indicate failure. Returning without
@@ -12,8 +12,14 @@
 
   Additional identifying metadata may be placed on the function, such
   as :ns-name and :doc."
-  [f :- fn?]
-  (vary-meta f assoc ::test-case true :type :lazytest/test-case))
+  [f]
+  `(let [f# ~f
+         fm# (meta f#)]
+     (vary-meta f# assoc
+                :type :lazytest/test-case
+                :file ~*file*
+                :line (or (:line fm#) ~(:line (meta &form)))
+                ::test-case true)))
 
 (defn test-case?
   "True if x is a test case."

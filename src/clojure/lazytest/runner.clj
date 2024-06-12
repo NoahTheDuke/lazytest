@@ -2,116 +2,84 @@
   (:require
    [lazytest.find :refer [find-suite]]
    [lazytest.focus :refer [filter-tree focused?]]
+   [lazytest.malli]
+   [lazytest.reporters :refer [dots report]]
    [lazytest.suite :refer [expand-tree suite-result test-seq]]
    [lazytest.test-case :refer [try-test-case]]
-   [malli.experimental :as mx]
-   [lazytest.color :refer [colorize]]))
+   [malli.experimental :as mx]))
 
-(defn report-dispatch [m] (:type m))
-
-(defmulti report #'report-dispatch)
-
-(defmethod report :default [_])
-(defmethod report :pass [_] (print (colorize "." :green)))
-(defmethod report :fail [_] (print (colorize "F" :red)))
-(defmethod report :error [_] (print (colorize "E" :red)))
-(defmethod report :begin-ns-suite [_] (print (colorize "(" :yellow)))
-(defmethod report :end-ns-suite [_] (print (colorize ")" :yellow)))
-(defmethod report :end-test-run [_] (newline))
-
-(defn dispatch [m]
-  (or (:type m) (type m)))
+(defn dispatch [_context m]
+  (or (:type m) (-> m meta :type)))
 
 (defmulti run-test #'dispatch)
-(defmethod run-test :default [m]
+(defmethod run-test :default [_context m]
   (throw (ex-info "Non-test given to run-suite." {:obj m})))
-(defmethod run-test nil [_])
+(defmethod run-test nil [_context _])
 
-(defn ->suite-result [s]
-  (suite-result s (vec (keep run-test s))))
+(defn ->suite-result [context s]
+  (let [sm (meta s)
+        id (or (:doc sm) (:ns-name sm) (:var sm))
+        context (if id (update context :depth (fnil inc 0)) context)]
+    (suite-result s (vec (keep #(run-test context %) s)))))
 
-(defmethod run-test :lazytest/run [s]
-  (let [s-meta (meta s)]
-    (report {:type :begin-test-run
-             :doc (:doc s-meta)
-             :nses (:nses s-meta)})
-    (let [results (->suite-result s)]
-      (report {:type :end-test-run
-               :doc (:doc s-meta)
-               :nses (:nses s-meta)
-               :results results})
+(defmethod run-test :lazytest/run [context s]
+  (let [sm (meta s)]
+    (report context (assoc sm :type :begin-test-run))
+    (let [results (->suite-result context s)]
+      (report context (assoc sm :type :end-test-run :results results))
       results)))
 
-(defmethod run-test :lazytest/ns-suite [s]
-  (let [s-meta (meta s)]
-    (report {:type :begin-ns-suite
-             :ns-name (:ns-name s-meta)})
-    (let [results (->suite-result s)]
-      (report {:type :end-ns-suite
-               :ns-name (:ns-name s-meta)
-               :results results})
+(defmethod run-test :lazytest/ns-suite [context s]
+  (let [sm (meta s)]
+    (report context (assoc sm :type :begin-ns-suite))
+    (let [results (->suite-result context s)]
+      (report context (assoc sm :type :end-ns-suite :results results))
       results)))
 
-(defmethod run-test :lazytest/test-var [s]
-  (let [s-meta (meta s)]
-    (report {:type :begin-test-var
-             :doc (:doc s-meta)
-             :var (:var s-meta)})
-    (let [results (->suite-result s)]
-      (report {:type :end-test-var
-               :doc (:doc s-meta)
-               :var (:var s-meta)
-               :results results})
+(defmethod run-test :lazytest/test-var [context s]
+  (let [sm (meta s)]
+    (report context (assoc sm :type :begin-test-var))
+    (let [results (->suite-result context s)]
+      (report context (assoc sm :type :end-test-var :results results))
       results)))
 
-(defmethod run-test :lazytest/suite [s]
-  (let [s-meta (meta s)]
-    (report {:type :begin-test-suite
-             :doc (:doc s-meta)})
-    (let [results (->suite-result s)]
-      (report {:type :end-test-suite
-               :doc (:doc s-meta)
-               :results results})
+(defmethod run-test :lazytest/suite [context s]
+  (let [sm (meta s)]
+    (report context (assoc sm :type :begin-test-suite))
+    (let [results (->suite-result context s)]
+      (report context (assoc sm :type :end-test-suite :results results))
       results)))
 
-(defmethod run-test :lazytest/test-seq [s]
-  (let [s-meta (meta s)]
-    (report {:type :begin-test-seq
-             :doc (:doc s-meta)})
-    (let [results (->suite-result s)]
-      (report {:type :end-test-seq
-               :doc (:doc s-meta)
-               :results results})
+(defmethod run-test :lazytest/test-seq [context s]
+  (let [sm (meta s)]
+    (report context (assoc sm :type :begin-test-seq))
+    (let [results (->suite-result context s)]
+      (report context (assoc sm :type :end-test-seq :results results))
       results)))
 
-(defmethod run-test :lazytest/test-case [tc]
+(defmethod run-test :lazytest/test-case [context tc]
   (let [tc-meta (meta tc)]
-    (report {:type :begin-test-case
-             :doc (:doc tc-meta)})
+    (report context (assoc tc-meta :type :begin-test-case))
     (let [results (try-test-case tc)]
-      (report results)
-      (report {:type :end-test-case
-               :doc (:doc tc-meta)
-               :results results})
+      (report context results)
+      (report context (assoc tc-meta :type :end-test-case :results results))
       results)))
-
-(defmethod run-test :lazytest.suite/suite-result [_])
-(defmethod run-test :lazytest.test-case/test-case-result [_])
 
 (defn run-tests
   "Runs tests defined in the given namespaces."
-  [& namespaces]
-  (let [ste (apply find-suite namespaces)
-        tree (filter-tree (expand-tree ste))
-        result (run-test tree)]
-    (if (focused? tree)
-      (vary-meta result assoc :focus true)
-      result)))
+  ([namespaces] (run-tests {:reporter dots} namespaces))
+  ([context namespaces]
+   (let [ste (apply find-suite namespaces)
+         tree (filter-tree (expand-tree ste))
+         result (run-test context tree)]
+     (if (focused? tree)
+       (vary-meta result assoc :focus true)
+       result))))
 
 (defn run-all-tests
   "Run tests defined in all namespaces."
   []
-  (run-tests))
+  (run-tests nil))
 
 (mx/defn run-test-var
   [v :- [:fn var?]]

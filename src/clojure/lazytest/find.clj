@@ -1,8 +1,9 @@
 (ns lazytest.find
   (:require
-    [lazytest.suite :refer [suite suite? test-seq test-seq?]]
-    [lazytest.test-case :refer [test-case?]]
-    [malli.experimental :as mx]))
+   [lazytest.malli]
+   [lazytest.suite :refer [suite suite? test-seq test-seq?]]
+   [lazytest.test-case :refer [test-case?]]
+   [malli.experimental :as mx]))
 
 (mx/defn ^:private find-var-test-value
   :- [:maybe [:orn [:suite [:fn suite?]]

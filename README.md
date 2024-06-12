@@ -122,7 +122,7 @@ The smallest unit of testing is a *test case*, which is a function
 may throw an exception to indicate failure. If it does not throw an
 exception, it is assumed to have passed. The return value of a test
 case is always ignored. Running a test case may have side effects.
-The macros `lazytest.describe/it` and `lazytest.describe/do-it` create
+The macros `lazytest.describe/it` and `lazytest.describe/expect-it` create
 test cases.
 
 Tests cases are organized into *suites*. A test suite is a function
@@ -130,8 +130,8 @@ Tests cases are organized into *suites*. A test suite is a function
 sequence (see `lazytest.suite/test-seq`) is a sequence, possibly lazy,
 of test cases and/or test suites. Suites, therefore, may be nested
 inside other suites, but nothing may be nested inside a test case.
-The macros `lazytest.describe/describe` and
-`lazytest.describe/testing` create test suites.
+The macros `lazytest.describe/defdescribe` and
+`lazytest.describe/describe` create test suites.
 
 A test suite function may NOT have side effects; it is only used to
 generate test cases and/or other test suites.
@@ -139,9 +139,7 @@ generate test cases and/or other test suites.
 A test *runnner* is responsible for expanding suites (see
 `lazytest.suite/expand-suite`) and running test cases (see
 `lazytest.test-case/try-test-case`). It may also provide feedback on
-the success of tests as they run. Two built-in runners are provided,
-see `lazytest.runner.console/run-tests` and
-`lazytest.runner.debug/run-tests`.
+the success of tests as they run.
 
 The test runner also returns a sequence of *results*, which are either
 *suite results* (see `lazytest.suite/suite-result`) or *test case

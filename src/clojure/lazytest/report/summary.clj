@@ -64,7 +64,8 @@
   #'dispatch)
 
 (defmethod summary ::s/suite-result
-  [{:keys [docs children] :as results}]
+  [{:keys [docs children] :as results
+    :or {docs []}}]
   (doseq [child children
           :let [docs (conj docs (identifier results))
                 child (assoc child :docs docs)]]

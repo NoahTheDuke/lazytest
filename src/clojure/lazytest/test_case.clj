@@ -26,9 +26,22 @@
   [x]
   (and (fn? x) (::test-case (meta x))))
 
-(defn- extract-file-and-line [source thrown]
-  (let [m (or (ex-data thrown) (meta source))]
-    (select-keys m [:line :file])))
+(defn- stacktrace-file-and-line
+  "Adapted from clojure.test"
+  [stacktrace]
+  (when (seq stacktrace)
+    (let [^StackTraceElement s (first stacktrace)]
+      {:file (.getFileName s)
+       :line (.getLineNumber s)})))
+
+(defn- extract-file-line-doc [source thrown]
+  (let [thrown-data (ex-data thrown)
+        caught-data (when (instance? Throwable (:caught thrown-data))
+                      (stacktrace-file-and-line
+                        (.getStackTrace ^Throwable (:caught thrown-data))))
+        source-meta (meta source)
+        m (merge source-meta thrown-data caught-data)]
+    (select-keys m [:line :file :doc])))
 
 (mx/defn test-case-result
   "Creates a test case result map with keys :pass?, :source, and :thrown.
@@ -42,10 +55,14 @@
   ([type'
     source :- [:fn test-case?]
     thrown :- [:maybe :lt/throwable]]
-   (let [{:keys [file line]} (extract-file-and-line source thrown)]
-     (with-meta {:type type' :source source :thrown thrown
-                 :file file :line line}
-       {:type ::test-case-result}))))
+   (let [{:keys [file line doc]} (extract-file-line-doc source thrown)
+         data (ex-data thrown)]
+     (with-meta {:type type' :source source :thrown (or (:caught data) thrown)
+                 :file file :line line :doc doc
+                 :data data
+                 :expected (:expected data)
+                 :actual (:actual data)}
+                {:type ::test-case-result}))))
 
 (defn test-case-result?
   "True if x is a test case result."
@@ -63,6 +80,8 @@
   (try (f)
     (test-case-result :pass f)
     (catch ExpectationFailed ex
-      (test-case-result :fail f ex))
+      (if (:caught (ex-data ex))
+        (test-case-result :error f ex)
+        (test-case-result :fail f ex)))
     (catch Throwable t
       (test-case-result :error f t))))

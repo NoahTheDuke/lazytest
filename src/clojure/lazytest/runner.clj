@@ -19,7 +19,9 @@
 (defn ->suite-result [context s]
   (let [sm (meta s)
         id (or (:doc sm) (:ns-name sm) (:var sm))
-        context (if id (update context :depth (fnil inc 0)) context)]
+        context (-> context
+                    (update ::depth #(if id ((fnil inc 0) %) %))
+                    (update ::testing-strings conj id))]
     (suite-result s (vec (keep #(run-test context %) s)))))
 
 (defmethod run-test :lazytest/run [context s]
@@ -39,7 +41,8 @@
 (defmethod run-test :lazytest/test-var [context s]
   (let [sm (meta s)]
     (report context (assoc sm :type :begin-test-var))
-    (let [results (->suite-result context s)]
+    (let [context (update context ::current-var (fnil conj []) (:var sm))
+          results (->suite-result context s)]
       (report context (assoc sm :type :end-test-var :results results))
       results)))
 
@@ -71,6 +74,7 @@
   ([context namespaces]
    (let [ste (apply find-suite namespaces)
          tree (filter-tree (expand-tree ste))
+         context (assoc context ::depth 0 ::testing-strings [] ::current-var nil)
          result (run-test context tree)]
      (if (focused? tree)
        (vary-meta result assoc :focus true)

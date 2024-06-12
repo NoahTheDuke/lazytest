@@ -7,7 +7,6 @@
    [clojure.tools.namespace.find :refer [find-sources-in-dir]]
    [lazytest.cli :refer [validate-opts]]
    [lazytest.malli]
-   [lazytest.report.summary :refer [summary]]
    [lazytest.reporters :as reporters]
    [lazytest.results :refer [summarize summary-exit-value]]
    [lazytest.runner :refer [run-tests]]
@@ -38,7 +37,6 @@
   (let [nses (require-dirs dir)
         reporter (resolve-reporter output)
         results (run-tests {:reporter reporter} nses)]
-    (summary results)
     (summarize results)))
 
 (defn -main

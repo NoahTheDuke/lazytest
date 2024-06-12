@@ -19,9 +19,7 @@
     :parse-fn symbol
     :assoc-fn update-args]
    [nil "--output OUTPUT" "Output format."
-    :default "dots"
-    :validate [#{"dots" "nested"}
-               "Not a valid selection (dots, nested)."]]
+    :default "dots"]
    ["-h" "--help" "Print help information."]])
 
 (defn help-message

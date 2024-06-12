@@ -34,15 +34,28 @@
 (defmacro base-fields
   "Useful for all expectations. Sets the base
   properties on the ExpectationFailed."
-  [&form expr doc & body]
+  [&form expr doc extra]
   `(ExpectationFailed.
      (merge ~(meta &form)
             ~(meta expr)
-            {:form '~expr
+            {:expected '~expr
              :file ~*file*
              :ns '~(ns-name *ns*)}
             ~(when doc {:doc doc})
-            ~@body)))
+            ~extra)))
+
+(defn- function-call?
+  "True if form is a list representing a normal function call."
+  [form]
+  (and (seq? form)
+       (let [sym (first form)]
+         (and (symbol? sym)
+              (let [v (resolve sym)]
+                (and (var? v)
+                     (bound? v)
+                     (not (:macro (meta v)))
+                     (let [f (var-get v)]
+                       (fn? f))))))))
 
 (defmacro expect
   "Evaluates expression. If it returns logical true, returns that
@@ -53,14 +66,31 @@
   ([expr] (with-meta (list `expect expr nil)
                      (meta &form)))
   ([expr docstring]
-   `(let [doc# ~docstring
-          args# ~(if (list? expr) (list* 'list expr) expr)
-          result# ~expr]
-      (or result#
-          (throw (base-fields ~&form ~expr ~docstring
-                              {:evaluated args#
-                               :result result#}))))))
-
+   (let [func? (function-call? expr)
+         [f args] (if func?
+                    [(first expr) (rest expr)]
+                    [expr nil])]
+     `(let [doc# ~docstring
+            args# (list ~@args)
+            result# (try (if ~func?
+                           (apply ~f args#)
+                           ~f)
+                         (catch Throwable t#
+                           (base-fields ~&form ~expr doc#
+                                        {:evaluated (if ~func?
+                                                      (cons ~f args#)
+                                                      ~f)
+                                         :caught t#})))]
+        (cond
+          (instance? ExpectationFailed result#)
+          (throw result#)
+          (not result#)
+          (throw (base-fields ~&form ~expr doc#
+                              {:evaluated (if ~(some? args)
+                                            (cons ~f args#)
+                                            ~f)
+                               :actual result#}))
+          :else result#)))))
 
 (defmacro describe
   "Defines a suite of tests.

@@ -13,7 +13,7 @@
          (expect (= 1 2))
          (throw (ex-info "never reached" {}))))
       (catch ExpectationFailed e
-        (expect (= '(= 1 2) (:form (ex-data e)))))))
+        (expect (= '(= 1 2) (:expected (ex-data e)))))))
   (let [state (atom 0)]
     (it "arbitrary code"
       (expect (= 4 (+ 2 2)))
@@ -39,10 +39,11 @@
       (expect (throws? AssertionError #(assert false))))
     (it "fails if function doesn't throw"
       (expect (false? (throws? ExceptionInfo #(do nil)))))
-    (it "rethrows other errors"
+    (it "wraps other throwables"
       (try
         (expect (throws? ExceptionInfo #(assert false)))
-        (catch AssertionError _))))
+        (catch ExpectationFailed ef
+          (expect (instance? AssertionError (:caught (ex-data ef))))))))
   (describe throws-with-msg?
     (it "checks the thrown message"
       (expect (throws-with-msg? Exception #"foo message"
@@ -71,21 +72,21 @@
                                    (ex-info "worser message" {:foo :bar})))))))))
 
 (defdescribe expect-data-test
-  (given [e1 (try (expect (= 1 2))
+  (given [e1 (try (expect (= 1 (inc 2)))
                false
                (catch ExpectationFailed err err))
           reason (ex-data e1)]
     (it "is correctly formed"
-      (expect e1)
-      (expect (= '(= 1 2) (:form reason)))
-      (expect (= (list = 1 2) (:evaluated reason)))
-      (expect (false? (:result reason)))))
-  (given [e3 (try (expect (instance? java.lang.String 42))
+      (expect (some? e1))
+      (expect (= '(= 1 (inc 2)) (:expected reason)))
+      (expect (= (list = 1 3) (:evaluated reason)))
+      (expect (false? (:actual reason)))))
+  (given [e3 (try (expect (instance? java.lang.String (+ 40 2)))
                false
                (catch ExpectationFailed err err))
           reason (ex-data e3)]
     (it "is correctly formed"
-      (expect e3)
-      (expect (= '(instance? java.lang.String 42) (:form reason)))
+      (expect (some? e3))
+      (expect (= '(instance? java.lang.String (+ 40 2)) (:expected reason)))
       (expect (= (list instance? java.lang.String 42) (:evaluated reason)))
-      (expect (false? (:result reason))))))
+      (expect (false? (:actual reason))))))

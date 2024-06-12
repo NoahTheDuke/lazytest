@@ -31,18 +31,18 @@
 
 ;;; Public API
 
-(defmacro base-fields
+(defmacro ->ex-failed
   "Useful for all expectations. Sets the base
   properties on the ExpectationFailed."
-  [&form expr doc extra]
-  `(ExpectationFailed.
-     (merge ~(meta &form)
-            ~(meta expr)
-            {:expected '~expr
-             :file ~*file*
-             :ns '~(ns-name *ns*)}
-            ~(when doc {:doc doc})
-            ~extra)))
+  ([expr data] `(->ex-failed nil ~expr ~data))
+  ([_form expr data]
+   `(ExpectationFailed.
+      (merge ~(meta _form)
+             ~(meta expr)
+             {:expected '~expr
+              :file ~*file*
+              :ns '~(ns-name *ns*)}
+             ~data))))
 
 (defn- function-call?
   "True if form is a list representing a normal function call."
@@ -57,6 +57,25 @@
                      (let [f (var-get v)]
                        (fn? f))))))))
 
+(defn expect-fn
+  [expr docstring]
+  `(let [doc# ~docstring
+         f# ~(first expr)
+         args# (list ~@(rest expr))
+         result# (apply f# args#)]
+     (or result#
+         (throw (->ex-failed ~expr {:doc doc#
+                                    :evaluated (list* f# args#)
+                                    :actual result#})))))
+
+(defn expect-any
+  [expr docstring]
+  `(let [doc# ~docstring
+         result# ~expr]
+     (or result#
+         (throw (->ex-failed ~expr {:doc doc#
+                                    :actual result#})))))
+
 (defmacro expect
   "Evaluates expression. If it returns logical true, returns that
   result. If the expression returns logical false, throws
@@ -66,31 +85,13 @@
   ([expr] (with-meta (list `expect expr nil)
                      (meta &form)))
   ([expr docstring]
-   (let [func? (function-call? expr)
-         [f args] (if func?
-                    [(first expr) (rest expr)]
-                    [expr nil])]
-     `(let [doc# ~docstring
-            args# (list ~@args)
-            result# (try (if ~func?
-                           (apply ~f args#)
-                           ~f)
-                         (catch Throwable t#
-                           (base-fields ~&form ~expr doc#
-                                        {:evaluated (if ~func?
-                                                      (cons ~f args#)
-                                                      ~f)
-                                         :caught t#})))]
-        (cond
-          (instance? ExpectationFailed result#)
-          (throw result#)
-          (not result#)
-          (throw (base-fields ~&form ~expr doc#
-                              {:evaluated (if ~(some? args)
-                                            (cons ~f args#)
-                                            ~f)
-                               :actual result#}))
-          :else result#)))))
+   `(try ~(if (function-call? expr)
+            (expect-fn expr docstring)
+            (expect-any expr docstring))
+         (catch ExpectationFailed ex# (throw ex#))
+         (catch Throwable t#
+           (->ex-failed ~&form ~expr {:doc ~docstring
+                                      :caught t#})))))
 
 (defmacro describe
   "Defines a suite of tests.
@@ -188,13 +189,13 @@
   (let [[doc body] (get-arg string? body)
         [attr-map exprs] (get-arg map? body)
         [assertion] exprs
-        metadata (merged-metadata body &form doc attr-map)]
+        metadata (merged-metadata body &form nil attr-map)]
     (when (not= 1 (count exprs))
       (throw (IllegalArgumentException. "expect-it takes 1 expr")))
     (when (and (seq? assertion) (symbol? (first assertion)))
       (assert (not= "expect" (name (first assertion)))))
     `(test-case (with-meta
-                  (fn [] (expect ~assertion))
+                  (fn [] (expect ~assertion ~doc))
                   ~metadata))))
 
 (defn throws?

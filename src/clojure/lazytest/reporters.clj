@@ -131,19 +131,20 @@
 
 (defmulti ^:private results-builder (fn [m] (:type (meta m))))
 
+(defn update-docs-with-source [child results]
+  (let [m (meta (:source results))
+        docs (conj (:docs results []) (identifier m))]
+    (assoc child :docs docs)))
+
 (defmethod results-builder ::s/suite-result
-  [{:keys [docs children] :as results
-    :or {docs []}}]
-  (doseq [child children
-          :let [m (meta (:source results))
-                docs (conj docs (identifier m))
-                child (assoc child :docs docs)]]
-    (results-builder child)))
+  [{:keys [children] :as results}]
+  (doseq [child children]
+    (results-builder (update-docs-with-source child results))))
 
 (defmethod results-builder ::tc/test-case-result
   [result]
   (when-not (= :pass (:type result))
-    (report-test-case-failure result)))
+    (report-test-case-failure (update-docs-with-source result result))))
 
 (defmulti results #'reporter-dispatch)
 (defmethod results :default [_ _])

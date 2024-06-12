@@ -1,7 +1,7 @@
 (ns lazytest.core-test
   (:require
    [lazytest.core :refer [causes-with-msg? causes? defdescribe describe expect
-                          given it throws-with-msg? throws?]])
+                          expect-it given it throws-with-msg? throws?]])
   (:import
    clojure.lang.ExceptionInfo
    lazytest.ExpectationFailed))
@@ -49,9 +49,9 @@
       (expect (throws-with-msg? Exception #"foo message"
                 #(do (throw (Exception. "the foo message for this exception")))))))
   (describe causes?
-    (it "checks the base throwable"
-      (expect (causes? IllegalArgumentException
-                       #(throw (IllegalArgumentException. "bad arguments")))))
+    (expect-it "checks the base throwable"
+      (causes? IllegalArgumentException
+               #(throw (IllegalArgumentException. "bad arguments"))))
     (it "checks the causes too"
       (expect (causes? IllegalArgumentException
                        #(try

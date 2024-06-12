@@ -3,7 +3,7 @@
    [lazytest.find :refer [find-suite]]
    [lazytest.focus :refer [filter-tree focused?]]
    [lazytest.malli]
-   [lazytest.reporters :refer [dots report]]
+   [lazytest.reporters :as reporters :refer [dots report]]
    [lazytest.suite :refer [expand-tree suite-result test-seq]]
    [lazytest.test-case :refer [try-test-case]]
    [malli.experimental :as mx]))
@@ -74,7 +74,13 @@
   ([context namespaces]
    (let [ste (apply find-suite namespaces)
          tree (filter-tree (expand-tree ste))
-         context (assoc context ::depth 0 ::testing-strings [] ::current-var nil)
+         reporter (:reporter context)
+         reporter (cond
+                    (nil? reporter) (apply reporters/combine-reporters dots)
+                    (fn? reporter) reporter
+                    (sequential? reporter) (apply reporters/combine-reporters reporter)
+                    :else (reporters/combine-reporters reporter))
+         context (assoc context :reporter reporter ::depth 0 ::testing-strings [] ::current-var nil)
          result (run-test context tree)]
      (if (focused? tree)
        (vary-meta result assoc :focus true)

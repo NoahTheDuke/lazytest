@@ -28,7 +28,13 @@
   [x]
   (and (fn? x) (::suite (meta x))))
 
-(mx/defn suite-result
+(defn identifier
+  "Get a string representation of the suite. Either the suite's
+  :doc, its :ns-name, or the string version of its :var."
+  [m]
+  (or (:doc m) (:ns-name m) (some-> m :var meta :name)))
+
+(mx/defn suite-result :- :map
   "Creates a suite result map with keys :source and :children.
 
   source is the test sequence, with identifying metadata.
@@ -36,10 +42,13 @@
   children is a sequence of test results and/or suite results."
   [source :- [:fn test-seq?]
    children :- sequential?]
-  (with-meta {:type ::suite-result
-              :source source
-              :children children}
-             {:type ::suite-result}))
+  (let [{:keys [line file] :as sm} (meta source)
+        doc (identifier sm)]
+    (with-meta {:type ::suite-result
+                :line line :file file :doc doc
+                :source source
+                :children children}
+               {:type ::suite-result})))
 
 (defn suite-result?
   "True if x is a suite result."

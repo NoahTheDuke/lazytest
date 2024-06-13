@@ -1,12 +1,13 @@
-(ns lazytest.reporters 
+(ns lazytest.reporters
   (:require
-   [lazytest.color :refer [colorize]]
-   [lazytest.suite :as s :refer [suite-result?]]
-   [lazytest.test-case :as tc]
-   [clojure.string :as str]
-   [clojure.stacktrace :as stack]
    [clojure.data :refer [diff]]
-   [clojure.pprint :as pp]))
+   [clojure.pprint :as pp]
+   [clojure.stacktrace :as stack]
+   [clojure.string :as str]
+   [lazytest.color :refer [colorize]]
+   [lazytest.results :refer [summarize]]
+   [lazytest.suite :as s :refer [suite-result?]]
+   [lazytest.test-case :as tc]))
 
 (defn combine-reporters
   ([reporter] (fn [context m] (reporter context m) (flush) nil))
@@ -19,28 +20,31 @@
   (when-let [reporter (:reporter context)]
     (reporter context m)))
 
-(defn test-case-str [result]
-  (or (:doc result) "Anonymous test case"))
-
-(defn identifier [m]
-  (or (:doc m) (:ns-name m) (some-> m :var symbol str)))
-
 (defn reporter-dispatch [_context m] (:type m))
+
+(defn- indent [n]
+  (print (apply str (repeat n "  "))))
 
 ;; FOCUSED
 ;; Prints a message when tests are focused. Included by default.
+;;
+;; Example:
+;;
+;; === FOCUSED TESTS ONLY ===
 
 (defmulti focused #'reporter-dispatch)
 (defmethod focused :default [_ _])
 (defmethod focused :begin-test-run [_ m]
   (when (:focus m)
-    (println "=== FOCUSED TESTS ONLY ==="))
+    (println "=== FOCUSED TESTS ONLY ===")
+    (newline))
   (flush))
 
 ;; SUMMARY
 ;; Prints the number of test cases, failures, and errors.
 ;;
 ;; Example:
+;;
 ;; Ran 5 test cases.
 ;; 0 failures and 2 errors.
 
@@ -49,19 +53,6 @@
   nested child suite/test results."
   [result]
   (tree-seq suite-result? :children result))
-
-(defn summarize
-  "Given a sequence of suite results, returns a map of counts with
-  keys :total, :pass, and :fail."
-  [results]
-  (let [test-case-results (remove suite-result? (result-seq results))
-        total (count test-case-results)
-        {:keys [pass fail error]} (group-by :type test-case-results)]
-    {:total total
-     :pass (count pass)
-     :fail (count fail)
-     :error (count error)
-     :not-passing (+ (count fail) (count error))}))
 
 (defmulti summary #'reporter-dispatch)
 (defmethod summary :default [_ _])
@@ -83,6 +74,23 @@
 ;; Print the failed assertions, their arguments, etc.
 ;;
 ;; Example:
+;;
+;; lazytest.core-test
+;;   with-redefs-test
+;;     redefs inside 'it' blocks:
+;;
+;; this should be true
+;; Expected: (= 7 (plus 2 3))
+;; Actual: false
+;; Evaluated arguments:
+;;  * 7
+;;  * 6
+;; Only in first argument:
+;; 7
+;; Only in second argument:
+;; 6
+;;
+;; in lazytest/core_test.clj:30
 
 (defmacro pprint-out [obj]
   `(str/trim (with-out-str (pp/pprint ~obj))))
@@ -100,62 +108,72 @@
 (defn- print-evaluated-arguments [reason]
   (println (colorize "Evaluated arguments:" :cyan))
   (doseq [arg (rest (:evaluated reason))]
-    (print "* ")
+    (print " * ")
     (if (instance? Throwable arg)
       (pp/pprint (type arg))
       (pp/pprint arg))))
 
+(defn- print-context [docs]
+  (loop [[doc & docs] (seq (filter identity docs))
+         idx 0]
+    (when doc
+      (indent idx)
+      (if docs
+        (println doc)
+        (println (str doc ":")))
+      (recur docs (inc idx)))))
+
 (defn- report-test-case-failure [result]
-  (let [docs (conj (:docs result) (test-case-str result))
-        report-type (:type result)
-        docstring (format
-                   "%s: %s"
-                   (if (= :fail report-type) "FAILURE" "ERROR")
-                   (str/join " " (remove nil? docs)))
+  (print-context (:docs result))
+  (let [report-type (:type result)
+        message (or (:message result)
+                    (if (= :fail report-type)
+                      "Expectation failed"
+                      "Caught exception"))
         error (:thrown result)
         reason (ex-data error)]
     (newline)
-    (println (colorize docstring :red))
-    (printf "in %s:%s\n" (:file result) (:line result))
+    (println (colorize message :red))
     (if (= :fail report-type)
-      (do (println (colorize "Expression:" :cyan)
+      (do (println (colorize "Expected:" :cyan)
                    (pprint-out (:expected reason)))
-        (println (colorize "Result:" :cyan)
+        (println (colorize "Actual:" :cyan)
                  (pprint-out (:actual reason)))
         (when (:evaluated reason)
           (print-evaluated-arguments reason)
-          (when (and (= '= (first (:evaluated reason)))
+          (when (and (= = (first (:evaluated reason)))
                      (= 3 (count (:evaluated reason))))
             (apply print-equality-failed (rest (:evaluated reason))))))
-      (stack/print-cause-trace error))))
+      (stack/print-cause-trace error))
+    (newline)
+    (println (colorize (format "in %s:%s\n" (:file result) (:line result)) :light)))
+  (flush))
 
-(defmulti ^:private results-builder (fn [m] (:type (meta m))))
-
-(defn update-docs-with-source [child results]
-  (let [m (meta (:source results))
-        docs (conj (:docs results []) (identifier m))]
-    (assoc child :docs docs)))
+(defmulti ^:private results-builder #'reporter-dispatch)
+(defmethod results-builder :pass [_ _])
 
 (defmethod results-builder ::s/suite-result
-  [{:keys [children] :as results}]
-  (doseq [child children]
-    (results-builder (update-docs-with-source child results))))
+  [context {:keys [children] :as results}]
+  (doseq [child children
+          :let [docs (conj (:docs results []) (s/identifier results))
+                child (assoc child :docs docs)]]
+    (results-builder context child)))
 
-(defmethod results-builder ::tc/test-case-result
-  [result]
-  (when-not (= :pass (:type result))
-    (report-test-case-failure (update-docs-with-source result result))))
+(defmethod results-builder :fail [_context result] (report-test-case-failure result))
+(defmethod results-builder :error [_context result] (report-test-case-failure result))
 
 (defmulti results #'reporter-dispatch)
 (defmethod results :default [_ _])
-(defmethod results :end-test-run [_ m]
-  (results-builder (:results m)))
+(defmethod results :end-test-run [context m]
+  (newline)
+  (results-builder context (:results m)))
 
 ;; DOTS
 ;; Passing test cases are printed as ., failures as F, and errors as E.
 ;; Test cases in namespaces are wrapped in parentheses.
 ;;
 ;; Example:
+;;
 ;; (....)(.)(....)
 
 (defmulti dots* #'reporter-dispatch)
@@ -174,22 +192,19 @@
 ;; Print each suite and test case on a new line, and indent each suite.
 ;;
 ;; Example:
-;; Namespaces
+;;
 ;;   lazytest.readme-test
 ;;     The square root of two
 ;;       is less than two
 ;;       is more than one
-
-(defn- indent [n]
-  (print (apply str (repeat n "  "))))
 
 (defmulti nested* #'reporter-dispatch)
 (defmethod nested* :default [_ _])
 
 (defn print-test-seq
   [context s]
-  (let [id (identifier s)
-        depth (:lazytest.runner/depth context 0)]
+  (let [id (s/identifier s)
+        depth (:lazytest.runner/depth context)]
     (when id
       (indent depth)
       (println id))))
@@ -202,13 +217,16 @@
 
 (defn print-test-result
   [context result]
-  (let [id (test-case-str result)]
-    (indent (:depth context 0))
+  (let [id (tc/identifier result)]
+    (indent (:lazytest.runner/depth context))
     (let [result-type (:type result)
           msg (str id (when (not= :pass result-type)
                         (str " " (str/upper-case (name result-type)))))]
-      (println (colorize msg
-                         (if (= :pass result-type) :green :red))))))
+      (case result-type
+        :pass (println (colorize "√" :green) (colorize msg :light))
+        :pending (println (colorize "-" :cyan) (colorize msg :cyan))
+        (:fail :error) (println (colorize "×" :red) (colorize msg :red))
+        #_:else nil))))
 
 (defmethod nested* :pass [context result] (print-test-result context result))
 (defmethod nested* :fail [context result] (print-test-result context result))
@@ -218,38 +236,51 @@
   [focused nested* results summary])
 
 ;; CLOJURE-TEST
-;; Attempts to mirror clojure.test's default reporter
+;; Adapts clojure.test's default reporter to Lazytests' system.
+;; It treats suite :docs as context strings and 
+;;
+;; Example:
 ;;
 ;; Testing lazytest.core-test
 ;;
-;; FAIL in (with-redefs-test) (lazytest/core_test.clj:28)
-;; Namespaces lazytest.core-test #'lazytest.core-test/with-redefs-test
-;; expected: (= 7 (plus 2 3))
+;; FAIL in (with-redefs-test) (lazytest/core_test.clj:33)
+;; redefs outside 'it' blocks should not be rebound
+;; expected: (not= 5 (plus 2 3))
 ;;   actual: false
+;;
+;; Ran 12 tests containing 29 test cases.
+;; 1 failure, 0 errors.
 
 (defmulti clojure-test #'reporter-dispatch)
 (defmethod clojure-test :default [_ _])
 
 (defn- clojure-test-case-str [context result]
-  (format "%s (%s:%s)"
-          (str (apply list (map #(:name (meta %)) (:lazytest.runner/current-var context))))
-          (or (:file result) "Unknown file")
+  (format "(%s) (%s:%s)"
+          (->> (:lazytest.runner/suite-history context)
+               (keep :var)
+               (map #(:name (meta %)))
+               (str/join " "))
+          (:file result)
           (:line result)))
 
 (defmethod clojure-test :fail [context result]
   (println "\nFAIL in" (clojure-test-case-str context result))
-  (when-let [strings (seq (:lazytest.runner/testing-strings context))]
+  (when-let [strings (->> (conj (:lazytest.runner/suite-history context) result)
+                          (keep :doc)
+                          (seq))]
     (println (str/join " " strings)))
-  (when-let [message (:doc result)]
+  (when-let [message (:message result)]
     (println message))
   (println "expected:" (pr-str (:expected result)))
   (println "  actual:" (pr-str (:actual result))))
 
 (defmethod clojure-test :error [context result]
   (println "\nERROR in" (clojure-test-case-str context result))
-  (when-let [strings (seq (:testing-strings context))]
+  (when-let [strings (->> (conj (:lazytest.runner/suite-history context) result)
+                          (keep :doc)
+                          (seq))]
     (println (str/join " " strings)))
-  (when-let [message (:doc result)]
+  (when-let [message (:message result)]
     (println message))
   (println "expected:" (pr-str (:expected result)))
   (print "  actual: ")
@@ -264,7 +295,8 @@
 
 (defmethod clojure-test :end-test-run [_ m]
   (let [results (:results m)
-        test-vars (count (filter #(= :lazytest/test-var (type (:source %))) (result-seq results)))
+        test-vars (count (filter #(= :lazytest/test-var (type (:source %)))
+                                 (result-seq results)))
         test-case-results (remove suite-result? (result-seq results))
         total (count test-case-results)
         {:keys [fail error]} (group-by :type test-case-results)

@@ -23,9 +23,10 @@
 (defn plus [a b] (+ a b))
 
 (defdescribe with-redefs-test
-  (it "should be rebound"
-    (with-redefs [plus *]
-      (expect (= 6 (plus 2 3)))))
+  (describe "redefs inside 'it' blocks"
+    (it "should be rebound"
+      (with-redefs [plus *]
+        (expect (= 6 (plus 2 3)) "this should be true"))))
   (describe "redefs outside 'it' blocks"
     (with-redefs [plus *]
       (it "should not be rebound"

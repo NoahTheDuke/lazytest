@@ -58,22 +58,20 @@
                        (fn? f))))))))
 
 (defn expect-fn
-  [expr docstring]
-  `(let [doc# ~docstring
-         f# ~(first expr)
+  [expr msg]
+  `(let [f# ~(first expr)
          args# (list ~@(rest expr))
          result# (apply f# args#)]
      (or result#
-         (throw (->ex-failed ~expr {:doc doc#
+         (throw (->ex-failed ~expr {:message ~msg
                                     :evaluated (list* f# args#)
                                     :actual result#})))))
 
 (defn expect-any
-  [expr docstring]
-  `(let [doc# ~docstring
-         result# ~expr]
+  [expr msg]
+  `(let [result# ~expr]
      (or result#
-         (throw (->ex-failed ~expr {:doc doc#
+         (throw (->ex-failed ~expr {:message ~msg
                                     :actual result#})))))
 
 (defmacro expect
@@ -84,13 +82,13 @@
   itself will be merged into the failure map."
   ([expr] (with-meta (list `expect expr nil)
                      (meta &form)))
-  ([expr docstring]
+  ([expr msg]
    `(try ~(if (function-call? expr)
-            (expect-fn expr docstring)
-            (expect-any expr docstring))
+            (expect-fn expr msg)
+            (expect-any expr msg))
          (catch ExpectationFailed ex# (throw ex#))
          (catch Throwable t#
-           (->ex-failed ~&form ~expr {:doc ~docstring
+           (->ex-failed ~&form ~expr {:message ~msg
                                       :caught t#})))))
 
 (defmacro describe
@@ -133,7 +131,9 @@
         [doc body] (get-arg string? body)
         [attr-map body] (get-arg map? body)
         focus (:focus (meta test-name))
+        test-var (list 'var (symbol (str *ns*) (str test-name)))
         attr-map (cond-> attr-map
+                   true (assoc :var test-var)
                    focus (assoc :focus focus))
         body (cond-> []
                sym (conj sym)
@@ -189,7 +189,7 @@
   (let [[doc body] (get-arg string? body)
         [attr-map exprs] (get-arg map? body)
         [assertion] exprs
-        metadata (merged-metadata body &form nil attr-map)]
+        metadata (merged-metadata body &form doc attr-map)]
     (when (not= 1 (count exprs))
       (throw (IllegalArgumentException. "expect-it takes 1 expr")))
     (when (and (seq? assertion) (symbol? (first assertion)))

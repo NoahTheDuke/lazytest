@@ -44,7 +44,8 @@
    :bg-magenta "[45m"
    :bg-cyan "[46m"
    :bg-white "[47m"
-   :bg-default "[49m"})
+   :bg-default "[49m"
+   :light "[90m"})
 
 (defn ansi-color-str
   "Return ANSI color codes for the given sequence of colors, which are

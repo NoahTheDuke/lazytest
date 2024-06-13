@@ -66,7 +66,7 @@ a top-level Var (thus the similar names).
 (ns examples.readme.nested
   (:require [lazytest.core :refer [defdescribe describe expect-it]]))
 
-(defdescribe "Addition"
+(defdescribe addition-test "Addition"
   (describe "of integers"
     (expect-it "computes small sums"
       (= 3 (+ 1 2)))

@@ -4,7 +4,7 @@
    [lazytest.focus :refer [filter-tree focused?]]
    [lazytest.malli]
    [lazytest.reporters :as reporters :refer [dots report]]
-   [lazytest.suite :refer [expand-tree suite-result test-seq]]
+   [lazytest.suite :as s :refer [expand-tree suite-result test-seq]]
    [lazytest.test-case :refer [try-test-case]]
    [malli.experimental :as mx]))
 
@@ -18,10 +18,10 @@
 
 (defn ->suite-result [context s]
   (let [sm (meta s)
-        id (or (:doc sm) (:ns-name sm) (:var sm))
+        id (s/identifier sm)
         context (-> context
-                    (update ::depth #(if id ((fnil inc 0) %) %))
-                    (update ::testing-strings conj id))]
+                    (update ::depth #(if id (inc %) %))
+                    (update ::suite-history conj sm))]
     (suite-result s (vec (keep #(run-test context %) s)))))
 
 (defmethod run-test :lazytest/run [context s]
@@ -41,8 +41,7 @@
 (defmethod run-test :lazytest/test-var [context s]
   (let [sm (meta s)]
     (report context (assoc sm :type :begin-test-var))
-    (let [context (update context ::current-var (fnil conj []) (:var sm))
-          results (->suite-result context s)]
+    (let [results (->suite-result context s)]
       (report context (assoc sm :type :end-test-var :results results))
       results)))
 
@@ -80,7 +79,10 @@
                     (fn? reporter) reporter
                     (sequential? reporter) (apply reporters/combine-reporters reporter)
                     :else (reporters/combine-reporters reporter))
-         context (assoc context :reporter reporter ::depth 0 ::testing-strings [] ::current-var nil)
+         context (assoc context
+                        :reporter reporter
+                        ::depth 1
+                        ::suite-history [])
          result (run-test context tree)]
      (if (focused? tree)
        (vary-meta result assoc :focus true)

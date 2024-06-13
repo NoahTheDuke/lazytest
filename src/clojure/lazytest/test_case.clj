@@ -56,10 +56,11 @@
     source :- [:fn test-case?]
     thrown :- [:maybe :lt/throwable]]
    (let [{:keys [file line doc]} (extract-file-line-doc source thrown)
-         data (ex-data thrown)]
-     (with-meta {:type type' :source source :thrown (or (:caught data) thrown)
-                 :file file :line line :doc doc
-                 :data data
+         data (ex-data thrown)
+         thrown (or (:caught data) thrown)]
+     (with-meta {:type type' :source source :thrown thrown
+                 :file (or file "NO_SOURCE_PATH") :line line
+                 :doc doc :message (:message (ex-data thrown))
                  :expected (:expected data)
                  :actual (:actual data)}
                 {:type ::test-case-result}))))
@@ -68,6 +69,9 @@
   "True if x is a test case result."
   [x]
   (and (map? x) (isa? (type x) ::test-case-result)))
+
+(defn identifier [result]
+  (or (:doc result) "Anonymous test case"))
 
 (mx/defn try-test-case
   "Executes a test case function. Catches all Throwables. Returns a

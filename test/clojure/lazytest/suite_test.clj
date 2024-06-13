@@ -22,7 +22,11 @@
      (when (= x 3)
        (vary-meta
          (test-case #(expect (= x 3)))
-         assoc :doc (str x " equals three")))]))
+         assoc :doc (str x " equals three")))
+     (when (= x 4)
+       (vary-meta
+         (test-case #(expect (= x 4)))
+         assoc :doc (str x " equals four")))]))
 
 ;; manually writing test-seqs
 (def s0
@@ -42,6 +46,12 @@
   (describe "Two"
     (common-test-cases 2)))
 
-;; using the above in a normal `defdescribe`
-(defdescribe s3 "Three"
-  (map common-test-cases (range 3 5)))
+;; writing a normal defdescribe
+(defdescribe s3
+  "Three"
+  (common-test-cases 3))
+
+;; including all of the above in a distinct test
+(defdescribe s4 "Four"
+  s3
+  (map common-test-cases (range 4 6)))

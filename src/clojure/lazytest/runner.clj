@@ -3,8 +3,8 @@
    [lazytest.find :refer [find-suite]]
    [lazytest.focus :refer [filter-tree focused?]]
    [lazytest.malli]
-   [lazytest.reporters :as reporters :refer [dots report]]
-   [lazytest.suite :as s :refer [expand-tree suite-result test-seq]]
+   [lazytest.reporters :as r :refer [nested report]]
+   [lazytest.suite :as s :refer [expand-tree suite-result]]
    [lazytest.test-case :refer [try-test-case]]
    [malli.experimental :as mx]))
 
@@ -67,22 +67,23 @@
       (report context (assoc tc-meta :type :end-test-case :results results))
       results)))
 
+(defn ->context [context]
+  (-> context
+      (assoc ::depth 1 ::suite-history [])
+      (update :reporter
+              #(cond
+                 (nil? %) (apply r/combine-reporters nested)
+                 (fn? %) %
+                 (sequential? %) (apply r/combine-reporters %)
+                 :else (r/combine-reporters %)))))
+
 (defn run-tests
   "Runs tests defined in the given namespaces."
-  ([namespaces] (run-tests {:reporter dots} namespaces))
+  ([namespaces] (run-tests {:reporter nested} namespaces))
   ([context namespaces]
    (let [ste (apply find-suite namespaces)
          tree (filter-tree (expand-tree ste))
-         reporter (:reporter context)
-         reporter (cond
-                    (nil? reporter) (apply reporters/combine-reporters dots)
-                    (fn? reporter) reporter
-                    (sequential? reporter) (apply reporters/combine-reporters reporter)
-                    :else (reporters/combine-reporters reporter))
-         context (assoc context
-                        :reporter reporter
-                        ::depth 1
-                        ::suite-history [])
+         context (->context context)
          result (run-test context tree)]
      (if (focused? tree)
        (vary-meta result assoc :focus true)
@@ -90,12 +91,14 @@
 
 (defn run-all-tests
   "Run tests defined in all namespaces."
-  []
-  (run-tests nil))
+  ([] (run-all-tests nil))
+  ([context]
+   (run-tests context nil)))
 
 (mx/defn run-test-var
-  [v :- [:fn var?]]
-  (let [tree (-> (vary-meta @v assoc :lazytest.suite/suite true)
+  [context v :- [:fn var?]]
+  (let [tree (-> (s/suite (s/test-seq [@v]))
+                 (vary-meta assoc :type :lazytest/run)
                  (expand-tree)
-                 (test-seq))]
-    (run-test tree)))
+                 #_(s/test-seq))]
+    (run-test context tree)))

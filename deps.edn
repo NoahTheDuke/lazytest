@@ -11,7 +11,8 @@
   :dev {:extra-paths ["dev"]
         :extra-deps {org.clojure/spec.alpha {:mvn/version "0.5.238"}
                      criterium/criterium {:mvn/version "0.4.6"}
-                     com.clojure-goes-fast/clj-java-decompiler {:mvn/version "0.3.4"}}}
+                     com.clojure-goes-fast/clj-java-decompiler {:mvn/version "0.3.4"}
+                     nubank/matcher-combinators {:mvn/version "3.8.5"}}}
 
   ;; I like nrepl and rebel-readline.
   :repl {:extra-deps {nrepl/nrepl {:mvn/version "1.0.0"}

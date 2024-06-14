@@ -83,13 +83,17 @@
   ([expr] (with-meta (list `expect expr nil)
                      (meta &form)))
   ([expr msg]
-   `(try ~(if (function-call? expr)
-            (expect-fn expr msg)
-            (expect-any expr msg))
-         (catch ExpectationFailed ex# (throw ex#))
-         (catch Throwable t#
-           (->ex-failed ~&form ~expr {:message ~msg
-                                      :caught t#})))))
+   (let [msg-gensym (gensym)]
+     `(let [~msg-gensym ~msg]
+        (try ~(if (function-call? expr)
+                (expect-fn expr msg-gensym)
+                (expect-any expr msg-gensym))
+             (catch ExpectationFailed ex#
+               (throw (->ex-failed nil (assoc (ex-data ex#)
+                                              :expected-message ~msg-gensym))))
+             (catch Throwable t#
+               (throw (->ex-failed ~&form ~expr {:message ~msg-gensym
+                                                 :caught t#}))))))))
 
 (defmacro describe
   "Defines a suite of tests.
@@ -118,6 +122,8 @@
   "`describe` helper that assigns a `describe` call to a Var of the given name.
 
   test-name is a symbol.
+
+  sym (optional) is a symbol; if present, it will be resolved in the current namespace and prepended to the documentation string.
 
   doc (optional) is a documentation string.
 
@@ -152,6 +158,7 @@
 (defmacro it
   "Defines a single test case that may execute arbitrary code.
 
+  sym (optional) is a symbol; if present, it will be resolved in the current namespace and prepended to the documentation string.
   doc (optional) is a documentation string
 
   attr-map (optional) is a metadata map
@@ -163,10 +170,12 @@
   NOTE: Because failure requires an exception, no assertions after
   the thrown exception will be run."
   {:arglists '([& body]
-               [doc? attr-map? & body])}
+               [sym? doc? attr-map? & body])}
   [& body]
-  (let [[doc body] (get-arg string? body)
+  (let [[sym body] (get-arg symbol? body)
+        [doc body] (get-arg string? body)
         [attr-map body] (get-arg map? body)
+        doc (strcat (when sym (resolve sym)) doc)
         metadata (merged-metadata body &form doc attr-map)]
     `(test-case (with-meta
                   (fn [] ~@body)
@@ -266,8 +275,9 @@
            (throw t)))))
 
 (defn ok?
-  "Calls f and discards its return value. Returns true if f does not
-  throw any exceptions.
+  "Calls f with no arguments and discards its return value. Returns
+  true if f does not throw any exceptions. Use when checking an expression
+  that returns a logical false value.
 
   Useful in `expect-it` or `expect`."
   [f]

@@ -129,22 +129,20 @@
         message (or (:message result)
                     (if (= :fail report-type)
                       "Expectation failed"
-                      "Caught exception"))
-        error (:thrown result)
-        reason (ex-data error)]
+                      "ERROR: Caught exception"))]
     (newline)
     (println (colorize message :red))
     (if (= :fail report-type)
       (do (println (colorize "Expected:" :cyan)
-                   (pprint-out (:expected reason)))
+                   (pr-str (:expected result)))
         (println (colorize "Actual:" :cyan)
-                 (pprint-out (:actual reason)))
-        (when (:evaluated reason)
-          (print-evaluated-arguments reason)
-          (when (and (= = (first (:evaluated reason)))
-                     (= 3 (count (:evaluated reason))))
-            (apply print-equality-failed (rest (:evaluated reason))))))
-      (stack/print-cause-trace error))
+                 (pr-str (:actual result)))
+        (when (:evaluated result)
+          (print-evaluated-arguments result)
+          (when (and (= = (first (:evaluated result)))
+                     (= 3 (count (:evaluated result))))
+            (apply print-equality-failed (rest (:evaluated result))))))
+      (stack/print-cause-trace (:actual result) 10))
     (newline)
     (println (colorize (format "in %s:%s\n" (:file result) (:line result)) :light)))
   (flush))
@@ -159,8 +157,14 @@
                 child (assoc child :docs docs)]]
     (results-builder context child)))
 
-(defmethod results-builder :fail [_context result] (report-test-case-failure result))
-(defmethod results-builder :error [_context result] (report-test-case-failure result))
+(defmethod results-builder :fail [_context result]
+  (-> result
+      (update :docs conj (tc/identifier result))
+      (report-test-case-failure)))
+(defmethod results-builder :error [_context result]
+  (-> result
+      (update :docs conj (tc/identifier result))
+      (report-test-case-failure)))
 
 (defmulti results #'reporter-dispatch)
 (defmethod results :default [_ _])

@@ -1,7 +1,7 @@
 (ns lazytest.core-test
   (:require
    [lazytest.core :refer [causes-with-msg? causes? defdescribe describe expect
-                          expect-it given it throws-with-msg? throws?]])
+                          expect-it given it ok? throws-with-msg? throws?]])
   (:import
    clojure.lang.ExceptionInfo
    lazytest.ExpectationFailed))
@@ -70,7 +70,17 @@
                 #(throw (IllegalArgumentException.
                           "bad argument"
                           (ex-info "foo message" {:extra :data}
-                                   (ex-info "worser message" {:foo :bar})))))))))
+                                   (ex-info "worser message" {:foo :bar}))))))))
+  (describe ok?
+    (it "returns true"
+      (expect (true? (expect (ok? (constantly false))))))
+    (it "doesn't catch thrown exceptions"
+      (try (expect (ok? #(throw (ex-info "ok?" {:foo :bar}))))
+           (catch ExpectationFailed ex
+             (let [caught (-> ex ex-data :caught)]
+               (expect (instance? clojure.lang.ExceptionInfo caught))
+               (expect (= "ok?" (ex-message caught)))
+               (expect (= {:foo :bar} (ex-data caught)))))))))
 
 (defdescribe expect-data-test
   (given [e1 (try (expect (= 1 (inc 2)))

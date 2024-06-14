@@ -19,7 +19,8 @@
     :parse-fn symbol
     :assoc-fn update-args]
    [nil "--output OUTPUT" "Output format."
-    :default "nested"]
+    :parse-fn symbol
+    :default 'nested]
    ["-h" "--help" "Print help information."]])
 
 (defn help-message

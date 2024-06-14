@@ -9,13 +9,6 @@
    [lazytest.suite :as s :refer [suite-result?]]
    [lazytest.test-case :as tc]))
 
-(defn combine-reporters
-  ([reporter] (fn [context m] (reporter context m) (flush) nil))
-  ([reporter & reporters]
-   (fn [context m]
-     (run! (fn [reporter] (reporter context m) (flush) nil)
-           (cons reporter reporters)))))
-
 (defn report [context m]
   (when-let [reporter (:reporter context)]
     (reporter context m)))
@@ -32,7 +25,7 @@
 ;;
 ;; === FOCUSED TESTS ONLY ===
 
-(defmulti focused #'reporter-dispatch)
+(defmulti focused {:arglists '([context m])} #'reporter-dispatch)
 (defmethod focused :default [_ _])
 (defmethod focused :begin-test-run [_ m]
   (when (:focus m)
@@ -54,7 +47,7 @@
   [result]
   (tree-seq suite-result? :children result))
 
-(defmulti summary #'reporter-dispatch)
+(defmulti summary {:arglists '([context m])} #'reporter-dispatch)
 (defmethod summary :default [_ _])
 (defmethod summary :end-test-run [_ m]
   (let [{:keys [total fail error not-passing]} (summarize (:results m))
@@ -147,7 +140,7 @@
     (println (colorize (format "in %s:%s\n" (:file result) (:line result)) :light)))
   (flush))
 
-(defmulti ^:private results-builder #'reporter-dispatch)
+(defmulti ^:private results-builder {:arglists '([context m])} #'reporter-dispatch)
 (defmethod results-builder :pass [_ _])
 
 (defmethod results-builder ::s/suite-result
@@ -166,7 +159,7 @@
       (update :docs conj (tc/identifier result))
       (report-test-case-failure)))
 
-(defmulti results #'reporter-dispatch)
+(defmulti results {:arglists '([context m])} #'reporter-dispatch)
 (defmethod results :default [_ _])
 (defmethod results :end-test-run [context m]
   (newline)
@@ -180,7 +173,7 @@
 ;;
 ;; (....)(.)(....)
 
-(defmulti dots* #'reporter-dispatch)
+(defmulti dots* {:arglists '([context m])} #'reporter-dispatch)
 (defmethod dots* :default [_ _])
 (defmethod dots* :pass [_ _] (print (colorize "." :green)))
 (defmethod dots* :fail [_ _] (print (colorize "F" :red)))
@@ -202,7 +195,7 @@
 ;;       is less than two
 ;;       is more than one
 
-(defmulti nested* #'reporter-dispatch)
+(defmulti nested* {:arglists '([context m])} #'reporter-dispatch)
 (defmethod nested* :default [_ _])
 
 (defn print-test-seq
@@ -255,7 +248,7 @@
 ;; Ran 12 tests containing 29 test cases.
 ;; 1 failure, 0 errors.
 
-(defmulti clojure-test #'reporter-dispatch)
+(defmulti clojure-test {:arglists '([context m])} #'reporter-dispatch)
 (defmethod clojure-test :default [_ _])
 
 (defn- clojure-test-case-str [context result]

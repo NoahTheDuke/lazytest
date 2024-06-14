@@ -1,5 +1,6 @@
 (ns lazytest.runner
   (:require
+   [lazytest.context :refer [->context]]
    [lazytest.find :refer [find-suite]]
    [lazytest.focus :refer [filter-tree focused?]]
    [lazytest.malli]
@@ -66,16 +67,6 @@
       (report context results)
       (report context (assoc tc-meta :type :end-test-case :results results))
       results)))
-
-(defn ->context [context]
-  (-> context
-      (assoc ::depth 1 ::suite-history [])
-      (update :reporter
-              #(cond
-                 (nil? %) (apply r/combine-reporters nested)
-                 (fn? %) %
-                 (sequential? %) (apply r/combine-reporters %)
-                 :else (r/combine-reporters %)))))
 
 (defn run-tests
   "Runs tests defined in the given namespaces."

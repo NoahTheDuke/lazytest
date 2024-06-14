@@ -1,23 +1,26 @@
 (ns lazytest.runner.repl
   (:require
+    [lazytest.context :refer [->context]]
     [lazytest.results :refer [summarize]]
-    [lazytest.runner :as runner :refer [->context]]
-    [malli.experimental :as mx]
+    [lazytest.runner :as runner]
     [lazytest.reporters :as r]))
 
 (def repl-context
-  (->context {:reporter [r/results r/summary]}))
+  {:reporter [r/results r/summary]})
 
 (defn run-tests
   "Runs tests defined in the given namespaces."
-  [& namespaces]
-  (summarize (runner/run-tests repl-context namespaces)))
+  ([namespaces] (run-tests namespaces repl-context))
+  ([namespaces context]
+   (summarize (runner/run-tests (->context context) namespaces))))
 
 (defn run-all-tests
   "Run tests defined in all namespaces."
-  []
-  (summarize (runner/run-all-tests repl-context)))
+  ([] (run-all-tests repl-context))
+  ([context]
+   (summarize (runner/run-all-tests (->context context)))))
 
-(mx/defn run-test-var
-  [v :- :lt/var]
-  (summarize (runner/run-test-var repl-context v)))
+(defn run-test-var
+  ([v] (run-test-var v repl-context))
+  ([v context]
+   (summarize (runner/run-test-var (->context context) v))))

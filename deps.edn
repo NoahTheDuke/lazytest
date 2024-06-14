@@ -7,7 +7,8 @@
                  :alias :prep
                  :fn javac}
  :aliases
- {;; Development tools
+ {:run {:main-opts ["-m" "lazytest.main"]}
+  ;; Development tools
   :dev {:extra-paths ["dev"]
         :extra-deps {org.clojure/spec.alpha {:mvn/version "0.5.238"}
                      criterium/criterium {:mvn/version "0.4.6"}
@@ -21,9 +22,8 @@
                       "--interactive"
                       "-f" "rebel-readline.main/-main"]}
 
-  ;; Run the tests with `-M:test:runner`.
+  ;; Run the tests with `-M:test:run`.
   :test {:extra-paths ["test/clojure"]}
-  :runner {:main-opts ["-m" "lazytest.main"]}
 
   ;; Build a jar or uberjar with `-M:build jar/uberjar`
   :build {:deps {io.github.noahtheduke/clein {:mvn/version "0.2.1"}}

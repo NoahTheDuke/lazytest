@@ -6,8 +6,8 @@
    [clojure.tools.namespace.file :refer [read-file-ns-decl]]
    [clojure.tools.namespace.find :refer [find-sources-in-dir]]
    [lazytest.cli :refer [validate-opts]]
+   [lazytest.context :refer [->context]]
    [lazytest.malli]
-   [lazytest.reporters :as reporters]
    [lazytest.results :refer [summarize summary-exit-value]]
    [lazytest.runner :refer [run-tests]]
    [malli.experimental :as mx]))
@@ -25,18 +25,12 @@
     (apply require nses)
     nses))
 
-(defn resolve-reporter [output]
-  (if-let [reporter-var (requiring-resolve (symbol "lazytest.reporters" output))]
-    (let [reporter (var-get reporter-var)]
-      (if (sequential? reporter)
-        (apply reporters/combine-reporters reporter)
-        (reporters/combine-reporters reporters/focused reporter)))
-    (throw (ex-info (str "Can't find reporter: " output) {}))))
-
 (defn run [{:keys [dir output]}]
   (let [nses (require-dirs dir)
-        reporter (resolve-reporter output)
-        results (run-tests {:reporter reporter} nses)]
+        reporter (if (qualified-symbol? output)
+                   output
+                   (symbol "lazytest.reporters" (name output)))
+        results (run-tests (->context {:reporter reporter}) nses)]
     (summarize results)))
 
 (defn -main

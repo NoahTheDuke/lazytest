@@ -1,9 +1,5 @@
 # Change Log
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-
 ## Unreleased
 
 - Rename test-case-result keys:
@@ -26,7 +22,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   * `dots` prints `.` for passing test case, `F` for failure, and `E` for ERROR. Namespaces wrap test cases in parentheses: `(..F.)` Includes `focused`, `results`, and `summary`.
   * `nested` prints each suite and test case on a new line, and indents each suite. Includes `focused`, `results`, and `summary`.
   * `clojure-test` attempts to mimic clojure.test's basic output.
+  * `verbose` prints "Running X" and "Done with X" for all test sequences and print the direct result of all test cases.
 - Add tests for reporters.
+- Add `--verbose` cli flag which prepends the `verbose` reporter to any other reporters.
 
 ## 0.1.0 - 2024-06-09
 

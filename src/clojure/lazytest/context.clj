@@ -14,18 +14,22 @@
     (qualified-symbol? reporter)
     (if-let [r (requiring-resolve reporter)]
       (resolve-reporter (var-get r))
-      (throw (ex-info "Cannot find reporter" {:reporter reporter})))
-    (symbol? reporter) (throw (ex-info "Cannot find reporter" {:reporter reporter}))
+      (throw (ex-info (str "Cannot find reporter: " reporter)
+                      {:reporter reporter})))
+    (symbol? reporter) (throw (ex-info (str "Cannot find reporter: " reporter)
+                                       {:reporter reporter}))
     (sequential? reporter) (->> reporter
                                 (map resolve-reporter)
                                 (apply combine-reporters))
     :else reporter))
 
 (defn ->context [context]
+  (let [runner (resolve-reporter
+                 (or (:reporter context) 'lazytest.reporters/nested))
+        runner (if (:verbose context)
+                 (combine-reporters (resolve-reporter 'lazytest.reporters/verbose) runner)
+                 runner)]
   (-> context
       (assoc :lazytest.runner/depth 1)
       (assoc :lazytest.runner/suite-history [])
-      (update :reporter
-              #(if (fn? %) %
-                 (resolve-reporter (or % 'lazytest.reporters/nested))))))
-
+      (assoc :reporter runner))))

@@ -5,7 +5,7 @@
    [clojure.stacktrace :as stack]
    [clojure.string :as str]
    [lazytest.color :refer [colorize]]
-   [lazytest.results :refer [summarize result-seq]]
+   [lazytest.results :refer [result-seq summarize]]
    [lazytest.suite :as s :refer [suite-result?]]
    [lazytest.test-case :as tc]))
 
@@ -301,3 +301,64 @@
                      errors
                      (str "error" (when (not= 1 errors) "s"))))
     (flush)))
+
+;; VERBOSE
+;; Prints loudly about every step of the way. Incredibly noisy, not recommended.
+
+(defmulti verbose {:arglists '([context m])} #'reporter-dispatch)
+(defmethod verbose :default [_ _])
+
+(def type->name
+  {
+   :begin-test-run "test run"
+   :begin-ns-suite "namespace suite"
+   :begin-test-var "test var"
+   :begin-test-suite "suite"
+   :begin-test-seq "suite"
+   :begin-test-case "test case"
+   :end-test-run "test run"
+   :end-ns-suite "namespace suite"
+   :end-test-var "test var"
+   :end-test-suite "suite"
+   :end-test-seq "suite"
+   :end-test-case "test case"
+   })
+
+(defn print-entering [s]
+  (println "Running" (str (type->name (:type s)) ":")
+           (str (s/identifier s)
+                (when (and (:file s) (:line s))
+                  (str " (" (:file s) ":" (:line s) ")")))))
+
+(defn print-leaving [s]
+  (println "Done with" (str (type->name (:type s)) ":")
+           (str (s/identifier s)
+                (when (and (:file s) (:line s))
+                  (str " (" (:file s) ":" (:line s) ")")))))
+
+(defmethod verbose :begin-test-run [_ _] (println "Starting test run"))
+(defmethod verbose :begin-ns-suite [_context s] (print-entering s))
+(defmethod verbose :begin-test-var [_context s] (print-entering s))
+(defmethod verbose :begin-test-suite [_context s] (print-entering s))
+(defmethod verbose :begin-test-seq [_context s] (print-entering s))
+
+(defmethod verbose :end-test-run [_ _] (println "Ending test run"))
+(defmethod verbose :end-ns-suite [_context s] (print-leaving s))
+(defmethod verbose :end-test-var [_context s] (print-leaving s))
+(defmethod verbose :end-test-suite [_context s] (print-leaving s))
+(defmethod verbose :end-test-seq [_context s] (print-leaving s))
+
+(defn print-entering-tc [tc]
+  (println "Running" (str (type->name (:type tc)) ":")
+           (str (tc/identifier tc) " (" (:file tc) ":" (:line tc) ")")))
+
+(defn print-leaving-tc [tc]
+  (println "Done with" (str (type->name (:type tc)) ":")
+           (str (tc/identifier tc) " (" (:file tc) ":" (:line tc) ")")))
+
+(defmethod verbose :begin-test-case [_context tc] (print-entering-tc tc))
+(defmethod verbose :end-test-case [_context tc] (print-leaving-tc tc))
+
+(defmethod verbose :pass [_context result] (prn result))
+(defmethod verbose :fail [_context result] (prn result))
+(defmethod verbose :error [_context result] (prn result))

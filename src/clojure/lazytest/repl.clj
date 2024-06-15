@@ -1,4 +1,4 @@
-(ns lazytest.runner.repl
+(ns lazytest.repl
   (:require
     [lazytest.context :refer [->context]]
     [lazytest.results :refer [summarize]]

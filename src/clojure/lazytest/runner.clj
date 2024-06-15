@@ -74,7 +74,6 @@
   ([context namespaces]
    (let [ste (apply find-suite namespaces)
          tree (filter-tree (expand-tree ste))
-         context (->context context)
          result (run-test context tree)]
      (if (focused? tree)
        (vary-meta result assoc :focus true)

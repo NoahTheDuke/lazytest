@@ -1,6 +1,5 @@
 (ns lazytest.runner
   (:require
-   [lazytest.context :refer [->context]]
    [lazytest.find :refer [find-suite]]
    [lazytest.focus :refer [filter-tree focused?]]
    [lazytest.malli]

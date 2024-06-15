@@ -15,8 +15,7 @@
            (throw (->ex-failed ~&form
                     {:actual (mc-clj/tagged-for-pretty-printing
                                (list '~'not (list 'match? matcher# actual#))
-                               result#)})))
-         match?#)
+                               result#)}))))
        (throw (->ex-failed ~&form
                 {:message "The first argument of match? needs to be a matcher (implement the match protocol)"
                  :evaluated (list `match? matcher# actual#)

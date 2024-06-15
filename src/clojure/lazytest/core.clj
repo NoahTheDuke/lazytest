@@ -1,7 +1,6 @@
 (ns lazytest.core
   (:require
     [lazytest.malli]
-    [clojure.string :as str]
     [lazytest.suite :refer [suite test-seq]]
     [lazytest.test-case :refer [test-case]])
   (:import (lazytest ExpectationFailed)))
@@ -17,17 +16,12 @@
     [nil args]))
 
 (defn- merged-metadata [body form docstring extra-attr-map]
-  (merge {:doc (not-empty docstring)
+  (merge {:doc docstring
           :file *file*
           :ns *ns*}
          (when (empty? body) {:pending true})
          (meta form)
          extra-attr-map))
-
-(defn- strcat
-  "Concatenate strings, with spaces in between, skipping nil."
-  [& args]
-  (str/join " " (remove nil? args)))
 
 ;;; Public API
 
@@ -98,21 +92,25 @@
 (defmacro describe
   "Defines a suite of tests.
 
-  sym (optional) is a symbol; if present, it will be resolved in the current namespace and prepended to the documentation string.
-
-  doc (optional) is a documentation string.
+  doc is a documentation string expression. If the expression is
+  a local, it will be used as is. If the expression is a resolvable
+  symbol, it will be resolved and used as a var. Otherwise, it's
+  evaluated like normal.
 
   attr-map (optional) is a metadata map.
 
   children are test cases or nested test suites."
-  {:arglists '([& children]
-               [sym? doc? attr-map? & children])}
-  [& body]
-  (let [[sym body] (get-arg symbol? body)
-        [doc body] (get-arg string? body)
+  {:arglists '([doc & children]
+               [doc attr-map? & children])}
+  [doc & body]
+  (let [doc (if (symbol? doc)
+              (if (contains? &env doc)
+                doc
+                (or (resolve doc)
+                    doc))
+              doc)
         [attr-map children] (get-arg map? body)
-        docstring (strcat (when sym (resolve sym)) doc)
-        metadata (merged-metadata children &form docstring attr-map)]
+        metadata (merged-metadata children &form doc attr-map)]
     `(suite (test-seq
               (with-meta
                 (flatten [~@children])
@@ -123,27 +121,23 @@
 
   test-name is a symbol.
 
-  sym (optional) is a symbol; if present, it will be resolved in the current namespace and prepended to the documentation string.
-
-  doc (optional) is a documentation string.
+  doc (optional) is a documentation string. Unlike the other helpers,
+  this doc must be a string literal.
 
   attr-map (optional) is a metadata map.
 
   children are test cases (see 'it') or nested test suites (see 'describe')."
   {:arglists '([test-name & children]
-               [test-name sym? doc? attr-map? & children])}
+               [test-name doc? attr-map? & children])}
   [test-name & body]
-  (let [[sym body] (get-arg symbol? body)
-        [doc body] (get-arg string? body)
+  (let [[doc body] (get-arg string? body)
         [attr-map body] (get-arg map? body)
         focus (:focus (meta test-name))
         test-var (list 'var (symbol (str *ns*) (str test-name)))
         attr-map (cond-> attr-map
                    true (assoc :var test-var)
                    focus (assoc :focus focus))
-        body (cond-> []
-               sym (conj sym)
-               doc (conj doc)
+        body (cond-> [(or doc (str test-name))]
                attr-map (conj attr-map)
                body (concat body))]
     `(def ~test-name (describe ~@body))))
@@ -158,8 +152,10 @@
 (defmacro it
   "Defines a single test case that may execute arbitrary code.
 
-  sym (optional) is a symbol; if present, it will be resolved in the current namespace and prepended to the documentation string.
-  doc (optional) is a documentation string
+  doc is a documentation string expression. If the expression is
+  a local, it will be used as is. If the expression is a resolvable
+  symbol, it will be resolved and used as a var. Otherwise, it's
+  evaluated like normal.
 
   attr-map (optional) is a metadata map
 
@@ -169,13 +165,16 @@
 
   NOTE: Because failure requires an exception, no assertions after
   the thrown exception will be run."
-  {:arglists '([& body]
-               [sym? doc? attr-map? & body])}
-  [& body]
-  (let [[sym body] (get-arg symbol? body)
-        [doc body] (get-arg string? body)
+  {:arglists '([doc & body]
+               [doc sym? attr-map? & body])}
+  [doc & body]
+  (let [doc (if (symbol? doc)
+              (if (contains? &env doc)
+                doc
+                (or (resolve doc)
+                    doc))
+              doc)
         [attr-map body] (get-arg map? body)
-        doc (strcat (when sym (resolve sym)) doc)
         metadata (merged-metadata body &form doc attr-map)]
     `(test-case (with-meta
                   (fn [] ~@body)
@@ -184,18 +183,24 @@
 (defmacro expect-it
   "Defines a single test case that wraps the given expr in an `expect` call.
 
-  body is: doc? attr-map? expr
-
-  doc (optional) is a documentation string
+  doc is a documentation string expression. If the expression is
+  a local, it will be used as is. If the expression is a resolvable
+  symbol, it will be resolved and used as a var. Otherwise, it's
+  evaluated like normal.
 
   attr-map (optional) is a metadata map
 
   expr is a single expression, which must return logical true to
   indicate the test case passes or logical false to indicate failure."
-  {:arglists '([expr]
-               [doc? attr-map? expr])}
-  [& body]
-  (let [[doc body] (get-arg string? body)
+  {:arglists '([doc expr]
+               [doc sym? attr-map? expr])}
+  [doc & body]
+  (let [doc (if (symbol? doc)
+              (if (contains? &env doc)
+                doc
+                (or (resolve doc)
+                    doc))
+              doc)
         [attr-map exprs] (get-arg map? body)
         [assertion] exprs
         metadata (merged-metadata body &form doc attr-map)]

@@ -12,7 +12,9 @@
   "Runs tests defined in the given namespaces."
   ([namespaces] (run-tests namespaces repl-context))
   ([namespaces context]
-   (summarize (runner/run-tests (->context context) namespaces))))
+   (if (sequential? namespaces)
+     (summarize (runner/run-tests (->context context) namespaces))
+     (run-tests [namespaces] context))))
 
 (defn run-all-tests
   "Run tests defined in all namespaces."

@@ -1,32 +1,15 @@
 (ns lazytest.color)
 
-;; Mostly stolen from Stuart Halloway's circumspec
+(def ^:dynamic *color*
+  (contains? #{"yes" "true"} (System/getProperty "lazytest.colorize" "true")))
 
 (defn colorize?
-  "Colorize output, true if system property lazytest.colorize is
-  true (default)"
+  "Colorize output, true if *color* is logical true."
   []
-  (contains? #{"yes" "true"}
-    (System/getProperty "lazytest.colorize" "true")))
-
-(defn set-colorize
-  "Set the colorize? property to true or false."
-  [bool]
-  (assert (boolean? bool))
-  (System/setProperty "lazytest.colorize" (str bool)))
+  *color*)
 
 (def ^{:doc "ANSI color code table"} color-table
   {:reset "[0m"
-   :bold-on "[1m"
-   :italic-on "[3m"
-   :underline-on "[4m"
-   :inverse-on "[7m"
-   :strikethrough-on "[9m"
-   :bold-off "[22m"
-   :italic-off "[23m"
-   :underline-off "[24m"
-   :inverse-off "[27m"
-   :strikethrough-off "[29m"
    :black "[30m"
    :red "[31m"
    :green "[32m"

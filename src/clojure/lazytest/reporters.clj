@@ -5,7 +5,7 @@
    [clojure.stacktrace :as stack]
    [clojure.string :as str]
    [lazytest.color :refer [colorize]]
-   [lazytest.results :refer [summarize]]
+   [lazytest.results :refer [summarize result-seq]]
    [lazytest.suite :as s :refer [suite-result?]]
    [lazytest.test-case :as tc]))
 
@@ -40,12 +40,6 @@
 ;;
 ;; Ran 5 test cases.
 ;; 0 failures and 2 errors.
-
-(defn result-seq
-  "Given a single suite result, returns a depth-first sequence of all
-  nested child suite/test results."
-  [result]
-  (tree-seq suite-result? :children result))
 
 (defmulti summary {:arglists '([context m])} #'reporter-dispatch)
 (defmethod summary :default [_ _])
@@ -98,9 +92,9 @@
       (println (colorize "The same in both:" :cyan))
       (pp/pprint same))))
 
-(defn- print-evaluated-arguments [reason]
+(defn- print-evaluated-arguments [result]
   (println (colorize "Evaluated arguments:" :cyan))
-  (doseq [arg (rest (:evaluated reason))]
+  (doseq [arg (rest (:evaluated result))]
     (print " * ")
     (if (instance? Throwable arg)
       (pp/pprint (type arg))

@@ -56,7 +56,7 @@
     source :- [:fn test-case?]
     thrown :- [:maybe :lt/throwable]]
    (let [{:keys [file line doc]} (extract-file-line-doc source thrown)
-         {:keys [actual expected caught]} (ex-data thrown)
+         {:keys [actual expected caught evaluated]} (ex-data thrown)
          thrown' (or (when (instance? Throwable caught) caught) thrown)]
      (with-meta {:type type'
                  :source source :thrown thrown'
@@ -65,7 +65,8 @@
                  :message (or (:message (ex-data thrown'))
                               (:expected-message (ex-data thrown')))
                  :expected expected
-                 :actual (or actual caught)}
+                 :actual (or actual caught)
+                 :evaluated evaluated}
                 {:type ::test-case-result}))))
 
 (defn test-case-result?

@@ -91,5 +91,5 @@
   (let [tree (-> (s/suite (s/test-seq [@v]))
                  (vary-meta assoc :type :lazytest/run)
                  (expand-tree)
-                 #_(s/test-seq))]
+                 (filter-tree))]
     (run-test context tree)))

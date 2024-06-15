@@ -32,7 +32,7 @@
   "Get a string representation of the suite. Either the suite's
   :doc, its :ns-name, or the string version of its :var."
   [m]
-  (or (:doc m) (:ns-name m) (some-> m :var meta :name)))
+  (or (:doc m) (:ns-name m) (:var m)))
 
 (mx/defn suite-result :- :map
   "Creates a suite result map with keys :source and :children.

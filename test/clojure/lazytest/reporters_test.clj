@@ -24,6 +24,7 @@
 (defn make-suite [& results]
   ^{:type ::s/suite-result}
   {:type ::s/suite-result
+   :lazytest.runner/duration 123456789.0
    :doc "example suite"
    :children results})
 
@@ -57,31 +58,31 @@
 (defdescribe summary-test
   (it "no tests"
     (expect
-      (= "\nRan 0 test cases.\n0 failures.\n"
+      (= "Ran 0 test cases in 0.12346 seconds.\n0 failures.\n\n"
          (-> (sut/summary nil {:type :end-test-run
                                :results (make-suite)})
              (with-out-str-no-color)))))
   (it "passing"
     (expect
-      (= "\nRan 1 test cases.\n0 failures.\n"
+      (= "Ran 1 test cases in 0.12346 seconds.\n0 failures.\n\n"
          (-> (sut/summary nil {:type :end-test-run
                                :results (make-suite (->passing))})
              (with-out-str-no-color)))))
   (it "failures"
     (expect
-      (= "\nRan 1 test cases.\n1 failure.\n"
+      (= "Ran 1 test cases in 0.12346 seconds.\n1 failure.\n\n"
          (-> (sut/summary nil {:type :end-test-run
                                :results (make-suite (->failing))})
              (with-out-str-no-color)))))
   (it "errors"
     (expect
-      (= "\nRan 1 test cases.\n0 failures and 1 errors.\n"
+      (= "Ran 1 test cases in 0.12346 seconds.\n0 failures and 1 errors.\n\n"
          (-> (sut/summary nil {:type :end-test-run
                                :results (make-suite (->erroring))})
              (with-out-str-no-color)))))
   (it "combinations"
     (expect
-      (= "\nRan 3 test cases.\n1 failure and 1 errors.\n"
+      (= "Ran 3 test cases in 0.12346 seconds.\n1 failure and 1 errors.\n\n"
          (-> (sut/summary nil {:type :end-test-run
                                :results (make-suite
                                           (->passing)
@@ -95,13 +96,13 @@
 (defdescribe results-test
   (it "no tests"
     (expect
-      (= "\n"
+      (nil?
          (-> (sut/results nil {:type :end-test-run
                                :results (make-suite)})
              (with-out-str-no-color)))))
   (it "passing"
     (expect
-      (= "\n"
+      (nil?
          (-> (sut/results nil {:type :end-test-run
                                :results (make-suite (->passing))})
              (with-out-str-no-color)))))
@@ -109,8 +110,7 @@
     (it "prints the expectation's message"
       (expect
         (= (str/join \newline
-                     [""
-                      "example suite"
+                     ["example suite"
                       "  example test-case:"
                       ""
                       "failing"
@@ -133,8 +133,7 @@
     (it "defaults if given no message"
       (expect
         (= (str/join \newline
-                     [""
-                      "example suite"
+                     ["example suite"
                       "  example test-case:"
                       ""
                       "Expectation failed"
@@ -158,8 +157,7 @@
     (it "prints the given message"
       (with-redefs [stack/print-cause-trace (fn [& _] (println "<stack-trace>"))]
         (expect
-          (= (str/join \newline [""
-                                 "example suite"
+          (= (str/join \newline ["example suite"
                                  "  example test-case:"
                                  ""
                                  "erroring"
@@ -174,8 +172,7 @@
     (it "defaults if given no message"
       (with-redefs [stack/print-cause-trace (fn [& _] (println "<stack-trace>"))]
         (expect
-          (= (str/join \newline [""
-                                 "example suite"
+          (= (str/join \newline ["example suite"
                                  "  example test-case:"
                                  ""
                                  "ERROR: Caught exception"
@@ -191,8 +188,7 @@
     (with-redefs [stack/print-cause-trace (fn [& _] (println "<stack-trace>"))]
       (expect
         (= (str/join \newline
-                     [""
-                      "example suite"
+                     ["example suite"
                       "  example test-case:"
                       ""
                       "failing"
@@ -335,12 +331,12 @@
 
 (defdescribe defdescribe-metadata-test
   (it "uses the var if given no doc string"
-    (expect (= "  defdescribe-no-doc\n"
+    (expect (= "  defdescribe-no-doc\n\n"
                (-> (runner/run-test-var (->context {:reporter sut/nested*})
                                         #'defdescribe-no-doc)
                    (with-out-str-no-color)))))
   (it "uses the doc string when available"
-    (expect (= "  cool docs\n"
+    (expect (= "  cool docs\n\n"
                (-> (runner/run-test-var (->context {:reporter sut/nested*})
                                         #'defdescribe-with-doc)
                    (with-out-str-no-color))))))

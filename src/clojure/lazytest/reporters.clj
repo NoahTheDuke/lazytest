@@ -45,8 +45,8 @@
 (defmethod summary :default [_ _])
 (defmethod summary :end-test-run [_ m]
   (let [{:keys [total fail error not-passing]} (summarize (:results m))
-        count-msg (str "Ran " total " test cases.")]
-    (newline)
+        duration (double (/ (-> m :results (:lazytest.runner/duration 0.0)) 1e9))
+        count-msg (format "Ran %s test cases in %.5f seconds." total duration)]
     (println (if (zero? total)
                (colorize count-msg :yellow)
                count-msg))
@@ -55,6 +55,7 @@
                               (format " and %s errors." error)
                               "."))
                        (if (zero? not-passing) :green :red)))
+    (newline)
     (flush)))
 
 ;; RESULTS
@@ -156,7 +157,6 @@
 (defmulti results {:arglists '([context m])} #'reporter-dispatch)
 (defmethod results :default [_ _])
 (defmethod results :end-test-run [context m]
-  (newline)
   (results-builder context (:results m)))
 
 ;; DOTS
@@ -205,6 +205,7 @@
 (defmethod nested* :begin-test-var [context s] (print-test-seq context s))
 (defmethod nested* :begin-test-suite [context s] (print-test-seq context s))
 (defmethod nested* :begin-test-seq [context s] (print-test-seq context s))
+(defmethod nested* :end-test-run [_ _] (newline) (flush))
 
 (defn print-test-result
   [context result]
@@ -362,3 +363,46 @@
 (defmethod verbose :pass [_context result] (prn result))
 (defmethod verbose :fail [_context result] (prn result))
 (defmethod verbose :error [_context result] (prn result))
+
+;;; PROFILE
+;;; Print the top 5 namespaces and test vars by duration.
+;;; Code adapted from kaocha
+;;;
+;;; Example:
+;;;
+;;; blah blah blah
+
+(defmulti profile {:arglists '([context m])} #'reporter-dispatch)
+(defmethod profile :default [_ _])
+(defmethod profile :end-test-run [_context {:keys [results]}]
+  (let [types (-> (group-by (comp type :source) (result-seq results))
+                  (select-keys [:lazytest/ns-suite :lazytest/test-var])
+                  (update-vals #(filterv :lazytest.runner/duration %)))
+        total-duration (->> (mapcat identity (vals types))
+                            (map :lazytest.runner/duration)
+                            (reduce + 0))
+        slowest-ns-suites (take 5 (sort-by :lazytest.runner/duration > (:lazytest/ns-suite types)))
+        ns-suite-duration (reduce + 0 (map :lazytest.runner/duration slowest-ns-suites))
+        slowest-vars (take 5 (sort-by :lazytest.runner/duration > (:lazytest/test-var types)))
+        var-duration (reduce + 0 (map :lazytest.runner/duration slowest-vars))
+        ]
+    (println (format "Top %s slowest test namespaces (%.5f seconds, %.1f%% of total time)"
+                     (count slowest-ns-suites)
+                     (double (/ ns-suite-duration 1e9))
+                     (double (* (/ ns-suite-duration total-duration) 100))))
+    (println (->> (for [suite slowest-ns-suites]
+                    (format "  %s %.5f seconds"
+                            (s/identifier suite)
+                            (double (/ (:lazytest.runner/duration suite) 1e9))))
+                  (str/join \newline)))
+    (newline)
+    (println (format "Top %s slowest test vars (%.5f seconds, %.1f%% of total time)"
+                     (count slowest-vars)
+                     (double (/ var-duration 1e9))
+                     (double (* (/ var-duration total-duration) 100))))
+    (println (->> (for [suite slowest-vars]
+                    (format "  %s %.5f seconds"
+                            (s/identifier suite)
+                            (double (/ (:lazytest.runner/duration suite) 1e9))))
+                  (str/join \newline)))
+    (flush)))

@@ -8,6 +8,8 @@
    [lazytest.test-case :refer [try-test-case]]
    [malli.experimental :as mx]))
 
+(set! *warn-on-reflection* true)
+
 (defn dispatch [_context m]
   (or (:type m) (-> m meta :type)))
 
@@ -19,10 +21,13 @@
 (defn ->suite-result [context s]
   (let [sm (meta s)
         id (s/identifier sm)
+        start (System/nanoTime)
         context (-> context
                     (update ::depth #(if id (inc %) %))
-                    (update ::suite-history conj sm))]
-    (suite-result s (vec (keep #(run-test context %) s)))))
+                    (update ::suite-history conj sm))
+        results (vec (keep #(run-test context %) s))
+        duration (double (- (System/nanoTime) start))]
+    (assoc (suite-result s results) ::duration duration)))
 
 (defmethod run-test :lazytest/run [context s]
   (let [sm (meta s)]
@@ -60,9 +65,12 @@
       results)))
 
 (defmethod run-test :lazytest/test-case [context tc]
-  (let [tc-meta (meta tc)]
+  (let [tc-meta (meta tc)
+        start (System/nanoTime)]
     (report context (assoc tc-meta :type :begin-test-case))
-    (let [results (try-test-case tc)]
+    (let [results (try-test-case tc)
+          duration (double (- (System/nanoTime) start))
+          results (assoc results ::duration duration)]
       (report context results)
       (report context (assoc tc-meta :type :end-test-case :results results))
       results)))

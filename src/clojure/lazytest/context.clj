@@ -18,7 +18,7 @@
                       {:reporter reporter})))
     (symbol? reporter) (throw (ex-info (str "Cannot find reporter: " reporter)
                                        {:reporter reporter}))
-    (sequential? reporter) (->> reporter
+    (sequential? reporter) (->> (flatten reporter)
                                 (map resolve-reporter)
                                 (apply combine-reporters))
     :else reporter))
@@ -29,7 +29,7 @@
         runner (if (:verbose context)
                  (combine-reporters (resolve-reporter 'lazytest.reporters/verbose) runner)
                  runner)]
-  (-> context
-      (assoc :lazytest.runner/depth 1)
-      (assoc :lazytest.runner/suite-history [])
-      (assoc :reporter runner))))
+    (-> context
+        (assoc :lazytest.runner/depth 1)
+        (assoc :lazytest.runner/suite-history [])
+        (assoc :reporter runner))))

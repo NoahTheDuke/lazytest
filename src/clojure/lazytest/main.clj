@@ -27,10 +27,7 @@
 
 (defn run [{:keys [dir output] :as context}]
   (let [nses (require-dirs dir)
-        reporter (if (qualified-symbol? output)
-                   output
-                   (symbol "lazytest.reporters" (name output)))
-        context (->context (assoc context :reporter reporter))
+        context (->context (assoc context :reporter output))
         results (run-tests context nses)]
     (summarize results)))
 

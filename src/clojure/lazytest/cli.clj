@@ -4,7 +4,7 @@
    [clojure.tools.cli :as cli]))
 
 (def fconj
-  (fnil conj #{}))
+  (fnil conj []))
 
 (defn update-args [m k v]
   (update m k fconj v))
@@ -18,9 +18,9 @@
    ["-v" "--var VAR-SYM" "Test var to only run."
     :parse-fn symbol
     :assoc-fn update-args]
-   [nil "--output OUTPUT" "Output format."
+   [nil "--output OUTPUT" "Output format. (Defaults to \"nested\".)"
     :parse-fn symbol
-    :default 'nested]
+    :assoc-fn update-args]
    [nil "--verbose" "Run with additional info, helpful for debugging."]
    ["-h" "--help" "Print help information."]])
 
@@ -42,6 +42,16 @@
   {:exit-message (str/join \newline (cons "lazytest errors:" errors))
    :ok false})
 
+(defn prepare-output [options]
+  (update options :output
+          (fn [output]
+            (if output
+              (->> output
+                   (map #(if (qualified-symbol? %) % (symbol "lazytest.reporters" (name %))))
+                   (distinct)
+                   (vec))
+              ['lazytest.reporters/nested]))))
+
 (defn validate-opts
   "Parse and validate opts.
 
@@ -56,4 +66,5 @@
       (:help options) (help-message summary)
       (:version options) {:exit-message "lazytest 0.0" :ok true}
       errors (print-errors errors)
-      :else options)))
+      :else (-> options
+                (prepare-output)))))

@@ -1,6 +1,7 @@
 # Lazytest: A new test framework for Clojure
 
-An alternative to `clojure.test`, aiming to be feature-rich and easily extensible.
+An alternative to `clojure.test`, aiming to be feature-rich and easily
+extensible.
 
 ## Why a new test framework?
 
@@ -18,82 +19,75 @@ to correct some of those issues and they made good progress, but many
 most don't worked well with modern repl-driven development practices
 (using `gynsym`s instead of named test vars).
 
-I like the ideas put forth in Sandra's post above about Lazytest and
-hope to experiment with achieving them 10 years later, while borrowing
-heavily from the work done by the community in the meantime (primarily
-[Kaocha by Lambda Island](https://github.com/lambdaisland/kaocha)).
+I like the ideas put forth in Alessandra's post above about Lazytest
+and hope to experiment with achieving them 10 years later, while
+borrowing heavily from the work in both the Clojure community and test
+runners frameworks in other languages.
 
-## Testing with 'defdescribe'
+## Getting Started
+
+Add it to your deps.edn or project.clj:
+
+```clojure
+{:aliases
+ {:test {:extra-deps {io.github.noahtheduke/lazytest {:mvn/version "0.2.0"}}
+         :extra-paths ["test"]
+         :main-opts ["-m" "lazytest.main"]}}}
+```
+
+In a test file:
+
+```clojure
+(ns example.readme-test
+  (:require [lazytest.core :refer [defdescribe decribe expect it]]))
+
+(defdescribe seq-fns-test
+  (describe keep
+    (it "should reject nils"
+      (expect (= '(1 false 2 3) (keep identity [nil 1 false 2 3]))))))
+```
+
+From the command line:
+
+```bash
+$ clojure -M:test
+
+  example.readme-test
+    seq-fns-test
+      #'clojure.core/keep
+        √ should reject nils
+
+Ran 1 test cases in 0.00243 seconds.
+0 failures.
+```
+
+## Testing with 'lazytest'
 
 The primary api is found in `lazytest.core` namespace. It mimics the
 behavior-driven testing style popularized by libraries such as
-[RSpec](http://rspec.info).
+[RSpec](https://rspec.info/) and [Mocha](https://mochajs.org).
 
 Use the `defdescribe` macro to create a group of tests. Start the
 group with a name and an optional documentation string.
 
 ```clojure
 (ns examples.readme.groups
-  (:require [lazytest.core :refer [defdescribe expect-it]]))
+  (:require [lazytest.core :refer [defdescribe describe expect it]]))
 
-(defdescribe app-test "This application" ...)
+(defdescribe seq-fns-test "a test of clojure core fns" ...)
 ```
 
-Within a `defdescribe` group, use the `expect-it` macro to create
-a single test example. Start your example with a documentation string
-describing what should happen, followed by an expression to test what
-you think should be logically true.
+Within a `defdescribe` group, use `it` to create a test example. Start
+your example with a documentation string describing what should
+happen, followed by an expression that throws if it it fails, such as
+Clojure's built-in `assert` or Lazytest's provided `expect`.
 
 ```clojure
 (defdescribe +-test "with integers"
-  (expect-it "computes the sum of 1 and 2"
-    (= 3 (+ 1 2)))
-  (expect-it "computes the sum of 3 and 4"
-    (= 7 (+ 3 4))))
-```
-
-Each `expect-it` example may only contain *one* expression, which must
-return logical true to indicate the test passed or logical false to
-indicate it failed.
-
-### Nested Test Groups
-
-Test groups may be nested inside other groups with the `describe`
-macro, which has the same syntax as `defdescribe` but does not define
-a top-level Var (thus the similar names).
-
-```clojure
-(ns examples.readme.nested
-  (:require [lazytest.core :refer [defdescribe describe expect-it]]))
-
-(defdescribe addition-test "Addition"
-  (describe "of integers"
-    (expect-it "computes small sums"
-      (= 3 (+ 1 2)))
-    (expect-it "computes large sums"
-      (= 7000 (+ 3000 4000))))
-  (describe "of floats"
-    (expect-it "computes small sums"
-      (> 0.00001 (abs (- 0.3 (+ 0.1 0.2)))))
-    (expect-it "computes large sums"
-      (> 0.00001 (abs (- 3000.0 (+ 1000.0 2000.0)))))))
-```
-
-### Arbitrary Code in an Example
-
-You can create an example that executes arbitrary code with the `it`
-macro. Wrap each assertion expression in the `lazytest.core/expect`
-macro.
-
-```clojure
-(ns examples.readme.do-it
-  (:require [lazytest.core :refer [defdescribe it expect]]))
-
-(defdescribe math-test "Arithmetic"
-  (it "after printing"
-    (expect (= 4 (+ 2 2)))
-    (println "Hello, World!")
-    (expect (= -1 (- 4 5)))))
+  (it "computes the sum of 1 and 2"
+    (expect (= 3 (+ 1 2))))
+  (it "computes the sum of 3 and 4"
+    (assert (= 7 (+ 3 4)))))
 ```
 
 The `expect` macro is like `assert` but carries more information about
@@ -102,6 +96,29 @@ evaluate to logical true.
 
 If the code inside the `it` macro runs to completion without throwing
 an exception, the test example is considered to have passed.
+
+### Nested Test Groups
+
+Test groups may be nested inside other groups with `describe`, which
+has the same syntax as `defdescribe` but does not define a top-level
+Var (thus the similar names).
+
+```clojure
+(ns examples.readme.nested
+  (:require [lazytest.core :refer [defdescribe describe expect it]]))
+
+(defdescribe addition-test "Addition"
+  (describe "of integers"
+    (it "computes small sums"
+      (expect (= 3 (+ 1 2))))
+    (it "computes large sums"
+      (expect (= 7000 (+ 3000 4000)))))
+  (describe "of floats"
+    (it "computes small sums"
+      (expect (> 0.00001 (abs (- 0.3 (+ 0.1 0.2))))))
+    (it "computes large sums"
+      (expect (> 0.00001 (abs (- 3000.0 (+ 1000.0 2000.0))))))))
+```
 
 ## Focusing on Individual Tests and Suites
 
@@ -149,9 +166,9 @@ the success of tests as they run.
 
 The test runner also returns a sequence of *results*, which are either
 *suite results* (see `lazytest.suite/suite-result`) or *test case
-results* (see `lazytest.test-case/test-case-result`). That sequence
-of results is passed to a *reporter*, which formats results for
-display to the user. Multiple reporters are provided, see the namespace
+results* (see `lazytest.test-case/test-case-result`). That sequence of
+results is passed to a *reporter*, which formats results for display
+to the user. Multiple reporters are provided, see the namespace
 `lazytest.reporters`.
 
 ## Making Emacs Indent Tests Properly

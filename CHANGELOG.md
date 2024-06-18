@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.2.0 - 2024-06-18
+
 - Rename test-case-result keys to match clojure.test and other test language's runners:
   * `:form` -> `:expected`
   * `:result` -> `:actual`

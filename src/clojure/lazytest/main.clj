@@ -6,7 +6,7 @@
    [clojure.tools.namespace.file :refer [read-file-ns-decl]]
    [clojure.tools.namespace.find :refer [find-sources-in-dir]]
    [lazytest.cli :refer [validate-opts]]
-   [lazytest.context :refer [->context]]
+   [lazytest.config :refer [->config]]
    [lazytest.malli]
    [lazytest.results :refer [summarize summary-exit-value]]
    [lazytest.runner :refer [run-tests]]
@@ -25,10 +25,10 @@
     (apply require nses)
     nses))
 
-(defn run [{:keys [dir output] :as context}]
+(defn run [{:keys [dir output] :as config}]
   (let [nses (require-dirs dir)
-        context (->context (assoc context :reporter output))
-        results (run-tests context nses)]
+        config (->config (assoc config :reporter output))
+        results (run-tests config nses)]
     (summarize results)))
 
 (defn -main

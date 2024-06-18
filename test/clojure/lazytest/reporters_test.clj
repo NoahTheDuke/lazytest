@@ -2,7 +2,7 @@
   (:require
    [clojure.stacktrace :as stack]
    [clojure.string :as str]
-   [lazytest.context :refer [->context]]
+   [lazytest.config :refer [->config]]
    [lazytest.core :refer [defdescribe describe expect expect-it given it ->ex-failed]]
    [lazytest.reporters :as sut]
    [lazytest.runner :as runner]
@@ -279,7 +279,7 @@
 
 (defdescribe nested-test
   (describe "prints various types"
-    (given [ctx (->context nil)]
+    (given [ctx (->config nil)]
       (it "prints suites"
         (expect
           (= "  example doc\n"
@@ -299,7 +299,7 @@
                                                    :var #'identity}))
                  (with-out-str-no-color)))))))
   (describe "all of the begin-* seq types"
-    (given [ctx (->context nil)]
+    (given [ctx (->config nil)]
       (map (fn [t]
              (it (str "prints " t)
                (expect
@@ -310,7 +310,7 @@
            [:begin-test-run :begin-ns-suite :begin-test-var
             :begin-test-suite :begin-test-seq])))
   (describe "test case results"
-    (given [ctx (->context nil)]
+    (given [ctx (->config nil)]
       (it "pass"
         (expect
           (= "  √ example test-case\n"
@@ -328,13 +328,13 @@
                  (with-out-str-no-color)))))))
   (describe "indentation"
     (it "defaults to 2 spaces"
-      (let [out (-> (sut/nested* (->context nil) (->passing))
+      (let [out (-> (sut/nested* (->config nil) (->passing))
                     (with-out-str-no-color))]
         (expect
           (= 2 (- (count out) (count (str/triml out)))))))
     (it "increases by two for every depth"
       (let [depth 3
-            out (-> (sut/nested* (-> (->context nil)
+            out (-> (sut/nested* (-> (->config nil)
                                      (assoc :lazytest.runner/depth depth))
                                  (->passing))
                     (with-out-str-no-color))]
@@ -347,11 +347,11 @@
 (defdescribe defdescribe-metadata-test
   (it "uses the var if given no doc string"
     (expect (= "  defdescribe-no-doc\n\n"
-               (-> (runner/run-test-var (->context {:reporter sut/nested*})
+               (-> (runner/run-test-var (->config {:reporter sut/nested*})
                                         #'defdescribe-no-doc)
                    (with-out-str-no-color)))))
   (it "uses the doc string when available"
     (expect (= "  cool docs\n\n"
-               (-> (runner/run-test-var (->context {:reporter sut/nested*})
+               (-> (runner/run-test-var (->config {:reporter sut/nested*})
                                         #'defdescribe-with-doc)
                    (with-out-str-no-color))))))

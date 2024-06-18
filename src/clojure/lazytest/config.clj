@@ -1,10 +1,10 @@
-(ns lazytest.context)
+(ns lazytest.config)
 
 (defn combine-reporters
-  ([reporter] (fn [context m] (reporter context m) (flush) nil))
+  ([reporter] (fn [config m] (reporter config m) (flush) nil))
   ([reporter & reporters]
-   (fn [context m]
-     (run! (fn [reporter] (reporter context m) (flush) nil)
+   (fn [config m]
+     (run! (fn [reporter] (reporter config m) (flush) nil)
            (cons reporter reporters)))))
 
 ;; inspired by kaocha.config/resolve-reporter
@@ -23,10 +23,10 @@
                                 (apply combine-reporters))
     :else reporter))
 
-(defn ->context [context]
+(defn ->config [config]
   (let [runner (resolve-reporter
-                 (or (:reporter context) 'lazytest.reporters/nested))]
-    (-> context
+                 (or (:reporter config) 'lazytest.reporters/nested))]
+    (-> config
         (assoc :lazytest.runner/depth 1)
         (assoc :lazytest.runner/suite-history [])
         (assoc :reporter runner))))

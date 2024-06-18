@@ -10,78 +10,78 @@
 
 (set! *warn-on-reflection* true)
 
-(defn dispatch [_context m]
+(defn dispatch [_config m]
   (or (:type m) (-> m meta :type)))
 
 (defmulti run-test #'dispatch)
-(defmethod run-test :default [_context m]
+(defmethod run-test :default [_config m]
   (throw (ex-info "Non-test given to run-suite." {:obj m})))
-(defmethod run-test nil [_context _])
+(defmethod run-test nil [_config _])
 
-(defn ->suite-result [context s]
+(defn ->suite-result [config s]
   (let [sm (meta s)
         id (s/identifier sm)
         start (System/nanoTime)
-        context (-> context
+        config (-> config
                     (update ::depth #(if id (inc %) %))
                     (update ::suite-history conj sm))
-        results (vec (keep #(run-test context %) s))
+        results (vec (keep #(run-test config %) s))
         duration (double (- (System/nanoTime) start))]
     (assoc (suite-result s results) ::duration duration)))
 
-(defmethod run-test :lazytest/run [context s]
+(defmethod run-test :lazytest/run [config s]
   (let [sm (meta s)]
-    (report context (assoc sm :type :begin-test-run))
-    (let [results (->suite-result context s)]
-      (report context (assoc sm :type :end-test-run :results results))
+    (report config (assoc sm :type :begin-test-run))
+    (let [results (->suite-result config s)]
+      (report config (assoc sm :type :end-test-run :results results))
       results)))
 
-(defmethod run-test :lazytest/ns-suite [context s]
+(defmethod run-test :lazytest/ns-suite [config s]
   (let [sm (meta s)]
-    (report context (assoc sm :type :begin-ns-suite))
-    (let [results (->suite-result context s)]
-      (report context (assoc sm :type :end-ns-suite :results results))
+    (report config (assoc sm :type :begin-ns-suite))
+    (let [results (->suite-result config s)]
+      (report config (assoc sm :type :end-ns-suite :results results))
       results)))
 
-(defmethod run-test :lazytest/test-var [context s]
+(defmethod run-test :lazytest/test-var [config s]
   (let [sm (meta s)]
-    (report context (assoc sm :type :begin-test-var))
-    (let [results (->suite-result context s)]
-      (report context (assoc sm :type :end-test-var :results results))
+    (report config (assoc sm :type :begin-test-var))
+    (let [results (->suite-result config s)]
+      (report config (assoc sm :type :end-test-var :results results))
       results)))
 
-(defmethod run-test :lazytest/suite [context s]
+(defmethod run-test :lazytest/suite [config s]
   (let [sm (meta s)]
-    (report context (assoc sm :type :begin-test-suite))
-    (let [results (->suite-result context s)]
-      (report context (assoc sm :type :end-test-suite :results results))
+    (report config (assoc sm :type :begin-test-suite))
+    (let [results (->suite-result config s)]
+      (report config (assoc sm :type :end-test-suite :results results))
       results)))
 
-(defmethod run-test :lazytest/test-seq [context s]
+(defmethod run-test :lazytest/test-seq [config s]
   (let [sm (meta s)]
-    (report context (assoc sm :type :begin-test-seq))
-    (let [results (->suite-result context s)]
-      (report context (assoc sm :type :end-test-seq :results results))
+    (report config (assoc sm :type :begin-test-seq))
+    (let [results (->suite-result config s)]
+      (report config (assoc sm :type :end-test-seq :results results))
       results)))
 
-(defmethod run-test :lazytest/test-case [context tc]
+(defmethod run-test :lazytest/test-case [config tc]
   (let [tc-meta (meta tc)
         start (System/nanoTime)]
-    (report context (assoc tc-meta :type :begin-test-case))
+    (report config (assoc tc-meta :type :begin-test-case))
     (let [results (try-test-case tc)
           duration (double (- (System/nanoTime) start))
           results (assoc results ::duration duration)]
-      (report context results)
-      (report context (assoc tc-meta :type :end-test-case :results results))
+      (report config results)
+      (report config (assoc tc-meta :type :end-test-case :results results))
       results)))
 
 (defn run-tests
   "Runs tests defined in the given namespaces."
   ([namespaces] (run-tests {:reporter nested} namespaces))
-  ([context namespaces]
+  ([config namespaces]
    (let [ste (apply find-suite namespaces)
          tree (filter-tree (expand-tree ste))
-         result (run-test context tree)]
+         result (run-test config tree)]
      (if (focused? tree)
        (vary-meta result assoc :focus true)
        result))))
@@ -89,13 +89,13 @@
 (defn run-all-tests
   "Run tests defined in all namespaces."
   ([] (run-all-tests nil))
-  ([context]
-   (run-tests context nil)))
+  ([config]
+   (run-tests config nil)))
 
 (mx/defn run-test-var
-  [context v :- [:fn var?]]
+  [config v :- [:fn var?]]
   (let [tree (-> (s/suite (s/test-seq [@v]))
                  (vary-meta assoc :type :lazytest/run)
                  (expand-tree)
                  (filter-tree))]
-    (run-test context tree)))
+    (run-test config tree)))

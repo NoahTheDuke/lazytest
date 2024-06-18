@@ -25,6 +25,8 @@
   ;; Run the tests with `-M:test:run`.
   :test {:extra-paths ["test/clojure"]}
 
+  :examples {:extra-paths ["."]}
+
   ;; Build a jar or uberjar with `-M:build jar/uberjar`
   :build {:deps {io.github.noahtheduke/clein {:mvn/version "0.2.1-SNAPSHOT"}}
           :main-opts ["-m" "noahtheduke.clein"]}

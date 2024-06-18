@@ -12,7 +12,7 @@
   Sodomka, Robert Lachlan, and Stuart Halloway."
   (:require
     [clojure.set :as set]
-    [lazytest.core :refer [defdescribe describe given throws-with-msg? expect-it]]))
+    [lazytest.core :refer [defdescribe describe given throws-with-msg? expect-it it expect]]))
 
 (defdescribe cycles-test "Cycles are forbidden: a tag"
   (given [family (reduce #(apply derive (cons %1 %2)) (make-hierarchy)
@@ -25,7 +25,7 @@
       (throws-with-msg? Throwable #"\(not= tag parent\)"
         #(derive family ::child ::child)))
     (expect-it "cannot be its own ancestor"
-      (throws-with-msg? Throwable #"Cyclic derivation: :multimethods/child has :multimethods/ancestor-1 as ancestor"
+      (throws-with-msg? Throwable #"Cyclic derivation: :examples.multimethods/child has :examples.multimethods/ancestor-1 as ancestor"
         #(derive family ::ancestor-1 ::child)))))
 
 (defn hierarchy-tags
@@ -56,39 +56,39 @@
 (defn is-valid-hierarchy [h]
   (describe "it is a valid hierarchy"
     (given [tags (hierarchy-tags h)]
-      (describe "ancestors are the transitive closure of parents"
+      (it "ancestors are the transitive closure of parents"
         (for [tag tags]
-          (expect-it (= (transitive-closure tag #(parents h %))
-                        (or (ancestors h tag) #{})))))
-      (describe "ancestors are transitive"
+          (expect (= (transitive-closure tag #(parents h %))
+                     (or (ancestors h tag) #{})))))
+      (it "ancestors are transitive"
         (for [tag tags]
-          (expect-it (= (transitive-closure tag #(ancestors h %))
-                        (or (ancestors h tag) #{})))))
-      (describe "tag descendants are transitive"
+          (expect (= (transitive-closure tag #(ancestors h %))
+                     (or (ancestors h tag) #{})))))
+      (it "tag descendants are transitive"
         (for [tag tags]
-          (expect-it (= (transitive-closure tag #(tag-descendants h %))
-                        (or (tag-descendants h tag) #{})))))
-      (describe "a tag isa? all of its parents"
+          (expect (= (transitive-closure tag #(tag-descendants h %))
+                     (or (tag-descendants h tag) #{})))))
+      (it "a tag isa? all of its parents"
         (for [tag tags
               :let [parents (parents h tag)]
               parent parents]
-          (expect-it (isa? h tag parent))))
-      (describe "a tag isa? all of its ancestors"
+          (expect (isa? h tag parent))))
+      (it "a tag isa? all of its ancestors"
         (for [tag tags
               :let [ancestors (ancestors h tag)]
               ancestor ancestors]
-          (expect-it (isa? h tag ancestor))))
-      (describe "all my descendants have me as an ancestor"
+          (expect (isa? h tag ancestor))))
+      (it "all my descendants have me as an ancestor"
         (for [tag tags
               :let [descendants (descendants h tag)]
               descendant descendants]
-          (expect-it (isa? h descendant tag))))
-      (describe "there are no cycles in parents"
+          (expect (isa? h descendant tag))))
+      (it "there are no cycles in parents"
         (for [tag tags]
-          (expect-it (not (contains? (transitive-closure tag #(parents h %)) tag)))))
-      (describe "there are no cycles in descendants"
+          (expect (not (contains? (transitive-closure tag #(parents h %)) tag)))))
+      (it "there are no cycles in descendants"
         (for [tag tags]
-          (expect-it (not (contains? (descendants h tag) tag))))))))
+          (expect (not (contains? (descendants h tag) tag))))))))
 
 (defdescribe diamong-inheritance-test "Using diamond inheritance"
   (given [diamond (reduce #(apply derive (cons %1 %2)) (make-hierarchy)

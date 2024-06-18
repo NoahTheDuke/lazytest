@@ -30,13 +30,15 @@
   properties on the ExpectationFailed."
   ([expr data] `(->ex-failed nil ~expr ~data))
   ([_form expr data]
-   `(ExpectationFailed.
-      (merge ~(meta _form)
-             ~(meta expr)
-             {:expected '~expr
-              :file ~*file*
-              :ns '~(ns-name *ns*)}
-             ~data))))
+   `(let [data# ~data]
+      (ExpectationFailed.
+        (:message data#)
+        (merge ~(meta _form)
+               ~(meta expr)
+               {:expected '~expr
+                :file ~*file*
+                :ns '~(ns-name *ns*)}
+               data#)))))
 
 (defn- function-call?
   "True if form is a list representing a normal function call."
@@ -83,8 +85,8 @@
                 (expect-fn expr msg-gensym)
                 (expect-any expr msg-gensym))
              (catch ExpectationFailed ex#
-               (throw (->ex-failed nil (assoc (ex-data ex#)
-                                              :expected-message ~msg-gensym))))
+               (let [data# (update (ex-data ex#) :message #(or % ~msg-gensym))]
+                 (throw (->ex-failed nil data#))))
              (catch Throwable t#
                (throw (->ex-failed ~&form ~expr {:message ~msg-gensym
                                                  :caught t#}))))))))

@@ -101,3 +101,25 @@
       (expect (= '(instance? java.lang.String (+ 40 2)) (:expected reason)))
       (expect (= (list instance? java.lang.String 42) (:evaluated reason)))
       (expect (false? (:actual reason))))))
+
+(defdescribe alternative-assertions
+  (it "can handle `ex-info`"
+    (try
+      ((it "ex-info example"
+         (let [f (when-not (= 1 2)
+                   (throw (ex-info "not equal" {:extra :data})))]
+           (f))))
+      (catch ExceptionInfo e
+        (expect (= "not equal" (ex-message e)))
+        (expect (= {:extra :data} (ex-data e))))))
+  (it "can handle `assert`"
+    (try
+      ((it "assert with no doc"
+         (assert (= 1 2))))
+      (catch AssertionError e
+        (expect (= "Assert failed: (= 1 2)" (ex-message e)))))
+    (try
+      ((it "assert with no doc"
+         (assert (= 1 2) "these should be equal")))
+      (catch AssertionError e
+        (expect (= "Assert failed: these should be equal\n(= 1 2)" (ex-message e)))))))

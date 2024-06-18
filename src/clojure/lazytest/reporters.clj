@@ -7,7 +7,9 @@
    [lazytest.color :refer [colorize]]
    [lazytest.results :refer [result-seq summarize]]
    [lazytest.suite :as s :refer [suite-result?]]
-   [lazytest.test-case :as tc]))
+   [lazytest.test-case :as tc])
+  (:import
+    lazytest.ExpectationFailed))
 
 (defn report [context m]
   (when-let [reporter (:reporter context)]
@@ -44,17 +46,14 @@
 (defmulti summary {:arglists '([context m])} #'reporter-dispatch)
 (defmethod summary :default [_ _])
 (defmethod summary :end-test-run [_ m]
-  (let [{:keys [total fail error not-passing]} (summarize (:results m))
+  (let [{:keys [total fail]} (summarize (:results m))
         duration (double (/ (-> m :results (:lazytest.runner/duration 0.0)) 1e9))
         count-msg (format "Ran %s test cases in %.5f seconds." total duration)]
     (println (if (zero? total)
                (colorize count-msg :yellow)
                count-msg))
-    (println (colorize (str fail " failure" (when (not= 1 fail) "s")
-                            (if (pos? error)
-                              (format " and %s errors." error)
-                              "."))
-                       (if (zero? not-passing) :green :red)))
+    (println (colorize (str fail " failure" (when (not= 1 fail) "s") ".")
+                       (if (zero? fail) :green :red)))
     (newline)
     (flush)))
 
@@ -80,26 +79,14 @@
 ;;
 ;; in lazytest/core_test.clj:30
 
-(defmacro pprint-out [obj]
-  `(str/trim (with-out-str (pp/pprint ~obj))))
+(defmulti ^:private results-builder {:arglists '([context m])} #'reporter-dispatch)
 
-(defn- print-equality-failed [a b]
-  (let [[a b same] (diff a b)]
-    (println (colorize "Only in first argument:" :cyan))
-    (pp/pprint a)
-    (println (colorize "Only in second argument:" :cyan))
-    (pp/pprint b)
-    (when (some? same)
-      (println (colorize "The same in both:" :cyan))
-      (pp/pprint same))))
-
-(defn- print-evaluated-arguments [result]
-  (println (colorize "Evaluated arguments:" :cyan))
-  (doseq [arg (rest (:evaluated result))]
-    (print " * ")
-    (if (instance? Throwable arg)
-      (pp/pprint (type arg))
-      (pp/pprint arg))))
+(defmethod results-builder ::s/suite-result
+  [context {:keys [children] :as results}]
+  (doseq [child children
+          :let [docs (conj (:docs results []) (s/identifier results))
+                child (assoc child :docs docs)]]
+    (results-builder context child)))
 
 (defn- print-context [docs]
   (loop [[doc & docs] (seq (filter identity docs))
@@ -111,48 +98,62 @@
         (println (str doc ":")))
       (recur docs (inc idx)))))
 
-(defn- report-test-case-failure [result]
-  (print-context (:docs result))
-  (let [report-type (:type result)
-        message (or (:message result)
-                    (if (= :fail report-type)
-                      "Expectation failed"
-                      "ERROR: Caught exception"))]
-    (newline)
-    (println (colorize message :red))
-    (if (= :fail report-type)
-      (do (println (colorize "Expected:" :cyan)
-                   (pr-str (:expected result)))
-        (println (colorize "Actual:" :cyan)
-                 (pr-str (:actual result)))
-        (when (:evaluated result)
-          (print-evaluated-arguments result)
-          (when (and (= = (first (:evaluated result)))
-                     (= 3 (count (:evaluated result))))
-            (apply print-equality-failed (rest (:evaluated result))))))
-      (stack/print-cause-trace (:actual result) 10))
-    (newline)
-    (println (colorize (format "in %s:%s\n" (:file result) (:line result)) :light)))
-  (flush))
+(defn- print-evaluated-arguments [result]
+  (println (colorize "Evaluated arguments:" :cyan))
+  (doseq [arg (rest (:evaluated result))]
+    (print " * ")
+    (if (instance? Throwable arg)
+      (pp/pprint (type arg))
+      (pp/pprint arg))))
 
-(defmulti ^:private results-builder {:arglists '([context m])} #'reporter-dispatch)
+(defn- print-equality-failed [[_ a b]]
+  (let [[a b same] (diff a b)]
+    (println (colorize "Only in first argument:" :cyan))
+    (pp/pprint a)
+    (println (colorize "Only in second argument:" :cyan))
+    (pp/pprint b)
+    (when (some? same)
+      (println (colorize "The same in both:" :cyan))
+      (pp/pprint same))))
+
 (defmethod results-builder :pass [_ _])
 
-(defmethod results-builder ::s/suite-result
-  [context {:keys [children] :as results}]
-  (doseq [child children
-          :let [docs (conj (:docs results []) (s/identifier results))
-                child (assoc child :docs docs)]]
-    (results-builder context child)))
+(defn print-stack-trace
+  "Adapted from clojure.stacktrace/print-stack-trace"
+  [^Throwable t n]
+  (let [st (.getStackTrace t)]
+    (when-let [e (first st)]
+      (stack/print-trace-element e)
+      (newline)
+      (doseq [e (if (nil? n)
+                  (rest st)
+                  (take (dec n) (rest st)))]
+        (print "    ")
+        (stack/print-trace-element e)
+        (newline))
+      (newline))))
 
 (defmethod results-builder :fail [_context result]
-  (-> result
-      (update :docs conj (tc/identifier result))
-      (report-test-case-failure)))
-(defmethod results-builder :error [_context result]
-  (-> result
-      (update :docs conj (tc/identifier result))
-      (report-test-case-failure)))
+  (let [result (update result :docs conj (tc/identifier result))]
+    (print-context (:docs result)))
+  (let [message (str (when-not (instance? ExpectationFailed (:thrown result))
+                       (str (.getName (class (:thrown result))) ": "))
+                     (:message result))]
+    (newline)
+    (println (colorize message :red))
+    (println (colorize "Expected:" :cyan)
+             (pr-str (:expected result)))
+    (println (colorize "Actual:" :cyan)
+             (pr-str (:actual result)))
+    (when (:evaluated result)
+      (print-evaluated-arguments result)
+      (when (and (= = (first (:evaluated result)))
+                 (= 3 (count (:evaluated result))))
+        (print-equality-failed (:evaluated result))))
+    (newline)
+    (print-stack-trace (:thrown result) 1)
+    (println (colorize (format "in %s:%s\n" (:file result) (:line result)) :light)))
+  (flush))
 
 (defmulti results {:arglists '([context m])} #'reporter-dispatch)
 (defmethod results :default [_ _])
@@ -160,18 +161,17 @@
   (results-builder context (:results m)))
 
 ;; DOTS
-;; Passing test cases are printed as ., failures as F, and errors as E.
+;; Passing test cases are printed as `.`, and failures as `F`.
 ;; Test cases in namespaces are wrapped in parentheses.
 ;;
 ;; Example:
 ;;
-;; (....)(.)(....)
+;; (....)(F)(.F..)
 
 (defmulti dots* {:arglists '([context m])} #'reporter-dispatch)
 (defmethod dots* :default [_ _])
 (defmethod dots* :pass [_ _] (print (colorize "." :green)))
 (defmethod dots* :fail [_ _] (print (colorize "F" :red)))
-(defmethod dots* :error [_ _] (print (colorize "E" :red)))
 (defmethod dots* :begin-ns-suite [_ _] (print (colorize "(" :yellow)))
 (defmethod dots* :end-ns-suite [_ _] (print (colorize ")" :yellow)))
 (defmethod dots* :end-test-run [_ _] (newline))
@@ -217,12 +217,11 @@
       (case result-type
         :pass (println (colorize "√" :green) (colorize msg :light))
         :pending (println (colorize "-" :cyan) (colorize msg :cyan))
-        (:fail :error) (println (colorize "×" :red) (colorize msg :red))
+        :fail (println (colorize "×" :red) (colorize msg :red))
         #_:else nil))))
 
 (defmethod nested* :pass [context result] (print-test-result context result))
 (defmethod nested* :fail [context result] (print-test-result context result))
-(defmethod nested* :error [context result] (print-test-result context result))
 
 (def nested
   [focused nested* results summary])
@@ -255,7 +254,7 @@
           (:file result)
           (:line result)))
 
-(defmethod clojure-test :fail [context result]
+(defn clojure-test-fail [context result]
   (println "\nFAIL in" (clojure-test-case-str context result))
   (when-let [strings (->> (conj (:lazytest.runner/suite-history context) result)
                           (keep :doc)
@@ -266,7 +265,7 @@
   (println "expected:" (pr-str (:expected result)))
   (println "  actual:" (pr-str (:actual result))))
 
-(defmethod clojure-test :error [context result]
+(defn clojure-test-error [context result]
   (println "\nERROR in" (clojure-test-case-str context result))
   (when-let [strings (->> (conj (:lazytest.runner/suite-history context) result)
                           (keep :doc)
@@ -281,6 +280,11 @@
       (stack/print-cause-trace actual nil)
       (prn actual)))
   (flush))
+
+(defmethod clojure-test :fail [context result]
+  (if (instance? ExpectationFailed (:thrown result))
+    (clojure-test-fail context result)
+    (clojure-test-error context result)))
 
 (defmethod clojure-test :begin-ns-suite [_ result]
   (println "\nTesting" (ns-name (:ns-name result))))
@@ -362,7 +366,6 @@
 
 (defmethod verbose :pass [_context result] (prn result))
 (defmethod verbose :fail [_context result] (prn result))
-(defmethod verbose :error [_context result] (prn result))
 
 ;;; PROFILE
 ;;; Print the top 5 namespaces and test vars by duration.

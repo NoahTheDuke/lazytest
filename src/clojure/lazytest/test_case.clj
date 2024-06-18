@@ -1,8 +1,7 @@
 (ns lazytest.test-case
   (:require
-    [malli.experimental :as mx])
-  (:import
-    (lazytest ExpectationFailed)))
+    [lazytest.malli]
+    [malli.experimental :as mx]))
 
 (defmacro test-case
   "Sets metadata on function f identifying it as a test case. A test
@@ -56,16 +55,15 @@
     source :- [:fn test-case?]
     thrown :- [:maybe :lt/throwable]]
    (let [{:keys [file line doc]} (extract-file-line-doc source thrown)
-         {:keys [actual expected caught evaluated]} (ex-data thrown)
+         {:keys [actual expected message caught evaluated]} (ex-data thrown)
          thrown' (or (when (instance? Throwable caught) caught) thrown)]
      (with-meta {:type type'
                  :source source :thrown thrown'
                  :file (or file "NO_SOURCE_PATH") :line line
                  :doc doc
-                 :message (or (:message (ex-data thrown'))
-                              (:expected-message (ex-data thrown')))
+                 :message (or message (ex-message thrown'))
                  :expected expected
-                 :actual (or actual caught)
+                 :actual (when (some? actual) actual)
                  :evaluated evaluated}
                 {:type ::test-case-result}))))
 
@@ -87,9 +85,5 @@
   [f :- [:fn test-case?]]
   (try (f)
     (test-case-result :pass f)
-    (catch ExpectationFailed ex
-      (if (:caught (ex-data ex))
-        (test-case-result :error f ex)
-        (test-case-result :fail f ex)))
     (catch Throwable t
-      (test-case-result :error f t))))
+      (test-case-result :fail f t))))

@@ -14,15 +14,13 @@
   [results]
   (let [test-case-results (remove suite-result? (result-seq results))
         total (count test-case-results)
-        {:keys [pass fail error]} (group-by :type test-case-results)]
+        {:keys [pass fail]} (group-by :type test-case-results)]
     {:total total
      :pass (count pass)
-     :fail (count fail)
-     :error (count error)
-     :not-passing (+ (count fail) (count error))}))
+     :fail (count fail)}))
 
 (defn summary-exit-value
   "Given a summary map as returned by summarize, returns 0 if there
   are no failures and 1 if there are."
   [summary]
-  (if (zero? (:not-passing summary)) 0 1))
+  (if (zero? (:fail summary)) 0 1))

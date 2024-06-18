@@ -2,11 +2,14 @@
 
 ## Unreleased
 
-- Rename test-case-result keys:
+- Rename test-case-result keys to match clojure.test and other test language's runners:
   * `:form` -> `:expected`
   * `:result` -> `:actual`
-- Catch ExpectationFailed in `expect`, rethrow with additional data `:expected-message`, instead of passing `msg` into each assert-expr like in clojure.test.
+- Collapse `:fail` and `:error` into `:fail`. If reporters want to differentiate, they can by checking if `:thrown` is an `ExpectationFailed`. (See `clojure-test` reporter for an example.)
+- Add `(message, reason)` constructor arity to ExpectationFailed to better match both `AssertionError` and `ExceptionInfo`.
+- Catch ExpectationFailed in `expect`, rethrow with updated `:message`, instead of passing `msg` into each assert-expr like in clojure.test.
 - Catch other Throwables in `expect`, wrap in ExpectationFailed as `:caught` data.
+- Simplify how `:message`s are tracked.
 - Require a docstring expression from `describe`, `it` and `expect-it`.
 - Add `*color*` dynamic var (set to lazytest.colorize system env, default to true) and make `colorize?` rely on it.
 - Move all relevant test case information into result object.
@@ -19,7 +22,7 @@
   * `focused` prints if there's any focused tests.
   * `summary` prints "Ran x test cases, N failures, Y errors".
   * `results` prints failed and errored test cases, expected values, etc.
-  * `dots` prints `.` for passing test case, `F` for failure, and `E` for ERROR. Namespaces wrap test cases in parentheses: `(..F.)` Includes `focused`, `results`, and `summary`.
+  * `dots` prints `.` for passing test case, and `F` for failure. Namespaces wrap test cases in parentheses: `(..F.)` Includes `focused`, `results`, and `summary`.
   * `nested` prints each suite and test case on a new line, and indents each suite. Includes `focused`, `results`, and `summary`.
   * `clojure-test` attempts to mimic clojure.test's basic output.
   * `verbose` prints "Running X" and "Done with X" for all test sequences and print the direct result of all test cases.

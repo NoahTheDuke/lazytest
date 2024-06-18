@@ -3,12 +3,14 @@
    [clojure.stacktrace :as stack]
    [clojure.string :as str]
    [lazytest.context :refer [->context]]
-   [lazytest.core :refer [defdescribe describe expect expect-it given it]]
+   [lazytest.core :refer [defdescribe describe expect expect-it given it ->ex-failed]]
    [lazytest.reporters :as sut]
    [lazytest.runner :as runner]
    [lazytest.suite :as s]
    [lazytest.test-case :as tc]
    [lazytest.test-utils :refer [with-out-str-no-color]]))
+
+(set! *warn-on-reflection* true)
 
 (defdescribe focused-test
   (expect-it "prints correctly"
@@ -35,25 +37,29 @@
       (with-meta {:type ::tc/test-case-result})))
 
 (defn ->failing [& {:as extra}]
-  (-> (merge {:type :fail
-              :doc "example test-case"
-              :message "failing"
-              :file "example.clj"
-              :line 1
-              :expected '(= 1 2)
-              :evaluated (list = 1 2)
-              :actual false} extra)
-      (with-meta {:type ::tc/test-case-result})))
+  (let [data (merge {:file "example.clj"
+                     :line 1
+                     :message "failing"
+                     :evaluated (list = 1 2)
+                     :actual false}
+                    extra)
+        thrown (->ex-failed '() (= 1 2) data)]
+    (tc/test-case-result
+      :fail (tc/test-case ^{:doc "example test-case"} (fn []))
+      thrown)))
 
-(defn ->erroring [& {:as extra}]
-  (-> (merge {:type :error
-              :doc "example test-case"
-              :message "erroring"
-              :file "example.clj"
-              :line 1
-              :expected '(= 1 (throw (ex-info "error" {:ex :info})))
-              :actual (ex-info "error" {:ex :info})} extra)
-      (with-meta {:type ::tc/test-case-result})))
+(defn ->erroring [& _]
+  (let [thrown (ex-info "deliberate error"
+                        {:ex :info
+                         :file "example.clj"
+                         :line 1})]
+    (tc/test-case-result
+      :fail (tc/test-case ^{:doc "example test-case"} (fn []))
+      thrown)))
+
+(defn stub-stack-trace
+  [_ex]
+  (print "<stack-trace>"))
 
 (defdescribe summary-test
   (it "no tests"
@@ -76,13 +82,13 @@
              (with-out-str-no-color)))))
   (it "errors"
     (expect
-      (= "Ran 1 test cases in 0.12346 seconds.\n0 failures and 1 errors.\n\n"
+      (= "Ran 1 test cases in 0.12346 seconds.\n1 failure.\n\n"
          (-> (sut/summary nil {:type :end-test-run
                                :results (make-suite (->erroring))})
              (with-out-str-no-color)))))
   (it "combinations"
     (expect
-      (= "Ran 3 test cases in 0.12346 seconds.\n1 failure and 1 errors.\n\n"
+      (= "Ran 3 test cases in 0.12346 seconds.\n2 failures.\n\n"
          (-> (sut/summary nil {:type :end-test-run
                                :results (make-suite
                                           (->passing)
@@ -155,12 +161,15 @@
                (with-out-str-no-color))))))
   (describe "errors"
     (it "prints the given message"
-      (with-redefs [stack/print-cause-trace (fn [& _] (println "<stack-trace>"))]
+      (with-redefs [stack/print-trace-element stub-stack-trace]
         (expect
           (= (str/join \newline ["example suite"
                                  "  example test-case:"
                                  ""
-                                 "erroring"
+                                 "clojure.lang.ExceptionInfo: deliberate error"
+                                 "Expected: nil"
+                                 "Actual: nil"
+                                 ""
                                  "<stack-trace>"
                                  ""
                                  "in example.clj:1"
@@ -170,12 +179,15 @@
                                    :results (make-suite (->erroring))})
                  (with-out-str-no-color))))))
     (it "defaults if given no message"
-      (with-redefs [stack/print-cause-trace (fn [& _] (println "<stack-trace>"))]
+      (with-redefs [stack/print-trace-element stub-stack-trace]
         (expect
           (= (str/join \newline ["example suite"
                                  "  example test-case:"
                                  ""
-                                 "ERROR: Caught exception"
+                                 "clojure.lang.ExceptionInfo: deliberate error"
+                                 "Expected: nil"
+                                 "Actual: nil"
+                                 ""
                                  "<stack-trace>"
                                  ""
                                  "in example.clj:1"
@@ -185,7 +197,7 @@
                                    :results (make-suite (->erroring :message nil))})
                  (with-out-str-no-color)))))))
   (it "combinations"
-    (with-redefs [stack/print-cause-trace (fn [& _] (println "<stack-trace>"))]
+    (with-redefs [stack/print-trace-element stub-stack-trace]
       (expect
         (= (str/join \newline
                      ["example suite"
@@ -207,7 +219,10 @@
                       "example suite"
                       "  example test-case:"
                       ""
-                      "erroring"
+                      "clojure.lang.ExceptionInfo: deliberate error"
+                      "Expected: nil"
+                      "Actual: nil"
+                      ""
                       "<stack-trace>"
                       ""
                       "in example.clj:1"
@@ -232,7 +247,7 @@
       (= "F" (-> (sut/dots* nil (->failing))
                  (with-out-str-no-color))))
     (expect-it "erroring"
-      (= "E" (-> (sut/dots* nil (->erroring))
+      (= "F" (-> (sut/dots* nil (->erroring))
                  (with-out-str-no-color)))))
   (describe "ns-test-suite"
     (it "begin"
@@ -308,7 +323,7 @@
                  (with-out-str-no-color)))))
       (it "error"
         (expect
-          (= "  × example test-case ERROR\n"
+          (= "  × example test-case FAIL\n"
              (-> (sut/nested* ctx (->erroring))
                  (with-out-str-no-color)))))))
   (describe "indentation"

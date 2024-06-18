@@ -307,11 +307,11 @@
                      (str "error" (when (not= 1 errors) "s"))))
     (flush)))
 
-;; VERBOSE
+;; DEBUG
 ;; Prints loudly about every step of the way. Incredibly noisy, not recommended.
 
-(defmulti verbose {:arglists '([context m])} #'reporter-dispatch)
-(defmethod verbose :default [_ _])
+(defmulti debug {:arglists '([context m])} #'reporter-dispatch)
+(defmethod debug :default [_ _])
 
 (def type->name
   {
@@ -341,17 +341,17 @@
                 (when (and (:file s) (:line s))
                   (str " (" (:file s) ":" (:line s) ")")))))
 
-(defmethod verbose :begin-test-run [_ _] (println "Starting test run"))
-(defmethod verbose :begin-ns-suite [_context s] (print-entering s))
-(defmethod verbose :begin-test-var [_context s] (print-entering s))
-(defmethod verbose :begin-test-suite [_context s] (print-entering s))
-(defmethod verbose :begin-test-seq [_context s] (print-entering s))
+(defmethod debug :begin-test-run [_ _] (println "Starting test run"))
+(defmethod debug :begin-ns-suite [_context s] (print-entering s))
+(defmethod debug :begin-test-var [_context s] (print-entering s))
+(defmethod debug :begin-test-suite [_context s] (print-entering s))
+(defmethod debug :begin-test-seq [_context s] (print-entering s))
 
-(defmethod verbose :end-test-run [_ _] (println "Ending test run"))
-(defmethod verbose :end-ns-suite [_context s] (print-leaving s))
-(defmethod verbose :end-test-var [_context s] (print-leaving s))
-(defmethod verbose :end-test-suite [_context s] (print-leaving s))
-(defmethod verbose :end-test-seq [_context s] (print-leaving s))
+(defmethod debug :end-test-run [_ _] (println "Ending test run"))
+(defmethod debug :end-ns-suite [_context s] (print-leaving s))
+(defmethod debug :end-test-var [_context s] (print-leaving s))
+(defmethod debug :end-test-suite [_context s] (print-leaving s))
+(defmethod debug :end-test-seq [_context s] (print-leaving s))
 
 (defn print-entering-tc [tc]
   (println "Running" (str (type->name (:type tc)) ":")
@@ -361,11 +361,11 @@
   (println "Done with" (str (type->name (:type tc)) ":")
            (str (tc/identifier tc) " (" (:file tc) ":" (:line tc) ")")))
 
-(defmethod verbose :begin-test-case [_context tc] (print-entering-tc tc))
-(defmethod verbose :end-test-case [_context tc] (print-leaving-tc tc))
+(defmethod debug :begin-test-case [_context tc] (print-entering-tc tc))
+(defmethod debug :end-test-case [_context tc] (print-leaving-tc tc))
 
-(defmethod verbose :pass [_context result] (prn result))
-(defmethod verbose :fail [_context result] (prn result))
+(defmethod debug :pass [_context result] (prn result))
+(defmethod debug :fail [_context result] (prn result))
 
 ;;; PROFILE
 ;;; Print the top 5 namespaces and test vars by duration.

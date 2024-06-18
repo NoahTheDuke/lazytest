@@ -21,7 +21,6 @@
    [nil "--output OUTPUT" "Output format. (Defaults to \"nested\".)"
     :parse-fn symbol
     :assoc-fn update-args]
-   [nil "--verbose" "Run with additional info, helpful for debugging."]
    ["-h" "--help" "Print help information."]])
 
 (defn help-message

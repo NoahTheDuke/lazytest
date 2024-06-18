@@ -25,10 +25,7 @@
 
 (defn ->context [context]
   (let [runner (resolve-reporter
-                 (or (:reporter context) 'lazytest.reporters/nested))
-        runner (if (:verbose context)
-                 (combine-reporters (resolve-reporter 'lazytest.reporters/verbose) runner)
-                 runner)]
+                 (or (:reporter context) 'lazytest.reporters/nested))]
     (-> context
         (assoc :lazytest.runner/depth 1)
         (assoc :lazytest.runner/suite-history [])

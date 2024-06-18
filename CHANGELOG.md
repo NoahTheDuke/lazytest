@@ -25,9 +25,8 @@
   * `dots` prints `.` for passing test case, and `F` for failure. Namespaces wrap test cases in parentheses: `(..F.)` Includes `focused`, `results`, and `summary`.
   * `nested` prints each suite and test case on a new line, and indents each suite. Includes `focused`, `results`, and `summary`.
   * `clojure-test` attempts to mimic clojure.test's basic output.
-  * `verbose` prints "Running X" and "Done with X" for all test sequences and print the direct result of all test cases.
+  * `debug` prints "Running X" and "Done with X" for all test sequences and print the direct result of all test cases.
 - Add tests for reporters.
-- Add `--verbose` cli flag which prepends the `verbose` reporter to any other reporters.
 
 ## 0.1.0 - 2024-06-09
 

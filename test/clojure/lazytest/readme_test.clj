@@ -1,6 +1,6 @@
 (ns lazytest.readme-test
   (:require
-   [lazytest.core :refer [defdescribe describe expect-it given]]))
+   [lazytest.core :refer [defdescribe describe expect-it given expect it]]))
 
 (defdescribe +-test "with integers"
   (expect-it "computes the sum of 1 and 2"
@@ -23,7 +23,7 @@
 
 (defdescribe square-root-test "The square root of two"
   (given [root (Math/sqrt 2)]
-    (expect-it "is less than two"
-      (< root 2))
-    (expect-it "is more than one"
-      (> root 1))))
+    (it "is less than two"
+      (expect (< root 2)))
+    (it "is more than one"
+      (expect (> root 1)))))

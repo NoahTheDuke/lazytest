@@ -116,7 +116,6 @@ All of the test suite and test case macros (`defdescribe`, `describe`, `it`, `ex
 
 The entry-points are at `lazytest.repl`: `run-all-tests`, `run-tests`, and `run-test-var`. The first runs all loaded test namespaces, the second runs the provided namespaces (either a single namespace or a collection of namespaces), and the third runs a single test var. If your editor can define custom repl functions, then it's fairly easy to set these as your test runner.
 
-
 ### Example configuration
 
 Neovim with [Conjure](https://github.com/Olical/conjure):
@@ -130,7 +129,8 @@ runners["test-runners"].lazytest = {
   ["ns-fn"] = "run-tests",
   ["single-fn"] = "run-test-var",
   ["default-call-suffix"] = "",
-  ["name-prefix"] = "(resolve '", ["name-suffix"] = ")"
+  ["name-prefix"] = "#'",
+  ["name-suffix"] = ""
 }
 vim.g["conjure#client#clojure#nrepl#test#runner"] = "lazytest"
 ```
@@ -175,38 +175,19 @@ Results: Print results to REPL output
 
 ## Lazytest Internals
 
-The smallest unit of testing is a *test case*, which is a function
-(see `lazytest.test-case/test-case`). When the function is called, it
-may throw an exception to indicate failure. If it does not throw an
-exception, it is assumed to have passed. The return value of a test
-case is always ignored. Running a test case may have side effects.
+The smallest unit of testing is a *test case*, which is a function (see `lazytest.test-case/test-case`). When the function is called, it may throw an exception to indicate failure. If it does not throw an exception, it is assumed to have passed. The return value of a test case is always ignored. Running a test case may have side effects.
 
-NOTE: The macros `lazytest.describe/it` and
-`lazytest.describe/expect-it` create test cases.
+NOTE: The macros `lazytest.describe/it` and `lazytest.describe/expect-it` create test cases.
 
-Tests cases are organized into *suites*. A test suite is a function
-(see `lazytest.suite/suite`) that returns a *test sequence*. A test
-sequence (see `lazytest.suite/test-seq`) is a sequence, possibly lazy,
-of test cases and/or test suites. Suites, therefore, may be nested
-inside other suites, but nothing may be nested inside a test case.
+Tests cases are organized into *suites*. A test suite is a function (see `lazytest.suite/suite`) that returns a *test sequence*. A test sequence (see `lazytest.suite/test-seq`) is a sequence, possibly lazy, of test cases and/or test suites. Suites, therefore, may be nested inside other suites, but nothing may be nested inside a test case.
 
-NOTE: The macros `lazytest.describe/defdescribe` and
-`lazytest.describe/describe` create test suites.
+NOTE: The macros `lazytest.describe/defdescribe` and `lazytest.describe/describe` create test suites.
 
-A test suite function may NOT have side effects; it is only used to
-generate test cases and/or other test suites.
+A test suite function SHOULD NOT have side effects; it is only used to generate test cases and/or other test suites.
 
-A test *runnner* is responsible for expanding suites (see
-`lazytest.suite/expand-suite`) and running test cases (see
-`lazytest.test-case/try-test-case`). It may also provide feedback on
-the success of tests as they run.
+A test *runnner* is responsible for expanding suites (see `lazytest.suite/expand-suite`) and running test cases (see `lazytest.test-case/try-test-case`). It may also provide feedback on the success of tests as they run.
 
-The test runner also returns a sequence of *results*, which are either
-*suite results* (see `lazytest.suite/suite-result`) or *test case
-results* (see `lazytest.test-case/test-case-result`). That sequence of
-results is passed to a *reporter*, which formats results for display
-to the user. Multiple reporters are provided, see the namespace
-`lazytest.reporters`.
+The test runner also returns a sequence of *results*, which are either *suite results* (see `lazytest.suite/suite-result`) or *test case results* (see `lazytest.test-case/test-case-result`). That sequence of results is passed to a *reporter*, which formats results for display to the user. Multiple reporters are provided, see the namespace `lazytest.reporters`.
 
 ## Making Emacs Indent Tests Properly
 

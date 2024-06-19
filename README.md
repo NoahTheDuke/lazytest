@@ -157,16 +157,20 @@ VSCode with [Calva](https://calva.io/custom-commands):
 IntelliJ with [Cursive](https://cursive-ide.com/userguide/repl.html#repl-commands):
 
 ```
-# Lazytest: Test All Tests
-Execute Command: (lazytest.repl/run-all-tests)"
+Name: Lazytest - Test All Tests
+Execute Command: (lazytest.repl/run-all-tests)
+Execution Namespace: Execute in current file namespace
+Results: Print results to REPL output
 
-# Lazytest: Test Current Namespace
-Execute Command: (lazytest.repl/run-tests *ns*)"
+Name: Lazytest - Test Current Namespace
+Execute Command: (lazytest.repl/run-tests ~file-namespace)
+Execution Namespace: Execute in current file namespace
+Results: Print results to REPL output
 
-# Lazytest: Test Current Var
+Name: Lazytest - Test Current Var
 Execute Command: (lazytest.repl/run-test-var #'~current-var)
-
-Print result to REPL output: true
+Execution Namespace: Execute in current file namespace
+Results: Print results to REPL output
 ```
 
 ## Lazytest Internals

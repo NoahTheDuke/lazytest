@@ -16,8 +16,7 @@
   (println "Compiling src/java")
   (b/javac {:src-dirs ["src/java"]
             :class-dir class-dir
-            :basis @basis
-            :javac-opts ["--release" "11"]})
+            :basis @basis})
   (println "Compilation complete")
   opts)
 

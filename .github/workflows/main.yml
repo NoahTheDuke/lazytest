@@ -43,4 +43,4 @@ jobs:
       - name: tests
         run: |
           clojure -T:prep javac
-          clojure -M:dev:test:runner
+          clojure -M:provided:dev:test:runner

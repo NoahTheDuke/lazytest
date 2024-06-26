@@ -8,12 +8,12 @@
                  :fn javac}
  :aliases
  {:run {:main-opts ["-m" "lazytest.main"]}
+  :provided {:extra-deps {nubank/matcher-combinators {:mvn/version "3.8.5"}}}
   ;; Development tools
   :dev {:extra-paths ["dev"]
         :extra-deps {org.clojure/spec.alpha {:mvn/version "0.5.238"}
                      criterium/criterium {:mvn/version "0.4.6"}
-                     com.clojure-goes-fast/clj-java-decompiler {:mvn/version "0.3.4"}
-                     nubank/matcher-combinators {:mvn/version "3.8.5"}}}
+                     com.clojure-goes-fast/clj-java-decompiler {:mvn/version "0.3.4"}}}
 
   ;; I like nrepl and rebel-readline.
   :repl {:extra-deps {nrepl/nrepl {:mvn/version "1.0.0"}
@@ -27,8 +27,8 @@
 
   :examples {:extra-paths ["."]}
 
-  ;; Build a jar or uberjar with `-M:build jar/uberjar`
-  :build {:deps {io.github.noahtheduke/clein {:mvn/version "0.2.1-SNAPSHOT"}}
+  ;; Build a jar or uberjar with `-M:clein jar/uberjar`
+  :clein {:deps {io.github.noahtheduke/clein {:mvn/version "0.2.2"}}
           :main-opts ["-m" "noahtheduke.clein"]}
   :clein/build
   {:lib io.github.noahtheduke/lazytest
@@ -37,8 +37,7 @@
    :version "./resources/LAZYTEST_VERSION"
    :license {:name "EPL-1.0"
              :url "https://www.eclipse.org/legal/epl-v10.html"}
-   :java-src-dirs ["src/java"]
-   :javac-opts ["--release" "11"]}
+   :java-src-dirs ["src/java"]}
 
   ;; Compile the ExpectationFailed class with `-T:prep javac`
   :prep {:deps {io.github.clojure/tools.build {:mvn/version "0.10.3"}}

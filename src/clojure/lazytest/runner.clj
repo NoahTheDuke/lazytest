@@ -1,7 +1,7 @@
 (ns lazytest.runner
   (:require
    [lazytest.find :refer [find-suite]]
-   [lazytest.focus :refer [filter-tree focused?]]
+   [lazytest.focus :refer [filter-tree]]
    [lazytest.malli]
    [lazytest.reporters :as r :refer [nested report]]
    [lazytest.suite :as s :refer [expand-tree suite-result]]
@@ -80,9 +80,9 @@
   ([namespaces] (run-tests {:reporter nested} namespaces))
   ([config namespaces]
    (let [ste (apply find-suite namespaces)
-         tree (filter-tree (expand-tree ste))
+         tree (filter-tree config (expand-tree ste))
          result (run-test config tree)]
-     (if (focused? tree)
+     (if (:focus (meta tree))
        (vary-meta result assoc :focus true)
        result))))
 
@@ -97,5 +97,5 @@
   (let [tree (-> (s/suite (s/test-seq [@v]))
                  (vary-meta assoc :type :lazytest/run)
                  (expand-tree)
-                 (filter-tree))]
+                 (#(filter-tree config %)))]
     (run-test config tree)))

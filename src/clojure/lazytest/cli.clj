@@ -3,11 +3,11 @@
    [clojure.string :as str]
    [clojure.tools.cli :as cli]))
 
-(def fconj
-  (fnil conj []))
-
 (defn update-args [m k v]
-  (update m k fconj v))
+  (update m k #(conj (or % []) v)))
+
+(defn update-set [m k v]
+  (update m k #(conj (or % #{}) v)))
 
 (def cli-options
   [["-d" "--dir DIR" "Directory containing tests. (Defaults to \"test\".)"
@@ -15,11 +15,17 @@
    ["-n" "--namespace NS-SYM" "Test namespace to only run."
     :parse-fn symbol
     :assoc-fn update-args]
-   ["-v" "--var VAR-SYM" "Test var to only run."
+   ["-v" "--var VAR-SYM" "Run only the specified fully-qualified symbol."
     :parse-fn symbol
     :assoc-fn update-args]
-   [nil "--output OUTPUT" "Output format. (Defaults to \"nested\".)"
-    :parse-fn symbol
+   ["-i" "--include KEYWORD" "Run only test sequences or vars with this metadata keyword."
+    :parse-fn #(keyword (if (str/starts-with? % ":") (subs % 1) %))
+    :assoc-fn update-set]
+   ["-e" "--exclude KEYWORD" "Exclude test sequences or vars with this metadata keyword."
+    :parse-fn #(keyword (if (str/starts-with? % ":") (subs % 1) %))
+    :assoc-fn update-set]
+   [nil "--output OUTPUT" "Output format. (Defaults to \"nested\".) Can be given multiple times."
+    :parse-fn read-string
     :assoc-fn update-args]
    ["-h" "--help" "Print help information."]])
 

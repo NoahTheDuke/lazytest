@@ -1,21 +1,12 @@
 (ns dev
   (:require
-    [clj-java-decompiler.core :as decompiler]
-    [clojure.main :as main]
-    [clojure.spec.test.alpha :as stest]
-    [criterium.core :as criterium]
-    [malli.dev :as mdev]
-    [malli.dev.pretty :as mpretty]))
+   [clj-java-decompiler.core :as decompiler]
+   [clojure.spec.test.alpha :as stest]
+   [criterium.core :as criterium]
+   [malli.dev :as mdev]
+   [malli.dev.pretty :as mpretty]))
 
 (set! *warn-on-reflection* true)
-
-; (def repl-requires
-;   "A sequence of lib specs that are applied to `require`
-;   by default when a new command-line REPL is started."
-;   '[[clojure.repl :refer (source apropos dir pst doc find-doc)]
-;     [clojure.java.javadoc :refer (javadoc)]
-;     [clojure.pprint :refer (pp pprint)]])
-(apply require main/repl-requires)
 
 (defmacro decompile
   "Decompile the form into Java and print it to stdout. Form shouldn't be quoted."

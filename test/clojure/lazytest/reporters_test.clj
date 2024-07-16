@@ -341,17 +341,17 @@
         (expect
           (= (* 2 depth) (- (count out) (count (str/triml out)))))))))
 
-(defdescribe defdescribe-no-doc nil)
-(defdescribe defdescribe-with-doc "cool docs")
+(defdescribe defdescribe-no-doc nil (it "works"))
+(defdescribe defdescribe-with-doc "cool docs" (it "works"))
 
 (defdescribe defdescribe-metadata-test
   (it "uses the var if given no doc string"
-    (expect (= "  defdescribe-no-doc\n\n"
+    (expect (= "  defdescribe-no-doc\n    √ works\n\n"
                (-> (runner/run-test-var (->config {:reporter sut/nested*})
                                         #'defdescribe-no-doc)
                    (with-out-str-no-color)))))
   (it "uses the doc string when available"
-    (expect (= "  cool docs\n\n"
+    (expect (= "  cool docs\n    √ works\n\n"
                (-> (runner/run-test-var (->config {:reporter sut/nested*})
                                         #'defdescribe-with-doc)
                    (with-out-str-no-color))))))

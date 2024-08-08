@@ -1,4 +1,10 @@
-(ns lazytest.config)
+(ns lazytest.config 
+  (:require
+   [clojure.java.io :as io]
+   [clojure.string :as str]))
+
+(def version (delay (str/trim (slurp (io/resource "LAZYTEST_VERSION")))))
+(defn lazytest-version [] (str "Lazytest v" @version))
 
 (defn combine-reporters
   ([reporter] (fn [config m] (reporter config m) (flush) nil))

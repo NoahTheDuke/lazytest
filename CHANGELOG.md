@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 0.3.0 - 2024-08-08
+
+- Added "Usage" to README, listing cli options.
+- Print correct version in `--help` output.
+- Add `--exclude` and `--include` cli flags for metadata selection. `--include` works like `^:focus` but is arbitrary metadata.
+
+## v0.2.1 - 2024-06-26 
+
+- Cleaned up README, added Editor Integration section.
+
 ## v0.2.0 - 2024-06-18
 
 - Rename test-case-result keys to match clojure.test and other test language's runners:

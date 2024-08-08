@@ -1,7 +1,8 @@
 (ns lazytest.cli
   (:require
    [clojure.string :as str]
-   [clojure.tools.cli :as cli]))
+   [clojure.tools.cli :as cli]
+   [lazytest.config :refer [lazytest-version]]))
 
 (defn update-args [m k v]
   (update m k #(conj (or % []) v)))
@@ -24,14 +25,15 @@
    ["-e" "--exclude KEYWORD" "Exclude test sequences or vars with this metadata keyword."
     :parse-fn #(keyword (if (str/starts-with? % ":") (subs % 1) %))
     :assoc-fn update-set]
-   [nil "--output OUTPUT" "Output format. (Defaults to \"nested\".) Can be given multiple times."
+   [nil "--output OUTPUT" "Output format. Can be given multiple times. (Defaults to \"nested\".)"
     :parse-fn read-string
     :assoc-fn update-args]
-   ["-h" "--help" "Print help information."]])
+   [nil "--help" "Print help information."]
+   [nil "--version" "Print version information."]])
 
 (defn help-message
   [specs]
-  (let [lines ["lazytest 0.0"
+  (let [lines [(lazytest-version)
                ""
                "Usage:"
                "  lazytest [options]"

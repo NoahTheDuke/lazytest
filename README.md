@@ -55,6 +55,19 @@ Ran 2 test cases in 0.00272 seconds.
 1 failure.
 ```
 
+## Usage
+
+With the above `:test` alias, you run with `clojure -M:test [options]` where `[options]` are any of the below.
+
+* `-d`, `--dir DIR`: Directory containing tests. (Defaults to `test`.)
+* `-n`, `--namespace NS-SYM`: Test namespace to only run.
+* `-v`, `--var VAR-SYM`: Run only the specified fully-qualified symbol.
+* `-i`, `--include KEYWORD`: Run only test sequences or vars with this metadata keyword.
+* `-e`, `--exclude KEYWORD`: Exclude test sequences or vars with this metadata keyword.
+* `--output OUTPUT`: Output format. Can be given multiple times. (Defaults to `nested`.)
+* `--help`: Print help information.
+* `--version`: Print version information.
+
 ## Why a new test framework?
 
 `clojure.test` has existed since 1.1 and while it's both ubiquitous and useful, it has a number of [problems][problems]:
@@ -62,7 +75,7 @@ Ran 2 test cases in 0.00272 seconds.
 * `are` is strictly worse than `doseq` or `mapv`.
 * `clojure.test/report` is `^:dynamic`, but that leads to being unable to combine multiple reporters at once, or libraries such as Leiningen monkey-patching it.
 * Tests can't be grouped or bundled in any meaningful way (no, defining `test-ns-hook` does not count).
-* `testing` calls aren't real contexts, it's just a dynamic var of strings.
+* `testing` calls aren't real contexts, they're just strings.
 * Fixtures serve a real purpose but because they're set on the namespace, their definition is side-effecting and using them is complicated and hard to reuse.
 
 [problems]: https://stuartsierra.com/2010/07/05/lazytest-status-report

@@ -1,22 +1,22 @@
 {:paths ["src/clojure" "resources" "target/classes"]
- :deps {org.clojure/clojure {:mvn/version "1.11.1"}
+ :deps {org.clojure/clojure {:mvn/version "1.11.4"}
         org.clojure/tools.cli {:mvn/version "1.1.230"}
         org.clojure/tools.namespace {:mvn/version "1.5.0"}
-        metosin/malli {:mvn/version "0.16.1"}}
+        metosin/malli {:mvn/version "0.16.3"}}
  :deps/prep-lib {:ensure "target/classes"
                  :alias :prep
                  :fn javac}
  :aliases
  {:run {:main-opts ["-m" "lazytest.main"]}
-  :provided {:extra-deps {nubank/matcher-combinators {:mvn/version "3.8.5"}}}
+  :provided {:extra-deps {nubank/matcher-combinators {:mvn/version "3.9.1"}}}
   ;; Development tools
   :dev {:extra-paths ["dev"]
         :extra-deps {org.clojure/spec.alpha {:mvn/version "0.5.238"}
                      criterium/criterium {:mvn/version "0.4.6"}
-                     com.clojure-goes-fast/clj-java-decompiler {:mvn/version "0.3.4"}}}
+                     com.clojure-goes-fast/clj-java-decompiler {:mvn/version "0.3.6"}}}
 
   ;; I like nrepl and rebel-readline.
-  :repl {:extra-deps {nrepl/nrepl {:mvn/version "1.0.0"}
+  :repl {:extra-deps {nrepl/nrepl {:mvn/version "1.2.0"}
                       com.bhauman/rebel-readline {:mvn/version "0.1.4"}}
          :main-opts  ["-m" "nrepl.cmdline"
                       "--interactive"
@@ -39,6 +39,10 @@
              :url "https://www.eclipse.org/legal/epl-v10.html"}
    :java-src-dirs ["src/java"]}
 
+  ;; Update dependencies
+  :antq {:deps {com.github.liquidz/antq {:mvn/version "2.8.1206"}}
+         :main-opts ["-m" "antq.core"]}
+
   ;; Compile the ExpectationFailed class with `-T:prep javac`
-  :prep {:deps {io.github.clojure/tools.build {:mvn/version "0.10.3"}}
+  :prep {:deps {io.github.clojure/tools.build {:mvn/version "0.10.5"}}
          :ns-default prep}}}

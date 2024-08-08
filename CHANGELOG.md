@@ -57,7 +57,7 @@ Updated original code to use deps.edn, tools.build, and other modern tooling.
 
 ## Old Lazytest
 
-This file documents the original Alesandra Sierra development, which ended in 2013. It is kept for posterity.
+This file documents the original Alessandra Sierra development, which ended in 2013. It is kept for posterity.
 
 v2.0.0-SNAPSHOT
 

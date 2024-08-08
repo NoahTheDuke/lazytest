@@ -10,14 +10,13 @@
    [lazytest.malli]
    [lazytest.results :refer [summarize summary-exit-value]]
    [lazytest.runner :refer [run-tests]]
-   [malli.experimental :as mx]))
-
-(mx/defn find-sources
-  [dirs :- [:sequential :lt/file]]
-  (mapcat find-sources-in-dir dirs))
+   [clojure.set :as set]))
 
 (defn find-ns-decls [config dirs]
-  (let [ns-filter (or (not-empty (:ns-filter config))
+  (let [var-filter-nses (->> (:var-filter config)
+                             (map (comp symbol namespace))
+                             (into #{}))
+        ns-filter (or (not-empty (set/union (:ns-filter config) var-filter-nses))
                       any?)]
     (into []
           (comp (mapcat find-sources-in-dir)
@@ -34,18 +33,24 @@
     (apply require nses)
     nses))
 
-(defn run [{:keys [dir output] :as config}]
+(defn run-impl [{:keys [dir output] :as config}]
   (let [config (->config (assoc config :reporter output))
-        nses (require-dirs config dir)
-        results (run-tests config nses)]
-    (summarize results)))
+        nses (require-dirs config dir)]
+    (run-tests config nses)))
 
-(defn -main
-  "Run with directories as arguments. Runs all tests in those
-  directories; returns 0 if all tests pass."
-  [& args]
+(defn run [args]
   (let [{:keys [exit-message ok] :as opts} (validate-opts args)]
     (if exit-message
       (do (println exit-message)
-        (System/exit (if ok 0 1)))
-      (System/exit (summary-exit-value (run opts))))))
+          {:exit (if ok 0 1)})
+      (let [results (run-impl opts)
+            summary (summarize results)]
+        (assoc summary
+               :results results
+               :exit (summary-exit-value summary))))))
+
+(defn -main
+  "Pass-through to runner which does all the work."
+  [& args]
+  (let [{:keys [exit]} (run args)]
+    (System/exit (or exit 0))))

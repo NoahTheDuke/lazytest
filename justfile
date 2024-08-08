@@ -20,3 +20,6 @@ test *args:
 test-all *args:
     clj-kondo  --parallel --lint dev src test
     just test {{args}}
+
+repl arg="":
+    clojure -M:provided:dev:test{{arg}}:repl

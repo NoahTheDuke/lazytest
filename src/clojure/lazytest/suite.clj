@@ -44,10 +44,11 @@
    children :- sequential?]
   (let [{:keys [line file] :as sm} (meta source)
         doc (identifier sm)]
-    (with-meta {:type ::suite-result
-                :line line :file file :doc doc
-                :source source
-                :children children}
+    (with-meta (assoc sm
+                      :type ::suite-result
+                      :line line :file file :doc doc
+                      :source source
+                      :children children)
                {:type ::suite-result})))
 
 (defn suite-result?

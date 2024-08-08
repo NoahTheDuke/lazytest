@@ -60,13 +60,17 @@ Ran 2 test cases in 0.00272 seconds.
 With the above `:test` alias, you run with `clojure -M:test [options]` where `[options]` are any of the below.
 
 * `-d`, `--dir DIR`: Directory containing tests. (Defaults to `test`.)
-* `-n`, `--namespace NS-SYM`: Test namespace to only run.
+* `-n`, `--namespace NS-SYM`: Run only the specified test namespaces. Can be given multiple times.
 * `-v`, `--var VAR-SYM`: Run only the specified fully-qualified symbol.
 * `-i`, `--include KEYWORD`: Run only test sequences or vars with this metadata keyword.
 * `-e`, `--exclude KEYWORD`: Exclude test sequences or vars with this metadata keyword.
 * `--output OUTPUT`: Output format. Can be given multiple times. (Defaults to `nested`.)
 * `--help`: Print help information.
 * `--version`: Print version information.
+
+Note: If both `--namespace` and `--var` are provided, then Lazytest will run all tests within the namespaces AND the specified vars. They are inclusive, not exclusive.
+
+Note: `--exclude` overrides `--include`, if both are provided.
 
 ## Writing tests with 'lazytest'
 

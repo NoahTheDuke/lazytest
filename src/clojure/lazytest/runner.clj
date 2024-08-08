@@ -1,7 +1,7 @@
 (ns lazytest.runner
   (:require
    [lazytest.find :refer [find-suite]]
-   [lazytest.focus :refer [filter-tree]]
+   [lazytest.filter :refer [filter-tree]]
    [lazytest.malli]
    [lazytest.reporters :as r :refer [nested report]]
    [lazytest.suite :as s :refer [expand-tree suite-result]]
@@ -18,7 +18,7 @@
   (throw (ex-info "Non-test given to run-suite." {:obj m})))
 (defmethod run-test nil [_config _])
 
-(defn ->suite-result [config s]
+(defn ->suite-result [config s source-type]
   (let [sm (meta s)
         id (s/identifier sm)
         start (System/nanoTime)
@@ -27,40 +27,42 @@
                     (update ::suite-history conj sm))
         results (vec (keep #(run-test config %) s))
         duration (double (- (System/nanoTime) start))]
-    (assoc (suite-result s results) ::duration duration)))
+    (-> (suite-result s results)
+        (assoc ::source-type source-type)
+        (assoc ::duration duration))))
 
 (defmethod run-test :lazytest/run [config s]
   (let [sm (meta s)]
     (report config (assoc sm :type :begin-test-run))
-    (let [results (->suite-result config s)]
+    (let [results (->suite-result config s :lazytest/run)]
       (report config (assoc sm :type :end-test-run :results results))
       results)))
 
 (defmethod run-test :lazytest/ns-suite [config s]
   (let [sm (meta s)]
     (report config (assoc sm :type :begin-ns-suite))
-    (let [results (->suite-result config s)]
+    (let [results (->suite-result config s :lazytest/ns-suite)]
       (report config (assoc sm :type :end-ns-suite :results results))
       results)))
 
 (defmethod run-test :lazytest/test-var [config s]
   (let [sm (meta s)]
     (report config (assoc sm :type :begin-test-var))
-    (let [results (->suite-result config s)]
+    (let [results (->suite-result config s :lazytest/test-var)]
       (report config (assoc sm :type :end-test-var :results results))
       results)))
 
 (defmethod run-test :lazytest/suite [config s]
   (let [sm (meta s)]
     (report config (assoc sm :type :begin-test-suite))
-    (let [results (->suite-result config s)]
+    (let [results (->suite-result config s :lazytest/suite)]
       (report config (assoc sm :type :end-test-suite :results results))
       results)))
 
 (defmethod run-test :lazytest/test-seq [config s]
   (let [sm (meta s)]
     (report config (assoc sm :type :begin-test-seq))
-    (let [results (->suite-result config s)]
+    (let [results (->suite-result config s :lazytest/test-seq)]
       (report config (assoc sm :type :end-test-seq :results results))
       results)))
 

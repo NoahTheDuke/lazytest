@@ -409,3 +409,9 @@
                             (double (/ (:lazytest.runner/duration suite) 1e9))))
                   (str/join \newline)))
     (flush)))
+
+;;; QUIET
+;;; Print nothing.
+
+(defmulti quiet {:arglists '([config m])} #'reporter-dispatch)
+(defmethod quiet :default [_ _])

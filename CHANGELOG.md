@@ -7,6 +7,8 @@
 - `-n`, `--namespace NS` cli flag to specify namespaces that will be tested.
 - `-v`, `--var VAR` cli flag to specify vars that will be tested.
 
+Note: If both `--namespace` and `--var` are provided, then Lazytest will run all tests within the namespaces AND the specified vars. They are inclusive, not exclusive.
+
 ## 0.3.0 - 2024-08-08
 
 - Added "Usage" to README, listing cli options.

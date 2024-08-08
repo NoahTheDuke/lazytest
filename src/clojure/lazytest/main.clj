@@ -16,18 +16,27 @@
   [dirs :- [:sequential :lt/file]]
   (mapcat find-sources-in-dir dirs))
 
-(defn find-ns-decls [dirs]
-  (mapv second (keep read-file-ns-decl (find-sources dirs))))
+(defn find-ns-decls [config dirs]
+  (let [ns-filter (or (not-empty (:ns-filter config))
+                      any?)]
+    (into []
+          (comp (mapcat find-sources-in-dir)
+                (keep read-file-ns-decl)
+                (keep second)
+                (filter ns-filter))
+          dirs)))
 
-(defn require-dirs [dir]
+(defn require-dirs [config dir]
   (let [dirs (map io/file (or dir #{"test"}))
-        nses (find-ns-decls dirs)]
+        nses (find-ns-decls config dirs)]
+    (when (empty? nses)
+      (throw (ex-info "No namespaces to run" {})))
     (apply require nses)
     nses))
 
 (defn run [{:keys [dir output] :as config}]
-  (let [nses (require-dirs dir)
-        config (->config (assoc config :reporter output))
+  (let [config (->config (assoc config :reporter output))
+        nses (require-dirs config dir)
         results (run-tests config nses)]
     (summarize results)))
 

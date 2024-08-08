@@ -13,12 +13,14 @@
 (def cli-options
   [["-d" "--dir DIR" "Directory containing tests. (Defaults to \"test\".)"
     :assoc-fn update-args]
-   ["-n" "--namespace NS-SYM" "Test namespace to only run."
+   ["-n" "--namespace NS-SYM" "Run only the specified test namespaces. Can be given multiple times."
+    :id :ns-filter
     :parse-fn symbol
-    :assoc-fn update-args]
+    :assoc-fn update-set]
    ["-v" "--var VAR-SYM" "Run only the specified fully-qualified symbol."
+    :id :var-filter
     :parse-fn symbol
-    :assoc-fn update-args]
+    :assoc-fn update-set]
    ["-i" "--include KEYWORD" "Run only test sequences or vars with this metadata keyword."
     :parse-fn #(keyword (if (str/starts-with? % ":") (subs % 1) %))
     :assoc-fn update-set]

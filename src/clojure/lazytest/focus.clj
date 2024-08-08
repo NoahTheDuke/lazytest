@@ -1,7 +1,7 @@
 (ns lazytest.focus)
 
 (defn focus-fns
-  "Returns map of {:include include-fn :exclude exclude-fn}."
+  "Returns map of {:include? include-fn :exclude? exclude-fn}."
   [config]
   (let [include? (when-let [include (:include config)]
                    (apply some-fn include))
@@ -37,12 +37,14 @@
         (with-meta fs (meta s))))))
 
 (defn filter-tree-impl
-  [focus-fns s]
+  [focus-fns var-filter s]
   (if (sequential? s)
     (let [m (meta s)
+          s-var (:var m)
           {:keys [exclude?]} focus-fns]
-      (when-not (when exclude? (exclude? m))
-        (when-let [fs (not-empty (vec (keep #(filter-tree-impl focus-fns %) s)))]
+      (when (and (if s-var (var-filter (symbol s-var)) true)
+                 (not (when exclude? (exclude? m))))
+        (when-let [fs (not-empty (vec (keep #(filter-tree-impl focus-fns var-filter %) s)))]
           (filter-focused
            focus-fns
            (with-meta fs (meta s))))))
@@ -53,5 +55,6 @@
   set to true, returns just the focused items while preserving their
   position in the tree. Otherwise returns s unchanged."
   [config s]
-  (let [focus-fn (focus-fns config)]
-    (filter-tree-impl focus-fn s)))
+  (let [focus-fn (focus-fns config)
+        var-filter (or (not-empty (:var-filter config)) any?)]
+    (filter-tree-impl focus-fn var-filter s)))

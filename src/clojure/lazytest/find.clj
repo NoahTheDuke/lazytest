@@ -2,13 +2,10 @@
   (:require
    [lazytest.malli]
    [lazytest.suite :refer [suite suite? test-seq test-seq?]]
-   [lazytest.test-case :refer [test-case?]]
-   [malli.experimental :as mx]))
+   [lazytest.test-case :refer [test-case?]]))
 
-(mx/defn ^:private find-var-test-value
-  :- [:maybe [:orn [:suite [:fn suite?]]
-              [:test-case [:fn test-case?]]]]
-  [this-var :- :lt/var]
+(defn ^:private find-var-test-value
+  [this-var]
   (when (bound? this-var)
     (let [value (var-get this-var)]
       (when (or (suite? value) (test-seq? value) (test-case? value))
@@ -21,7 +18,7 @@
        (keep find-var-test-value)
        seq))
 
-(mx/defn find-ns-suite :- [:maybe [:fn suite?]]
+(defn find-ns-suite
   "Returns a test suite for the namespace.
 
   Returns nil if the namespace has no test suites.

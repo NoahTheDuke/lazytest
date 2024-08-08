@@ -10,3 +10,13 @@ current_version := `cat resources/LAZYTEST_VERSION | xargs`
     fd '.(clj|edn|md)' . -x sd '<<next>>' '{{version}}' {}
     sd '{{current_version}}' '{{version}}' README.md
     sd '## Unreleased' '## Unreleased\n\n## {{version}} - {{today}}' CHANGELOG.md
+
+[no-exit-message]
+test *args:
+    clojure -T:prep javac
+    clojure -M:provided:dev:test:run {{args}}
+
+[no-exit-message]
+test-all *args:
+    clj-kondo  --parallel --lint dev src test
+    just test {{args}}

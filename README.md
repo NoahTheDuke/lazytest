@@ -68,34 +68,6 @@ With the above `:test` alias, you run with `clojure -M:test [options]` where `[o
 * `--help`: Print help information.
 * `--version`: Print version information.
 
-## Why a new test framework?
-
-`clojure.test` has existed since 1.1 and while it's both ubiquitous and useful, it has a number of [problems][problems]:
-* `is` tightly couples running test code and reporting on it.
-* `are` is strictly worse than `doseq` or `mapv`.
-* `clojure.test/report` is `^:dynamic`, but that leads to being unable to combine multiple reporters at once, or libraries such as Leiningen monkey-patching it.
-* Tests can't be grouped or bundled in any meaningful way (no, defining `test-ns-hook` does not count).
-* `testing` calls aren't real contexts, they're just strings.
-* Fixtures serve a real purpose but because they're set on the namespace, their definition is side-effecting and using them is complicated and hard to reuse.
-
-[problems]: https://stuartsierra.com/2010/07/05/lazytest-status-report
-
-There exists very good libraries like [Expectations v2][expectations v2], [kaocha][kaocha], [eftest][eftest], Nubank's [matcher-combinators][nmc], Cognitect's [test-runner][ctr] that improve on `clojure.test`, but they're all still built on a fairly shaky foundation. I think it's worthwhile to explore other ways of being, other ways of doing stuff. Is a library like lazytest good? is a testing framework like this good when used in clojure? I don't know, but I'm willing to try and find out.
-
-[expectations v2]: https://github.com/clojure-expectations/clojure-test
-[kaocha]: https://github.com/lambdaisland/kaocha
-[eftest]: https://github.com/weavejester/eftest
-[nmc]: https://github.com/nubank/matcher-combinators
-[ctr]: https://github.com/cognitect-labs/test-runner
-
-Other alternatives such as [Midje][midje], [classic Expectations][expectations v1], and [speclj][speclj] attempted to correct some of those issues and they made good progress. However, some (such as `Midje`) relied on non-list style (`test => expected`) and most don't worked well with modern repl-driven development practices (as seen by the popularity of the aforementioned clojure.test-compatible [Expectations v2][expectations v2]).
-
-[expectations v1]: https://github.com/clojure-expectations/expectations
-[midje]: https://github.com/marick/midje
-[speclj]: https://github.com/slagyr/speclj
-
-I like the ideas put forth in Alessandra's post above about Lazytest and hope to experiment with achieving them 14 years later, while borrowing heavily from the work in both the Clojure community and test runners frameworks in other languages.
-
 ## Writing tests with 'lazytest'
 
 The primary api is found in `lazytest.core` namespace. It mimics the behavior-driven testing style popularized by libraries such as [RSpec](https://rspec.info/) and [Mocha](https://mochajs.org).
@@ -215,6 +187,34 @@ Put the following in `.emacs`:
      (expect-it 'defun)
      (it 'defun)))
 ```
+
+## Why a new test framework?
+
+`clojure.test` has existed since 1.1 and while it's both ubiquitous and useful, it has a number of [problems][problems]:
+* `is` tightly couples running test code and reporting on it.
+* `are` is strictly worse than `doseq` or `mapv`.
+* `clojure.test/report` is `^:dynamic`, but that leads to being unable to combine multiple reporters at once, or libraries such as Leiningen monkey-patching it.
+* Tests can't be grouped or bundled in any meaningful way (no, defining `test-ns-hook` does not count).
+* `testing` calls aren't real contexts, they're just strings.
+* Fixtures serve a real purpose but because they're set on the namespace, their definition is side-effecting and using them is complicated and hard to reuse.
+
+[problems]: https://stuartsierra.com/2010/07/05/lazytest-status-report
+
+There exists very good libraries like [Expectations v2][expectations v2], [kaocha][kaocha], [eftest][eftest], Nubank's [matcher-combinators][nmc], Cognitect's [test-runner][ctr] that improve on `clojure.test`, but they're all still built on a fairly shaky foundation. I think it's worthwhile to explore other ways of being, other ways of doing stuff. Is a library like lazytest good? is a testing framework like this good when used in clojure? I don't know, but I'm willing to try and find out.
+
+[expectations v2]: https://github.com/clojure-expectations/clojure-test
+[kaocha]: https://github.com/lambdaisland/kaocha
+[eftest]: https://github.com/weavejester/eftest
+[nmc]: https://github.com/nubank/matcher-combinators
+[ctr]: https://github.com/cognitect-labs/test-runner
+
+Other alternatives such as [Midje][midje], [classic Expectations][expectations v1], and [speclj][speclj] attempted to correct some of those issues and they made good progress. However, some (such as `Midje`) relied on non-list style (`test => expected`) and most don't worked well with modern repl-driven development practices (as seen by the popularity of the aforementioned clojure.test-compatible [Expectations v2][expectations v2]).
+
+[expectations v1]: https://github.com/clojure-expectations/expectations
+[midje]: https://github.com/marick/midje
+[speclj]: https://github.com/slagyr/speclj
+
+I like the ideas put forth in Alessandra's post above about Lazytest and hope to experiment with achieving them 14 years later, while borrowing heavily from the work in both the Clojure community and test runners frameworks in other languages.
 
 ## License
 

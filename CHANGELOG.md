@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+- `-n`, `--namespace NS` cli flag to specify namespaces that will be tested.
+- `-v`, `--var VAR` cli flag to specify vars that will be tested.
+
 ## 0.3.0 - 2024-08-08
 
 - Added "Usage" to README, listing cli options.

@@ -21,7 +21,7 @@
   (print (apply str (repeat n "  "))))
 
 ;; FOCUSED
-;; Prints a message when tests are focused. Included by default.
+;; Prints a message when tests are focused.
 ;;
 ;; Example:
 ;;
@@ -36,7 +36,7 @@
   (flush))
 
 ;; SUMMARY
-;; Prints the number of test cases, failures, and errors.
+;; Prints the number of test cases and failures.
 ;;
 ;; Example:
 ;;
@@ -58,7 +58,7 @@
     (flush)))
 
 ;; RESULTS
-;; Print the failed assertions, their arguments, etc.
+;; Print the failed assertions, their arguments, and associated information.
 ;;
 ;; Example:
 ;;
@@ -228,7 +228,7 @@
 
 ;; CLOJURE-TEST
 ;; Adapts clojure.test's default reporter to Lazytests' system.
-;; It treats suite :docs as config strings and 
+;; It treats suite and test-case :docs as testing strings.
 ;;
 ;; Example:
 ;;
@@ -367,13 +367,13 @@
 (defmethod debug :pass [_config result] (prn result))
 (defmethod debug :fail [_config result] (prn result))
 
-;;; PROFILE
-;;; Print the top 5 namespaces and test vars by duration.
-;;; Code adapted from kaocha
-;;;
-;;; Example:
-;;;
-;;; blah blah blah
+;; PROFILE
+;; Print the top 5 namespaces and test vars by duration.
+;; Code adapted from kaocha
+;;
+;; Example:
+;;
+;; blah blah blah
 
 (defmulti profile {:arglists '([config m])} #'reporter-dispatch)
 (defmethod profile :default [_ _])
@@ -410,8 +410,8 @@
                   (str/join \newline)))
     (flush)))
 
-;;; QUIET
-;;; Print nothing.
+;; QUIET
+;; Print nothing.
 
 (defmulti quiet {:arglists '([config m])} #'reporter-dispatch)
 (defmethod quiet :default [_ _])

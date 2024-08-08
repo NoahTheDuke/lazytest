@@ -135,25 +135,29 @@ To partition your test suite based on metadata, you can use `-i`/`--include` to 
 
 ## Output
 
-Lazytest comes with a number of reporters built-in. These print various information about the test run, both as it happens and surrounding execution. They can be used together or individually. It's generally best to use one of the full reporters, to see all relevant information.
+Lazytest comes with a number of reporters built-in. These print various information about the test run, both as it happens and surrounding execution. It's generally best to use one of the full reporters, to see all relevant information.
 
 Reporter pieces:
 
-* **focused**: Prints a message when tests are focused.
-* **summary**: Prints the number of test cases and failures.
-* **results**: Prints the failed assertions, their arguments, and associated information.
-* **dots\***: Prints passing tests as `.` and failures as `F`. Test cases in namespace are wrapped in parentheses.
-* **nested\***: Prints each suite and test case on a new line, indenting at each suite.
-* **profile**: Prints the slowest 5 namespaces and slowest 5 test vars by duration.
+* **focused**: Prints a message when tests are focused at the start of the test run.
+* **summary**: Prints the number of test cases and failures at the end of the test run.
+* **results**: Prints the failed assertions, their arguments, and associated information at the end of the test run.
+* **nested\***: Prints each suite and test case on a new line, indenting at each suite, during the test run.
+* **dots\***: Prints passing tests as `.` and failures as `F` during the test run. Test cases in namespace are wrapped in parentheses.
+* **profile**: Prints the slowest 5 namespaces and slowest 5 test vars by duration at the end of the test run.
 
 Full reporters:
 
+* **nested**: Runs `focused`, `nested*`, `results`, and `summary`. This is the default Lazytest reporter.
 * **dots**: Runs `focused`, `dots*`, `results`, and `summary`.
-* **nested**: Runs `focused`, `nested*`, `results`, and `summary`.
-* **clojure-test**: Mimics `clojure.test`'s default reporter, treating suite and test-case :docs as testing strings.
+* **clojure-test**: Mimics `clojure.test`'s default reporter, treating suite and test-case docstrings as testing strings.
+
+Specialty reporters:
+
 * **quiet**: Prints nothing. Useful if all you want is the return code.
 * **debug**: Prints loudly about every step of the run. Incredibly noise, not recommended for anything other than debugging Lazytest internals.
 
+If multiple reporters are specified with `--output`, then they are run in the order chosen whenever they would print. For example, using `-o summary -o results` will print `Ran 5 test cases in 0.12346 seconds.` before printing `example test-case: Expectation Failed`. This is only important when multiple reporters print at the same step in the run, but it can be the difference between information being obvious or hidden.
 
 TODO: Show examples in `docs/output.md`.
 

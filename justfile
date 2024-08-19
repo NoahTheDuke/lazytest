@@ -23,3 +23,6 @@ test-all *args:
 
 repl arg="":
     clojure -M:provided:dev:test{{arg}}:repl
+
+@clojars:
+    env CLOJARS_USERNAME='noahtheduke' CLOJARS_PASSWORD=`cat ../clojars.txt` clojure -M:clein deploy

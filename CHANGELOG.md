@@ -2,20 +2,23 @@
 
 ## Unreleased
 
-### Added
+### Features
 
 - `-n`, `--namespace NS` cli flag to specify namespaces that will be tested.
 - `-v`, `--var VAR` cli flag to specify vars that will be tested.
-
-Note: If both `--namespace` and `--var` are provided, then Lazytest will run all tests within the namespaces AND the specified vars. They are inclusive, not exclusive.
+- Support `:test` metadata on vars. Handles functions, test cases, and test suites, converting them to test suites or using them directly. They're treated in the reporter as test vars, using the defn's var. (See README.md for examples.)
 
 ## 0.3.0 - 2024-08-08
 
-- Added "Usage" to README, listing cli options.
-- Print correct version in `--help` output.
-- Add `--exclude` and `--include` cli flags for metadata selection. `--include` works like `^:focus` but is arbitrary metadata.
+### Features
 
-## v0.2.1 - 2024-06-26 
+- `--exclude` and `--include` cli flags for metadata selection. `--include` works like `^:focus` but is arbitrary metadata.
+
+### Fixes
+
+- Print correct version in `--help` output.
+
+## v0.2.1 - 2024-06-26
 
 - Cleaned up README, added Editor Integration section.
 
@@ -95,7 +98,7 @@ v1.2.1        2010-11-27        BAD RELEASE: DO NOT USE
 
  * Tried maven-release-plugin version 2.1
 
- 
+
 v1.2.0        2010-11-27        BAD RELEASE: DO NOT USE
 
  * Wrong file extension on the deployed JAR

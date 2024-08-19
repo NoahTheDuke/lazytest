@@ -118,6 +118,51 @@ The `expect` macro is like `assert` but carries more information about the failu
 
 If an `it` runs to completion without throwing an exception, the test case is considered to have passed.
 
+### Var Metadata
+
+In addition to finding the tests defined with `defdescribe`, Lazytest also checks all vars for `:test` metadata. If the `:test` metadata is a function, a test case, or a test suite, it's treated as a top-level `defdescribe` for the associated var and executed just like other tests. `:test` functions are given the doc string ``"`:test` metadata"``.
+
+How to write them:
+
+```clojure
+(ns example.metadata-test ...)
+
+(defn fn-example {:test #(expect ...)})
+(defn test-case-example {:test (it "test case example docstring" ...)})
+(defn suite-example {:test (suite ...)})
+(defn describe-example {:test (describe "top level docstring" ...)})
+```
+
+How they're printed:
+
+```
+  example.metadata-test
+    #'example.metadata-test/fn-example
+      √ `:test` metadata
+    #'example.metadata-test/test-case-example
+      √ test case example docstring
+    #'example.metadata-test/suite-example
+      √ first test case
+      √ second test case
+    #'example.metadata-test/describe-example
+      top level docstring
+        √ third test case
+        √ fourth test case
+```
+
+These can get unweildy if multiple test cases are included before a given implementation, so I recommend either moving them to a dedicated test file or moving the `attr-map` to the end of the function definition:
+
+```clojure
+(defn describe-example
+  ([a b]
+   (+ a b))
+  {:test (describe "Should be simple addition"
+           (it "handles ints"
+             (expect (= 2 (describe-example 1 1))))
+           (it "handles floats"
+             (expect (= 2.0 (describe-example 1.0 1.0)))))})
+```
+
 ## Focusing on Individual Tests and Suites
 
 All of the test suite and test case macros (`defdescribe`, `describe`, `it`, `expect-it`) take a metadata map after the docstring. Adding `:focus true` to this map will cause *only* that test/suite to be run. Removing it will return to the normal behavior (run all tests).

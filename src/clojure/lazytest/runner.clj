@@ -1,6 +1,6 @@
 (ns lazytest.runner
   (:require
-   [lazytest.find :refer [find-suite]]
+   [lazytest.find :refer [find-suite find-var-test-value]]
    [lazytest.filter :refer [filter-tree]]
    [lazytest.malli]
    [lazytest.reporters :as r :refer [nested report]]
@@ -96,7 +96,7 @@
 
 (mx/defn run-test-var
   [config v :- [:fn var?]]
-  (let [tree (-> (s/suite (s/test-seq [@v]))
+  (let [tree (-> (find-var-test-value v)
                  (vary-meta assoc :type :lazytest/run)
                  (expand-tree)
                  (#(filter-tree config %)))]

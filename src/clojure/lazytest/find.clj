@@ -1,15 +1,34 @@
 (ns lazytest.find
   (:require
+   [lazytest.core :refer [describe it]]
    [lazytest.malli]
-   [lazytest.suite :refer [suite suite? test-seq test-seq?]]
+   [lazytest.suite :refer [suite suite? test-seq]]
    [lazytest.test-case :refer [test-case?]]))
 
-(defn ^:private find-var-test-value
+(defn- set-var [value this-var]
+  (vary-meta value assoc :type :lazytest/test-var :var this-var))
+
+(defn find-var-test-value
   [this-var]
   (when (bound? this-var)
-    (let [value (var-get this-var)]
-      (when (or (suite? value) (test-seq? value) (test-case? value))
-        (vary-meta value assoc :type :lazytest/test-var :var this-var)))))
+    (let [value (var-get this-var)
+          m (meta this-var)
+          test-metadata (:test m)]
+      (cond
+        ;; (defdescribe example ...)
+        ;; (def example (suite ...))
+        (suite? value)
+        (set-var value this-var)
+        ;; (defn example {:test (describe ...)})
+        ;; (defn example {:test (suite ...)})
+        (suite? test-metadata)
+        (set-var (describe this-var test-metadata) this-var)
+        ;; (defn example {:test (it ...)})
+        (test-case? test-metadata)
+        (set-var (suite (test-seq [test-metadata])) this-var)
+        ;; (defn example {:test #(expect ...)})
+        (fn? test-metadata)
+        (set-var (suite (test-seq [(it "`:test` metadata" (test-metadata))])) this-var)))))
 
 (defn- test-seq-for-ns [this-ns]
   (->> (ns-interns this-ns)

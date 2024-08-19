@@ -53,5 +53,7 @@
 
 ;; including all of the above in a distinct test
 (defdescribe s4 "Four"
+  s1
+  s2
   s3
   (map common-test-cases (range 4 6)))

@@ -8,7 +8,7 @@ Add it to your deps.edn or project.clj:
 
 ```clojure
 {:aliases
- {:test {:extra-deps {io.github.noahtheduke/lazytest {:mvn/version "0.3.0"}}
+ {:test {:extra-deps {io.github.noahtheduke/lazytest {:mvn/version "0.4.0"}}
          :extra-paths ["test"]
          :main-opts ["-m" "lazytest.main"]}}}
 ```

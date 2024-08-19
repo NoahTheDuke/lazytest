@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.4.0
+
+Released `2024-08-19`.
+
 ### Features
 
 - `-n`, `--namespace NS` cli flag to specify namespaces that will be tested.

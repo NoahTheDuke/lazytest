@@ -40,8 +40,8 @@
 ;;
 ;; Example:
 ;;
-;; Ran 5 test cases.
-;; 0 failures and 2 errors.
+;; Ran 5 test cases in 0.04501 seconds.
+;; 0 failures.
 
 (defmulti summary {:arglists '([config m])} #'reporter-dispatch)
 (defmethod summary :default [_ _])
@@ -184,10 +184,15 @@
 ;;
 ;; Example:
 ;;
-;;   lazytest.readme-test
-;;     The square root of two
-;;       is less than two
-;;       is more than one
+;;  lazytest.core-test
+;;    it-test
+;;      √ will early exit
+;;      √ arbitrary code
+;;    with-redefs-test
+;;      redefs inside 'it' blocks
+;;        × should be rebound FAIL
+;;      redefs outside 'it' blocks
+;;        √ should not be rebound
 
 (defmulti nested* {:arglists '([config m])} #'reporter-dispatch)
 (defmethod nested* :default [_ _])

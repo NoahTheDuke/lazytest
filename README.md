@@ -180,31 +180,80 @@ To partition your test suite based on metadata, you can use `-i`/`--include` to 
 
 ## Output
 
-Lazytest comes with a number of reporters built-in. These print various information about the test run, both as it happens and surrounding execution. It's generally best to use one of the full reporters, to see all relevant information.
+Lazytest comes with a number of reporters built-in. These print various information about the test run, both as it happens and surrounding execution. They are specified at the cli with `--output` and can be simple symbols or fully-qualified symbols. If a custom reporter is provided, it must be fully-qualified. (Otherwise, Lazytest will try to resolve it to the `lazytest.reporters` namespace and throw an exception.)
 
-Reporter pieces:
+### `lazytest.reporters/nested`
 
-* **focused**: Prints a message when tests are focused at the start of the test run.
-* **summary**: Prints the number of test cases and failures at the end of the test run.
-* **results**: Prints the failed assertions, their arguments, and associated information at the end of the test run.
-* **nested\***: Prints each suite and test case on a new line, indenting at each suite, during the test run.
-* **dots\***: Prints passing tests as `.` and failures as `F` during the test run. Test cases in namespace are wrapped in parentheses.
-* **profile**: Prints the slowest 5 namespaces and slowest 5 test vars by duration at the end of the test run.
+The default Lazytest reporter. Inspired heavily by [Mocha's Spec][mocha spec] reporter, it prints each suite and test case indented as they are written in the test files.
 
-Full reporters:
+[mocha spec]: https://mochajs.org/#spec
 
-* **nested**: Runs `focused`, `nested*`, `results`, and `summary`. This is the default Lazytest reporter.
-* **dots**: Runs `focused`, `dots*`, `results`, and `summary`.
-* **clojure-test**: Mimics `clojure.test`'s default reporter, treating suite and test-case docstrings as testing strings.
 
-Specialty reporters:
+```
+  lazytest.core-test
+    it-test
+      √ will early exit
+      √ arbitrary code
+    with-redefs-test
+      redefs inside 'it' blocks
+        × should be rebound FAIL
+      redefs outside 'it' blocks
+        √ should not be rebound
 
-* **quiet**: Prints nothing. Useful if all you want is the return code.
-* **debug**: Prints loudly about every step of the run. Incredibly noise, not recommended for anything other than debugging Lazytest internals.
+lazytest.core-test
+  with-redefs-test
+    redefs inside 'it' blocks
+      should be rebound:
 
-If multiple reporters are specified with `--output`, then they are run in the order chosen whenever they would print. For example, using `-o summary -o results` will print `Ran 5 test cases in 0.12346 seconds.` before printing `example test-case: Expectation Failed`. This is only important when multiple reporters print at the same step in the run, but it can be the difference between information being obvious or hidden.
+this should be true
+Expected: (= 7 (plus 2 3))
+Actual: false
+Evaluated arguments:
+ * 7
+ * 6
+Only in first argument:
+7
+Only in second argument:
+6
 
-TODO: Show examples in `docs/output.md`.
+in lazytest/core_test.clj:29
+
+Ran 90 test cases in 0.06548 seconds.
+1 failure.
+```
+
+### `lazytest.reporters/dots`
+
+A minimalist reporter. Prints passing test cases as green `.` and failures as red `F` during the test run. Test suites are grouped with parentheses (`(`/`)`). It also prints the failure results and summary as in `lazytest.reporters/nested`, which has been elided below for brevity.
+
+```
+(...)(..F................)(.....)(..)(..)(....)(........)(........................................)(.......)
+```
+
+### `lazytest.reporters/clojure-test`
+
+Mimics `clojure.test`'s default reporter, treating suite and test-case docstrings as testing strings.
+
+```
+Testing lazytest.core-test
+
+FAIL in (with-redefs-test) (lazytest/core_test.clj:29)
+with-redefs-test redefs inside 'it' blocks should be rebound
+this should be true
+expected: (= 7 (plus 2 3))
+  actual: false
+
+Ran 25 tests containing 90 test cases.
+1 failure, 0 errors.
+```
+
+### `lazytest.reporters/quiet`
+
+Prints nothing. Useful if all you want is the return code.
+
+### `lazytest.reporters/debug`
+
+Prints loudly about every step of the run. Incredibly noise, not recommended for anything other than debugging Lazytest internals.
 
 ## Editor Integration
 

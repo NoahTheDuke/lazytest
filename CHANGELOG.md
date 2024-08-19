@@ -8,21 +8,28 @@
 - `-v`, `--var VAR` cli flag to specify vars that will be tested.
 - Support `:test` metadata on vars. Handles functions, test cases, and test suites, converting them to test suites or using them directly. They're treated in the reporter as test vars, using the defn's var. (See README.md for examples.)
 
-## 0.3.0 - 2024-08-08
+## 0.3.0
+
+Released `2024-08-08`.
 
 ### Features
 
 - `--exclude` and `--include` cli flags for metadata selection. `--include` works like `^:focus` but is arbitrary metadata.
 
-### Fixes
+### Changes
 
+- Added "Usage" to README, listing cli options.
 - Print correct version in `--help` output.
 
-## v0.2.1 - 2024-06-26
+## v0.2.1
+
+Released `2024-06-26`.
 
 - Cleaned up README, added Editor Integration section.
 
-## v0.2.0 - 2024-06-18
+## v0.2.0
+
+Released `2024-06-18`.
 
 - Rename test-case-result keys to match clojure.test and other test language's runners:
   * `:form` -> `:expected`
@@ -50,7 +57,9 @@
   * `debug` prints "Running X" and "Done with X" for all test sequences and print the direct result of all test cases.
 - Add tests for reporters.
 
-## 0.1.0 - 2024-06-09
+## 0.1.0
+
+Released `2024-06-09`.
 
 Updated original code to use deps.edn, tools.build, and other modern tooling.
 

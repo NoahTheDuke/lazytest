@@ -37,7 +37,8 @@
    :version "./resources/LAZYTEST_VERSION"
    :license {:name "EPL-1.0"
              :url "https://www.eclipse.org/legal/epl-v10.html"}
-   :java-src-dirs ["src/java"]}
+   :java-src-dirs ["src/java"]
+   :javac-opts ["--release" "11"]}
 
   ;; Update dependencies
   :antq {:deps {com.github.liquidz/antq {:mvn/version "2.8.1206"}}

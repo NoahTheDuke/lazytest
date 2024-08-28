@@ -134,11 +134,9 @@
   [test-name & body]
   (let [[doc body] (get-arg string? body)
         [attr-map body] (get-arg map? body)
-        focus (:focus (meta test-name))
+        m (dissoc (meta test-name) :doc)
         test-var (list 'var (symbol (str *ns*) (str test-name)))
-        attr-map (cond-> attr-map
-                   true (assoc :var test-var)
-                   focus (assoc :focus focus))
+        attr-map (merge m (assoc attr-map :var test-var))
         body (cond-> [(or doc (str test-name))]
                attr-map (conj attr-map)
                body (concat body))]

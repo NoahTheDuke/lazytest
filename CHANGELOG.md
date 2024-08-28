@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changes
+
+- Merge metadata on `defdescribe` var into `describe` attr-map. Fixes `--include` and `--exclude` filtering on var metadata instead of attr-map.
+
 ## 0.4.0
 
 Released `2024-08-19`.

@@ -1,4 +1,4 @@
-(ns dev
+(ns lazytest.dev
   (:require
    [clj-java-decompiler.core :as decompiler]
    [clojure.spec.test.alpha :as stest]
@@ -24,8 +24,7 @@
   "Start malli function instrumentation."
   ([] (malli-start! {:report (mpretty/thrower)}))
   ([opts]
-   (with-out-str (mdev/start! opts))
-   (println "Started Malli instrumentation")))
+   (with-out-str (mdev/start! opts))))
 
 (malli-start!)
 

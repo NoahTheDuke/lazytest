@@ -179,7 +179,7 @@
         [attr-map body] (get-arg map? body)
         metadata (merged-metadata body &form doc attr-map)]
     `(test-case (with-meta
-                  (fn [] ~@body)
+                  (fn it# [] ~@body)
                   ~metadata))))
 
 (defmacro expect-it
@@ -211,7 +211,7 @@
     (when (and (seq? assertion) (symbol? (first assertion)))
       (assert (not= "expect" (name (first assertion)))))
     `(test-case (with-meta
-                  (fn [] (expect ~assertion ~doc))
+                  (fn expect-it# [] (expect ~assertion ~doc))
                   ~metadata))))
 
 (defn throws?
@@ -272,7 +272,7 @@
   [c re f]
   (try (f) false
        (catch Throwable t
-         (if (some (fn [cause]
+         (if (some (fn causes-with-msg?-wrapper [cause]
                      (when
                        (and (instance? c cause)
                             (re-find re (ex-message cause)))

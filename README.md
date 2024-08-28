@@ -1,4 +1,7 @@
-# Lazytest: A new test framework for Clojure
+# Lazytest: A standalone test framework for Clojure
+
+[![Clojars Project](https://img.shields.io/clojars/v/io.github.noahtheduke/lazytest.svg)](https://clojars.org/io.github.noahtheduke/lazytest)
+[![cljdoc badge](https://cljdoc.org/badge/io.github.noahtheduke/lazytest)](https://cljdoc.org/d/io.github.noahtheduke/lazytest)
 
 An alternative to `clojure.test`, aiming to be feature-rich and easily extensible.
 
@@ -22,9 +25,9 @@ In a test file:
 (defdescribe seq-fns-test
   (describe keep
     (it "should reject nils"
-      (expect (= '(1 false 2 3) (keep any? [nil 1 false 2 3]))))
+      (expect (= '(1 2 3) (keep identity [nil 1 2 3]))))
     (it "should return a sequence"
-      (expect (seq (keep any? []))))))
+      (expect (seq? (seq (keep identity [nil])))))))
 ```
 
 From the command line:
@@ -44,7 +47,7 @@ lazytest.readme-test
       should return a sequence:
 
 Expectation failed
-Expected: (seq (keep any? []))
+Expected: (seq? (seq (keep identity [nil])))
 Actual: nil
 Evaluated arguments:
  * ()

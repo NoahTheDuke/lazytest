@@ -1,6 +1,7 @@
 (ns lazytest.test-utils
   (:require
    [lazytest.color :as lc]
+   [lazytest.dev]
    [matcher-combinators.core :as mc]
    [matcher-combinators.model :refer [->Mismatch]]
    [matcher-combinators.result :as result]))

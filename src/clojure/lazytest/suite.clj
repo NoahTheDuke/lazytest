@@ -21,7 +21,7 @@
   "Wraps sequence in a function and sets metadata identifying
   it as a test suite."
   [s]
-  `(vary-meta (fn [] ~s) assoc ::suite true :type :lazytest/suite))
+  `(vary-meta (fn suite# [] (test-seq ~s)) assoc ::suite true :type :lazytest/suite))
 
 (defn suite?
   "True if x is a test suite."

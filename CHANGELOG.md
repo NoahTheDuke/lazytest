@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.4.2
+
+Released `2024-08-28`.
+
 - Target java 11 as unnecessary to target later versions.
 
 ## 0.4.1

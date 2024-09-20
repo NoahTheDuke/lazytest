@@ -88,7 +88,7 @@ I like the ideas put forth in Alessandra's post above about Lazytest and hope to
 
 ## Usage
 
-With the above `:test` alias, call `clojure -M:test [options]` to run your test suite once, or `clojure -M:test [options] --watch` to use "Watch mode", which watches your project for changes and reloads any changed or dependent files and then reruns your test suite.
+With the above `:test` alias, call `clojure -M:test [options]` to run your test suite once, or `clojure -M:test [options] --watch` to use "Watch mode" (see below) to run repeatedly as files change.
 
 Any of the below `[options]` can also be provided:
 
@@ -106,6 +106,12 @@ Any of the below `[options]` can also be provided:
 Note: If both `--namespace` and `--var` are provided, then Lazytest will run all tests within the namespaces AND the specified vars. They are inclusive, not exclusive.
 
 Note: `--exclude` overrides `--include`, if both are provided.
+
+### Watch mode
+
+Watch mode uses [clj-reload](https://github.com/tonsky/clj-reload) to reload all local changes on the classpath, plus any files containing namespaces that depend on the changed files. Watch mode defaults to `lazytest.reporters/dots` to make the output easier to read. By default, it checks for changes once every 500 milliseconds (1/2 a second), but this can be changed with `--delay`. Watch mode supports all of the other options as well, so you can select a different output style, specific directories, test namespaces, or test varsto check, etc.
+
+Type `CTRL-C` to stop.
 
 ## Writing tests with 'lazytest'
 

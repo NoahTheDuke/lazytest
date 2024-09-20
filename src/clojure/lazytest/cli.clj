@@ -77,4 +77,6 @@
       (:help options) (help-message summary)
       (:version options) {:exit-message "lazytest 0.0" :ok true}
       errors (print-errors errors)
-      :else (update options :output prepare-output))))
+      :else (-> options
+                (update :output prepare-output)
+                (update :delay #(or % 500))))))

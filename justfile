@@ -22,6 +22,7 @@ test-all *args:
     just test {{args}}
 
 repl arg="":
+    clojure -T:prep javac
     clojure -M:provided:dev:test{{arg}}:repl
 
 @clojars:

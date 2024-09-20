@@ -32,7 +32,7 @@ In a test file:
 
 From the command line:
 
-```bash
+```
 $ clojure -M:test
 
   lazytest.readme-test
@@ -88,14 +88,18 @@ I like the ideas put forth in Alessandra's post above about Lazytest and hope to
 
 ## Usage
 
-With the above `:test` alias, you run with `clojure -M:test [options]` where `[options]` are any of the below.
+With the above `:test` alias, call `clojure -M:test [options]` to run your test suite once, or `clojure -M:test [options] --watch` to use "Watch mode", which watches your project for changes and reloads any changed or dependent files and then reruns your test suite.
+
+Any of the below `[options]` can also be provided:
 
 * `-d`, `--dir DIR`: Directory containing tests. (Defaults to `test`.)
-* `-n`, `--namespace NS-SYM`: Run only the specified test namespaces. Can be given multiple times.
-* `-v`, `--var VAR-SYM`: Run only the specified fully-qualified symbol.
+* `-n`, `--namespace SYMBOL`: Run only the specified test namespaces. Can be given multiple times.
+* `-v`, `--var SYMBOL`: Run only the specified fully-qualified symbol.
 * `-i`, `--include KEYWORD`: Run only test sequences or vars with this metadata keyword.
 * `-e`, `--exclude KEYWORD`: Exclude test sequences or vars with this metadata keyword.
-* `--output OUTPUT`: Output format. Can be given multiple times. (Defaults to `nested`.)
+* `--output SYMBOL`: Output format. Can be given multiple times. (Defaults to `nested`.)
+* `--watch`: As noted above, runs under "Watch mode", which reloads and reruns your test suite as project or test code changes.
+* `--delay NUM`: How many milliseconds to wait before checking for changes to reload. Only used in "Watch mode". (Defaults to 500.)
 * `--help`: Print help information.
 * `--version`: Print version information.
 

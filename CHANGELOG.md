@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Features
+
+- `--watch` cli flag will run under "Watch mode", which uses [clj-reload](https://github.com/tonsky/clj-reload) to check for changes in local classpath, and then reruns the provided or default test suite. Includes `--delay NUM` which allows for changing the number of milliseconds between checking changes.
+
 ## 0.4.2
 
 Released `2024-08-28`.

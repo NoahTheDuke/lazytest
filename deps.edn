@@ -2,6 +2,7 @@
  :deps {org.clojure/clojure {:mvn/version "1.11.4"}
         org.clojure/tools.cli {:mvn/version "1.1.230"}
         org.clojure/tools.namespace {:mvn/version "1.5.0"}
+        io.github.tonsky/clj-reload {:mvn/version "0.7.0"}
         metosin/malli {:mvn/version "0.16.3"}}
  :deps/prep-lib {:ensure "target/classes"
                  :alias :prep

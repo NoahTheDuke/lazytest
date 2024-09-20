@@ -95,7 +95,7 @@
    (run-tests config nil)))
 
 (mx/defn run-test-var
-  [config v :- [:fn var?]]
+  [config v :- :lt/var]
   (let [tree (-> (find-var-test-value v)
                  (vary-meta assoc :type :lazytest/run)
                  (expand-tree)

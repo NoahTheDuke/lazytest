@@ -13,11 +13,11 @@
 (def cli-options
   [["-d" "--dir DIR" "Directory containing tests. (Defaults to \"test\".)"
     :assoc-fn update-args]
-   ["-n" "--namespace NS-SYM" "Run only the specified test namespaces. Can be given multiple times."
+   ["-n" "--namespace SYMBOL" "Run only the specified test namespaces. Can be given multiple times."
     :id :ns-filter
     :parse-fn symbol
     :assoc-fn update-set]
-   ["-v" "--var VAR-SYM" "Run only the specified fully-qualified symbol."
+   ["-v" "--var SYMBOL" "Run only the specified fully-qualified symbol."
     :id :var-filter
     :parse-fn symbol
     :assoc-fn update-set]
@@ -27,9 +27,16 @@
    ["-e" "--exclude KEYWORD" "Exclude test sequences or vars with this metadata keyword."
     :parse-fn #(keyword (if (str/starts-with? % ":") (subs % 1) %))
     :assoc-fn update-set]
-   [nil "--output OUTPUT" "Output format. Can be given multiple times. (Defaults to \"nested\".)"
+   [nil "--output SYMBOL" "Output format. Can be given multiple times. (Defaults to \"nested\".)"
     :parse-fn read-string
-    :assoc-fn update-args]
+    :assoc-fn (fn [args k v]
+                (let [output (if (qualified-symbol? v)
+                               v
+                               (symbol "lazytest.reporters" (name v)))]
+                  (update-args args k output)))]
+   [nil "--watch" "Run under Watch mode. Uses clj-reload to reload changed and dependent namespaces, then reruns test suite."]
+   [nil "--delay NUM" "(Watch mode) How many milliseconds to wait before checking for changes. (Defaults to 500.)"
+    :parse-fn parse-long]
    [nil "--help" "Print help information."]
    [nil "--version" "Print version information."]])
 
@@ -41,7 +48,7 @@
                "  lazytest [options]"
                ""
                "Options:"
-               (#'cli/summarize specs)
+               (cli/summarize specs)
                ""]]
     {:exit-message (str/join \newline lines)
      :ok true}))
@@ -51,15 +58,10 @@
   {:exit-message (str/join \newline (cons "lazytest errors:" errors))
    :ok false})
 
-(defn prepare-output [options]
-  (update options :output
-          (fn [output]
-            (if output
-              (->> output
-                   (map #(if (qualified-symbol? %) % (symbol "lazytest.reporters" (name %))))
-                   (distinct)
-                   (vec))
-              ['lazytest.reporters/nested]))))
+(defn prepare-output [output]
+  (->> output
+       (distinct)
+       (vec)))
 
 (defn validate-opts
   "Parse and validate opts.
@@ -75,5 +77,4 @@
       (:help options) (help-message summary)
       (:version options) {:exit-message "lazytest 0.0" :ok true}
       errors (print-errors errors)
-      :else (-> options
-                (prepare-output)))))
+      :else (update options :output prepare-output))))

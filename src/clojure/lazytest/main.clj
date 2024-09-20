@@ -3,6 +3,7 @@
   (:gen-class)
   (:require
    [clojure.java.io :as io]
+   [clojure.set :as set]
    [clojure.tools.namespace.file :refer [read-file-ns-decl]]
    [clojure.tools.namespace.find :refer [find-sources-in-dir]]
    [lazytest.cli :refer [validate-opts]]
@@ -10,7 +11,7 @@
    [lazytest.malli]
    [lazytest.results :refer [summarize summary-exit-value]]
    [lazytest.runner :refer [run-tests]]
-   [clojure.set :as set]))
+   [lazytest.watch :as watch]))
 
 (defn find-ns-decls [config dirs]
   (let [var-filter-nses (->> (:var-filter config)
@@ -34,15 +35,20 @@
     nses))
 
 (defn run-impl [{:keys [dir output] :as config}]
-  (let [config (->config (assoc config :reporter output))
+  (let [output (or (not-empty output) ['lazytest.reporters/nested])
+        config (->config (assoc config :output output :reporter output))
         nses (require-dirs config dir)]
     (run-tests config nses)))
 
 (defn run [args]
   (let [{:keys [exit-message ok] :as opts} (validate-opts args)]
-    (if exit-message
+    (cond
+      exit-message
       (do (println exit-message)
           {:exit (if ok 0 1)})
+      (:watch opts)
+      (assoc opts :watcher (watch/watch run-impl opts))
+      :else
       (let [results (run-impl opts)
             summary (summarize results)]
         (assoc summary
@@ -52,5 +58,6 @@
 (defn -main
   "Pass-through to runner which does all the work."
   [& args]
-  (let [{:keys [exit]} (run args)]
-    (System/exit (or exit 0))))
+  (let [{:keys [exit watch]} (run args)]
+    (when-not watch
+      (System/exit (or exit 0)))))

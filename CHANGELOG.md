@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changes
+
+- Changed primary branch from `master` to `main`.
+- Disconnected Github fork from original Lazytest repo.
+
 ## 0.5.0
 
 Released `2024-09-20`.
@@ -99,88 +104,3 @@ Updated original code to use deps.edn, tools.build, and other modern tooling.
 * Add CLI api.
 * Change external API to use a single namespace (`lazytest.core`).
 * Change external API macros and functions to work better with modern tooling (use vars, etc).
-
-## Old Lazytest
-
-This file documents the original Alessandra Sierra development, which ended in 2013. It is kept for posterity.
-
-v2.0.0-SNAPSHOT
-
- * Remove contexts and `given`
-
- * Added deftest style
-
- * Added sample projects for Leiningen & Maven
-
- * Added samples using clojure.test-clojure
-
-
-v1.2.3        2010-11-27        Added Maven Plugin
-
- * Separated into modules
-
- * Released lazytest-maven-plugin version 1.0.0
-
-
-v1.2.2        2010-11-27        Fixed release with diff
-
- * Fixed release using 'diff' and Clojure 1.3.0-alpha3
-
-
-v1.2.1        2010-11-27        BAD RELEASE: DO NOT USE
-
- * Wrong file extension on the deployed JAR
-
- * Tried maven-release-plugin version 2.1
-
-
-v1.2.0        2010-11-27        BAD RELEASE: DO NOT USE
-
- * Wrong file extension on the deployed JAR
-
- * Depends on Clojure 1.3.0-alpha3
-
- * Prints 'diff' of values when testing with =
-
-
-v1.1.2        2010-10-03        Minor reloading enhancement
-
- * Only touch source files on reloading when absolutely necessary
-
-
-v1.1.1        2010-10-02        Bugfix release
-
- * Prevent 'namespace not found' bug by touching source files before
-   reloading
-
-
-v1.1.0        2010-10-02        Improvements for random generators
-
- Note: due to a configuration error, this version was never deployed.
-
- * Add lazytest.random/default-test-case-count and
-   scaled-test-case-count
-
- * lazytest.describe/for-any uses the above
-
- * lazytest.report.nested collapses large groups of test cases with
-   the same doc strings, such as randomly-generated tests
-
-
-v1.0.2        2010-10-01        Bugfix release
-
- * Fix parsing of ns forms with nested prefix lists
-
-
-v1.0.1        2010-09-29        Bugfix release
-
- * Fix missing :require of lazytest.random within lazytest.describe
-
- * Remove libs from clojure.core/*loaded-libs* when reloading. This is
-   manipulating an undocumented core Var, but avoids some unnecessary
-   loads caused by (require :reload-all ...). It also seems to avoid
-   some load-order issues with `:reload-all`, but I can't find
-   consistent test cases.
-
-
-v1.0.0        2010-09-24        Initial Release

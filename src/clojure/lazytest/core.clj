@@ -1,9 +1,12 @@
 (ns lazytest.core
   (:require
-    [lazytest.malli]
-    [lazytest.suite :refer [suite test-seq]]
-    [lazytest.test-case :refer [test-case]])
-  (:import (lazytest ExpectationFailed)))
+   [lazytest.context :refer [merge-context]]
+   [lazytest.malli]
+   [lazytest.suite :refer [suite]]
+   [lazytest.test-case :refer [test-case]]
+   [medley.core :refer [update-existing]])
+  (:import
+   (lazytest ExpectationFailed)))
 
 ;;; Utilities
 
@@ -91,6 +94,16 @@
                (throw (->ex-failed ~&form ~expr {:message ~msg-gensym
                                                  :caught t#}))))))))
 
+(defmacro before
+  "Returns a context whose teardown function evaluates body."
+  [& body]
+  `{:before (fn [] (let [ret# (do ~@body)] ret#))})
+
+(defmacro after
+  "Returns a context whose teardown method evaluates body."
+  [& body]
+  `{:after (fn [] (let [ret# (do ~@body)] ret#))})
+
 (defmacro describe
   "Defines a suite of tests.
 
@@ -113,10 +126,9 @@
               doc)
         [attr-map children] (get-arg map? body)
         metadata (merged-metadata children &form doc attr-map)]
-    `(suite (test-seq
-              (with-meta
-                (flatten [~@children])
-                ~metadata)))))
+    `(suite (with-meta
+              (flatten [~@children])
+              (update-existing ~metadata :context merge-context)))))
 
 (defmacro defdescribe
   "`describe` helper that assigns a `describe` call to a Var of the given name.

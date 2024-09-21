@@ -1,7 +1,8 @@
 (ns lazytest.runner
   (:require
-   [lazytest.find :refer [find-suite find-var-test-value]]
+   [lazytest.context :refer [run-afters run-befores combine-arounds]]
    [lazytest.filter :refer [filter-tree]]
+   [lazytest.find :refer [find-suite find-var-test-value]]
    [lazytest.malli]
    [lazytest.reporters :as r :refer [nested report]]
    [lazytest.suite :as s :refer [expand-tree suite-result]]
@@ -25,7 +26,10 @@
         config (-> config
                     (update ::depth #(if id (inc %) %))
                     (update ::suite-history conj sm))
-        results (vec (keep #(run-test config %) s))
+        f (if-let [around-fn (combine-arounds sm)]
+            #(around-fn (fn [] (run-test config %)))
+            #(run-test config %))
+        results (vec (keep f s))
         duration (double (- (System/nanoTime) start))]
     (-> (suite-result s results)
         (assoc ::source-type source-type)
@@ -34,47 +38,59 @@
 (defmethod run-test :lazytest/run [config s]
   (let [sm (meta s)]
     (report config (assoc sm :type :begin-test-run))
+    (run-befores sm)
     (let [results (->suite-result config s :lazytest/run)]
       (report config (assoc sm :type :end-test-run :results results))
+      (run-afters sm)
       results)))
 
 (defmethod run-test :lazytest/ns-suite [config s]
   (let [sm (meta s)]
     (report config (assoc sm :type :begin-ns-suite))
+    (run-befores sm)
     (let [results (->suite-result config s :lazytest/ns-suite)]
       (report config (assoc sm :type :end-ns-suite :results results))
+      (run-afters sm)
       results)))
 
 (defmethod run-test :lazytest/test-var [config s]
   (let [sm (meta s)]
     (report config (assoc sm :type :begin-test-var))
+    (run-befores sm)
     (let [results (->suite-result config s :lazytest/test-var)]
       (report config (assoc sm :type :end-test-var :results results))
+      (run-afters sm)
       results)))
 
 (defmethod run-test :lazytest/suite [config s]
   (let [sm (meta s)]
     (report config (assoc sm :type :begin-test-suite))
+    (run-befores sm)
     (let [results (->suite-result config s :lazytest/suite)]
       (report config (assoc sm :type :end-test-suite :results results))
+      (run-afters sm)
       results)))
 
 (defmethod run-test :lazytest/test-seq [config s]
   (let [sm (meta s)]
     (report config (assoc sm :type :begin-test-seq))
+    (run-befores sm)
     (let [results (->suite-result config s :lazytest/test-seq)]
       (report config (assoc sm :type :end-test-seq :results results))
+      (run-afters sm)
       results)))
 
 (defmethod run-test :lazytest/test-case [config tc]
   (let [tc-meta (meta tc)
         start (System/nanoTime)]
     (report config (assoc tc-meta :type :begin-test-case))
+    (run-befores tc-meta)
     (let [results (try-test-case tc)
           duration (double (- (System/nanoTime) start))
           results (assoc results ::duration duration)]
       (report config results)
       (report config (assoc tc-meta :type :end-test-case :results results))
+      (run-afters tc-meta)
       results)))
 
 (defn run-tests

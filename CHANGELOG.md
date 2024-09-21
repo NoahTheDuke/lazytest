@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### Features
+
+- Add macros `before` and `after`, support `:context` in suite metadata. This allows for writing fixture-like code that can be reused across multiple suites or tests:
+
+```clojure
+(defdescribe context-test
+  (given [state (volatile! [])]
+    (describe "it runs both"
+      {:context [(before (vswap! state conj :before))
+                 (after (vswap! state conj :after))]}
+      (expect-it "temp" true))
+    (expect-it "tracks correctly"
+      (= [:before :after] @state))))
+```
+
 ### Changes
 
 - Changed primary branch from `master` to `main`.

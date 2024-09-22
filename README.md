@@ -217,6 +217,8 @@ To handle set up and tear down of stateful architecture, Lazytest provides the h
       (= [:around-before :around-after] @state))))
 ```
 
+Context functions of the same kind are run in the order they're defined. `(around)` hooks are combined with the same logic as `clojure.test`'s `join-fixtures`. When executing a given suite or test-case, all `(before)` hooks are run, then the `(around)` hooks are called on the nested tests (if they exist), then the `(after)` hooks are run.
+
 ## Output
 
 Lazytest comes with a number of reporters built-in. These print various information about the test run, both as it happens and surrounding execution. They are specified at the cli with `--output` and can be simple symbols or fully-qualified symbols. If a custom reporter is provided, it must be fully-qualified. (Otherwise, Lazytest will try to resolve it to the `lazytest.reporters` namespace and throw an exception.)

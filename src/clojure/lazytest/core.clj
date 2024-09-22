@@ -97,12 +97,12 @@
 (defmacro before
   "Returns a context whose teardown function evaluates body."
   [& body]
-  `{:before (fn [] (let [ret# (do ~@body)] ret#))})
+  `{:before (fn before# [] (let [ret# (do ~@body)] ret#))})
 
 (defmacro after
   "Returns a context whose teardown method evaluates body."
   [& body]
-  `{:after (fn [] (let [ret# (do ~@body)] ret#))})
+  `{:after (fn after# [] (let [ret# (do ~@body)] ret#))})
 
 (defmacro around
   "Builds a function for the `around` context, with the anaphoric symbol `f` as the wrapped test function.
@@ -117,7 +117,7 @@
   (assert (and (vector? param)
                (= 1 (count param))
                (simple-symbol? (first param))) "Must be a vector of one symbol")
-  `{:around (fn ~param (let [ret# (do ~@body)] ret#))})
+  `{:around (fn around# ~param (let [ret# (do ~@body)] ret#))})
 
 (defmacro describe
   "Defines a suite of tests.
@@ -204,7 +204,7 @@
         [attr-map body] (get-arg map? body)
         metadata (merged-metadata body &form doc attr-map)]
     `(test-case (with-meta
-                  (fn it# [] ~@body)
+                  (fn it# [] (let [ret# (do ~@body)] ret#))
                   (update-existing ~metadata :context merge-context)))))
 
 (defmacro expect-it

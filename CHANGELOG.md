@@ -4,7 +4,7 @@
 
 ### Features
 
-- Add macros `before` and `after`, support `:context` in suite metadata. This allows for writing fixture-like code that can be reused across multiple suites or tests:
+- Add macros `before` and `after`, and support `:context` in suite metadata. This allows for writing fixture-like code that can be reused across multiple suites or tests:
 
 ```clojure
 (defdescribe context-test
@@ -15,6 +15,16 @@
       (expect-it "temp" true))
     (expect-it "tracks correctly"
       (= [:before :after] @state))))
+```
+
+Additionally, add the macro `around`, which works like a clojure.test fixture:
+
+```clojure
+(describe "it works"
+  {:context [(around [f]
+               (binding [*foo* 100]
+                 (f)))]}
+  ...)
 ```
 
 ### Changes

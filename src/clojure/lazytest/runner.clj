@@ -87,7 +87,12 @@
         start (System/nanoTime)]
     (report config (assoc tc-meta :type :begin-test-case))
     (run-befores tc-meta)
-    (let [results (try-test-case tc)
+    (let [f (if-let [around-fn (combine-arounds tc-meta)]
+            #(let [ret (volatile! nil)]
+               (around-fn (fn [] (vreset! ret (try-test-case %))))
+               @ret)
+            try-test-case)
+          results (f tc)
           duration (double (- (System/nanoTime) start))
           results (assoc results ::duration duration)]
       (report config results)

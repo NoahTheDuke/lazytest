@@ -191,6 +191,32 @@ Additionally, you can use the cli option `-n`/`--namespace` to specify one or mo
 
 To partition your test suite based on metadata, you can use `-i`/`--include` to only run tests with the given metadata, or `-e`/`--exclude` to skip tests with the given metadata.
 
+## Setup and Teardown
+
+To handle set up and tear down of stateful architecture, Lazytest provides the hooks `(before)`, `(after)`, and `(around)`. You can add them to a `:context` vector in suite or test-case metadata:
+
+```clojure
+(defdescribe before-and-after-test
+  (given [state (volatile! [])]
+    (describe "before and after"
+      {:context [(before (vswap! state conj :before))
+                 (after (vswap! state conj :after))]}
+      (expect-it "temp" true))
+    (expect-it "has been properly tracked"
+      (= [:before :after] @state))))
+
+(defdescribe around-test
+  (given [state (volatile! [])]
+    (describe "around"
+      {:context [(around [f]
+                   (vswap! state conj :around-before)
+                   (f)
+                   (vswap! state conj :around-after))]}
+      (expect-it "temp" true))
+    (expect-it "correctly ran the whole thing"
+      (= [:around-before :around-after] @state))))
+```
+
 ## Output
 
 Lazytest comes with a number of reporters built-in. These print various information about the test run, both as it happens and surrounding execution. They are specified at the cli with `--output` and can be simple symbols or fully-qualified symbols. If a custom reporter is provided, it must be fully-qualified. (Otherwise, Lazytest will try to resolve it to the `lazytest.reporters` namespace and throw an exception.)

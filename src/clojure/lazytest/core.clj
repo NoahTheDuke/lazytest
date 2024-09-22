@@ -104,6 +104,21 @@
   [& body]
   `{:after (fn [] (let [ret# (do ~@body)] ret#))})
 
+(defmacro around
+  "Builds a function for the `around` context, with the anaphoric symbol `f` as the wrapped test function.
+
+  Usage:
+  (describe some-func
+    {:context [(around [f]
+                 (binding [*foo* 100]
+                   (f)))]}
+    ...)"
+  [param & body]
+  (assert (and (vector? param)
+               (= 1 (count param))
+               (simple-symbol? (first param))) "Must be a vector of one symbol")
+  `{:around (fn ~param (let [ret# (do ~@body)] ret#))})
+
 (defmacro describe
   "Defines a suite of tests.
 
@@ -190,7 +205,7 @@
         metadata (merged-metadata body &form doc attr-map)]
     `(test-case (with-meta
                   (fn it# [] ~@body)
-                  ~metadata))))
+                  (update-existing ~metadata :context merge-context)))))
 
 (defmacro expect-it
   "Defines a single test case that wraps the given expr in an `expect` call.

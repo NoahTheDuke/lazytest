@@ -33,9 +33,8 @@
     (describe "around"
       {:context [{:around (fn [f]
                             (vswap! state conj :around-before)
-                            (let [ret (f)]
-                              (vswap! state conj :around-after)
-                              ret))}]}
+                            (f)
+                            (vswap! state conj :around-after))}]}
       (expect-it "temp" true))
     (expect-it "tracks correctly"
       (= [:around-before :around-after] @state))))

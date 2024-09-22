@@ -27,7 +27,9 @@
                     (update ::depth #(if id (inc %) %))
                     (update ::suite-history conj sm))
         f (if-let [around-fn (combine-arounds sm)]
-            #(around-fn (fn [] (run-test config %)))
+            #(let [ret (volatile! nil)]
+               (around-fn (fn [] (vreset! ret (run-test config %))))
+               @ret)
             #(run-test config %))
         results (vec (keep f s))
         duration (double (- (System/nanoTime) start))]

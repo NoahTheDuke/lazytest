@@ -14,11 +14,16 @@
     ;; Custom schemas
     (mr/mutable-registry registry*)))
 
+(defn register-schema
+  [k ?schema]
+  (swap! registry* assoc k ?schema))
+
 (defmacro register!
   "Borrowed from malli documentation."
   [k ?schema]
   (assert (qualified-keyword? k) "Must provide a qualified keyword")
-  `(swap! registry* assoc ~k ~?schema))
+  `(do (register-schema ~k ~?schema)
+       nil))
 
 (register! :lt/file
            [:fn

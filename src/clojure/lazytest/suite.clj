@@ -1,32 +1,58 @@
-(ns lazytest.suite 
+(ns lazytest.suite
   (:require
-    [malli.experimental :as mx]))
+   [lazytest.malli]
+   [lazytest.test-case :refer [test-case?]]
+   [malli.experimental :as mx]))
 
-(mx/defn test-seq
-  "Adds metadata to sequence s identifying it as a test sequence.
-
-  A test sequence is a sequence of test cases and/or test suites.
-
-  Metadata on the test sequence provides identifying information
-  for the test suite, such as :ns-name and :doc."
-  [s :- sequential?]
-  (vary-meta s assoc ::test-seq true :type :lazytest/test-seq))
+(set! *warn-on-reflection* true)
 
 (defn test-seq?
   "True if s is a test sequence."
   [s]
   (and (sequential? s) (::test-seq (meta s))))
 
-(defmacro suite
-  "Wraps sequence in a function and sets metadata identifying
-  it as a test suite."
-  [s]
-  `(vary-meta (fn suite# [] (test-seq ~s)) assoc ::suite true :type :lazytest/suite))
-
 (defn suite?
   "True if x is a test suite."
   [x]
   (and (fn? x) (::suite (meta x))))
+
+(defn- right-type? [x]
+  (or (nil? x)
+      (test-seq? x)
+      (suite? x)
+      (test-case? x)))
+
+(defn test-seq
+  "Adds metadata to sequence s identifying it as a test sequence.
+
+  A test sequence is a sequence of test cases and/or test suites.
+
+  Metadata on the test sequence provides identifying information
+  for the test suite, such as :ns-name and :doc."
+  [s]
+  (when-not (and (sequential? s)
+                 (every? right-type? s))
+    (throw (ex-info (->> s
+                         (remove right-type?)
+                         (first)
+                         (class)
+                         (.getName)
+                         (str "Expected test-seq or suite or test-case, received "))
+                    {:type ::test-seq
+                     :data s})))
+  (vary-meta s assoc ::test-seq true :type :lazytest/test-seq))
+
+(defmacro suite
+  "Wraps sequence in a function and sets metadata identifying
+  it as a test suite."
+  [s]
+  `(vary-meta (fn suite# []
+                (try (test-seq ~s)
+                     (catch clojure.lang.ExceptionInfo ex#
+                       (if (= ::test-seq (:type (ex-data ex#)))
+                         (throw (java.lang.IllegalArgumentException. (str (ex-message ex#))))
+                         (throw ex#)))))
+              assoc ::suite true :type :lazytest/suite))
 
 (defn identifier
   "Get a string representation of the suite. Either the suite's

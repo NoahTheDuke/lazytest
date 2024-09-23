@@ -1,6 +1,6 @@
 (ns lazytest.suite-test
   (:require
-   [lazytest.core :refer [defdescribe describe expect]]
+   [lazytest.core :refer [causes-with-msg? defdescribe describe expect it]]
    [lazytest.suite :refer [suite test-seq]]
    [lazytest.test-case :refer [test-case]]))
 
@@ -57,3 +57,8 @@
   s2
   s3
   (map common-test-cases (range 4 6)))
+
+(defdescribe test-seq-test
+  (it "checks describe blocks for the right types"
+    (expect (causes-with-msg? java.lang.IllegalArgumentException #"Expected test-seq or suite or test-case"
+              #((describe "set-up" true))))))

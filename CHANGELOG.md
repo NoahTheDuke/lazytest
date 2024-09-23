@@ -17,7 +17,7 @@
       (= [:before :after] @state))))
 ```
 
-- Add the macro `around`, which works like a clojure.test fixture:
+- Add the macro `around`, which works like a `clojure.test` fixture:
 
 ```clojure
 (describe "it works"
@@ -28,6 +28,8 @@
 ```
 
 - Add macros `before-each` and `after-each`, which are run before/after each nested test case.
+
+- Add function `set-ns-context!` which sets the current namespace's context to be the given vector. Works like `clojure.test/use-fixture`.
 
 ### Changes
 

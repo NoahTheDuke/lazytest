@@ -193,7 +193,7 @@ To partition your test suite based on metadata, you can use `-i`/`--include` to 
 
 ## Setup and Teardown
 
-To handle set up and tear down of stateful architecture, Lazytest provides the hooks `(before)`, `(before-each)`, `(after-each)`, `(after)`, and `(around)`. You can add them to a `:context` vector in suite or test-case metadata:
+To handle set up and tear down of stateful architecture, Lazytest provides the hooks `before`, `before-each`, `after-each`, `after`, and `around`, along with the helper `set-ns-context!`. You can add them to a `:context` vector in suite or test-case metadata:
 
 ```clojure
 (defdescribe before-and-after-test
@@ -229,7 +229,9 @@ To handle set up and tear down of stateful architecture, Lazytest provides the h
 
 `(around)` hooks are combined with the same logic as `clojure.test`'s `join-fixtures`.
 
-Context functions of the same kind are run in the order they're defined. When executing a given suite or test-case, all `(before)` hooks are run once, then each `before-each` hook is run, then the `(around)` hooks are called on the nested tests (if they exist), then each `(after-each)` hook is run, then all `(after)` hooks are run once.
+Context functions of the same kind are run in the order they're defined. When executing a given suite or test-case, all `before` hooks are run once, then each `before-each` hook is run, then the `around` hooks are called on the nested tests (if they exist), then each `after-each` hook is run, then all `after` hooks are run once.
+
+To set context functions for an entire namespace, use `set-ns-context!`. There is currently no way to define run-wide context functions.
 
 ## Output
 

@@ -1,10 +1,9 @@
 (ns lazytest.core
   (:require
-   [lazytest.context :refer [merge-context]]
+   [lazytest.context :as ctx]
    [lazytest.malli]
    [lazytest.suite :refer [suite]]
-   [lazytest.test-case :refer [test-case]]
-   [medley.core :refer [update-existing]])
+   [lazytest.test-case :refer [test-case]])
   (:import
    (lazytest ExpectationFailed)))
 
@@ -127,6 +126,18 @@
                (simple-symbol? (first param))) "Must be a vector of one symbol")
   `{:around (fn around# ~param (let [ret# (do ~@body)] ret#))})
 
+(defn set-ns-context!
+  [context]
+  (alter-meta! *ns* assoc :lazytest/context (ctx/merge-context context)))
+
+(defn ^:no-doc cleanup-context
+  "Convert :context to :lazytest/context"
+  [metadata]
+  (cond-> metadata
+    (:context metadata)
+    (-> (assoc :lazytest/context (ctx/merge-context (:context metadata)))
+        (dissoc :context))))
+
 (defmacro describe
   "Defines a suite of tests.
 
@@ -151,7 +162,7 @@
         metadata (merged-metadata children &form doc attr-map)]
     `(suite (with-meta
               (flatten [~@children])
-              (update-existing ~metadata :context merge-context)))))
+              (cleanup-context ~metadata)))))
 
 (defmacro defdescribe
   "`describe` helper that assigns a `describe` call to a Var of the given name.
@@ -213,7 +224,7 @@
         metadata (merged-metadata body &form doc attr-map)]
     `(test-case (with-meta
                   (fn it# [] (let [ret# (do ~@body)] ret#))
-                  (update-existing ~metadata :context merge-context)))))
+                  (cleanup-context ~metadata)))))
 
 (defmacro expect-it
   "Defines a single test case that wraps the given expr in an `expect` call.

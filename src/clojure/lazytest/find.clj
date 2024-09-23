@@ -54,7 +54,7 @@
         (when-let [s (test-seq-for-ns n)]
           (vary-meta
             (suite (test-seq s))
-            assoc :type :lazytest/ns-suite :ns-name (ns-name n))))))
+            merge (meta n) {:type :lazytest/ns-suite :ns-name (ns-name n)})))))
 
 (defn find-suite
   "Returns test suite containing suites for the given namespaces.

@@ -111,10 +111,10 @@
 
 (defdescribe propagate-eachs-test
   (expect-it "combines correctly"
-    (= {:context {:before-each [1 2 3 4 5 6]
-                  :after-each []}}
-       (meta (propagate-eachs {:context {:before-each [1 2 3]}}
-                              (with-meta [] {:context {:before-each [4 5 6]}}))))))
+    (= {:lazytest/context {:before-each [1 2 3 4 5 6]
+                           :after-each []}}
+       (meta (propagate-eachs {:lazytest/context {:before-each [1 2 3]}}
+                              (with-meta [] {:lazytest/context {:before-each [4 5 6]}}))))))
 
 (defdescribe complex-context-test
   (given [state (volatile! [])]

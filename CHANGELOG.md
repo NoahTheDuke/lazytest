@@ -17,7 +17,7 @@
       (= [:before :after] @state))))
 ```
 
-Additionally, add the macro `around`, which works like a clojure.test fixture:
+- Add the macro `around`, which works like a clojure.test fixture:
 
 ```clojure
 (describe "it works"
@@ -26,6 +26,8 @@ Additionally, add the macro `around`, which works like a clojure.test fixture:
                  (f)))]}
   ...)
 ```
+
+- Add macros `before-each` and `after-each`, which are run before/after each nested test case.
 
 ### Changes
 

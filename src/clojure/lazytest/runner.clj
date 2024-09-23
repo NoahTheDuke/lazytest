@@ -1,6 +1,6 @@
 (ns lazytest.runner
   (:require
-   [lazytest.context :refer [run-afters run-befores combine-arounds]]
+   [lazytest.context :refer [run-afters run-befores combine-arounds run-before-eachs run-after-eachs propagate-eachs]]
    [lazytest.filter :refer [filter-tree]]
    [lazytest.find :refer [find-suite find-var-test-value]]
    [lazytest.malli]
@@ -27,10 +27,11 @@
                     (update ::depth #(if id (inc %) %))
                     (update ::suite-history conj sm))
         f (if-let [around-fn (combine-arounds sm)]
-            #(let [ret (volatile! nil)]
-               (around-fn (fn [] (vreset! ret (run-test config %))))
+            #(let [ret (volatile! nil)
+                   tests (propagate-eachs sm %)]
+               (around-fn (fn [] (vreset! ret (run-test config tests))))
                @ret)
-            #(run-test config %))
+            #(run-test config (propagate-eachs sm %)))
         results (vec (keep f s))
         duration (double (- (System/nanoTime) start))]
     (-> (suite-result s results)
@@ -87,12 +88,16 @@
         start (System/nanoTime)]
     (report config (assoc tc-meta :type :begin-test-case))
     (run-befores tc-meta)
-    (let [f (if-let [around-fn (combine-arounds tc-meta)]
-            #(let [ret (volatile! nil)]
-               (around-fn (fn [] (vreset! ret (try-test-case %))))
-               @ret)
-            try-test-case)
-          results (f tc)
+    (let [results (if-let [around-fn (combine-arounds tc-meta)]
+                    (let [ret (volatile! nil)]
+                      (run-before-eachs tc-meta)
+                      (around-fn (fn [] (vreset! ret (try-test-case tc))))
+                      (run-after-eachs tc-meta)
+                      @ret)
+                    (do (run-before-eachs tc-meta)
+                        (let [ret (try-test-case tc)]
+                          (run-after-eachs tc-meta)
+                          ret)))
           duration (double (- (System/nanoTime) start))
           results (assoc results ::duration duration)]
       (report config results)

@@ -193,21 +193,21 @@ To partition your test suite based on metadata, you can use `-i`/`--include` to 
 
 ## Setup and Teardown
 
-To handle set up and tear down of stateful architecture, Lazytest provides the hooks `(before)`, `(after)`, and `(around)`. You can add them to a `:context` vector in suite or test-case metadata:
+To handle set up and tear down of stateful architecture, Lazytest provides the hooks `(before)`, `(before-each)`, `(after-each)`, `(after)`, and `(around)`. You can add them to a `:context` vector in suite or test-case metadata:
 
 ```clojure
 (defdescribe before-and-after-test
   (given [state (volatile! [])]
-    (describe "before and after"
+    (describe "before and after example"
       {:context [(before (vswap! state conj :before))
                  (after (vswap! state conj :after))]}
-      (expect-it "temp" true))
+      (expect-it "temp" (vswap! state conj :expect)))
     (expect-it "has been properly tracked"
-      (= [:before :after] @state))))
+      (= [:before :expect :after] @state))))
 
 (defdescribe around-test
   (given [state (volatile! [])]
-    (describe "around"
+    (describe "around example"
       {:context [(around [f]
                    (vswap! state conj :around-before)
                    (f)
@@ -215,9 +215,21 @@ To handle set up and tear down of stateful architecture, Lazytest provides the h
       (expect-it "temp" true))
     (expect-it "correctly ran the whole thing"
       (= [:around-before :around-after] @state))))
+
+(defdescribe each-test
+  (given [state (volatile! [])]
+    (describe "each examples"
+      {:context [(before (vswap! state conj :before))
+                 (before-each (vswap! state conj :before-each))]}
+      (expect-it "temp" (vswap! state conj :expect-1))
+      (expect-it "temp" (vswap! state conj :expect-2)))
+    (expect-it "has been properly tracked"
+      (= [:before :before-each :expect-1 :before-each :expect-2] @state))))
 ```
 
-Context functions of the same kind are run in the order they're defined. `(around)` hooks are combined with the same logic as `clojure.test`'s `join-fixtures`. When executing a given suite or test-case, all `(before)` hooks are run, then the `(around)` hooks are called on the nested tests (if they exist), then the `(after)` hooks are run.
+`(around)` hooks are combined with the same logic as `clojure.test`'s `join-fixtures`.
+
+Context functions of the same kind are run in the order they're defined. When executing a given suite or test-case, all `(before)` hooks are run once, then each `before-each` hook is run, then the `(around)` hooks are called on the nested tests (if they exist), then each `(after-each)` hook is run, then all `(after)` hooks are run once.
 
 ## Output
 

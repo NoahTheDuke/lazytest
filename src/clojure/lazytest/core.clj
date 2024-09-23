@@ -99,6 +99,14 @@
   [& body]
   `{:before (fn before# [] (let [ret# (do ~@body)] ret#))})
 
+(defmacro before-each
+  [& body]
+  `{:before-each (fn before-each# [] (let [ret# (do ~@body)] ret#))})
+
+(defmacro after-each
+  [& body]
+  `{:after-each (fn after-each# [] (let [ret# (do ~@body)] ret#))})
+
 (defmacro after
   "Returns a context whose teardown method evaluates body."
   [& body]

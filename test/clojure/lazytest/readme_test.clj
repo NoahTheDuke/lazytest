@@ -1,7 +1,7 @@
 (ns lazytest.readme-test
   (:require
    [lazytest.core :refer [after around before defdescribe describe expect
-                          expect-it given it]]))
+                          expect-it given it before-each]]))
 
 (defdescribe +-test "with integers"
   (expect-it "computes the sum of 1 and 2"
@@ -48,3 +48,13 @@
       (expect-it "temp" true))
     (expect-it "correctly ran the whole thing"
       (= [:around-before :around-after] @state))))
+
+(defdescribe each-test
+  (given [state (volatile! [])]
+    (describe "each examples"
+      {:context [(before (vswap! state conj :before))
+                 (before-each (vswap! state conj :before-each))]}
+      (expect-it "temp" (vswap! state conj :expect-1))
+      (expect-it "temp" (vswap! state conj :expect-2)))
+    (expect-it "has been properly tracked"
+      (= [:before :before-each :expect-1 :before-each :expect-2] @state))))

@@ -5,7 +5,7 @@
    [lazytest.find :refer [find-suite find-var-test-value]]
    [lazytest.malli]
    [lazytest.reporters :as r :refer [nested report]]
-   [lazytest.suite :as s :refer [expand-tree suite-result]]
+   [lazytest.suite :as s :refer [suite-result]]
    [lazytest.test-case :refer [try-test-case]]
    [malli.experimental :as mx]))
 
@@ -110,7 +110,7 @@
   ([namespaces] (run-tests {:reporter nested} namespaces))
   ([config namespaces]
    (let [ste (apply find-suite namespaces)
-         tree (filter-tree config (expand-tree ste))
+         tree (filter-tree config ste)
          result (run-test config tree)]
      (if (:focus (meta tree))
        (vary-meta result assoc :focus true)
@@ -126,6 +126,5 @@
   [config v :- :lt/var]
   (let [tree (-> (find-var-test-value v)
                  (vary-meta assoc :type :lazytest/run)
-                 (expand-tree)
                  (#(filter-tree config %)))]
     (run-test config tree)))

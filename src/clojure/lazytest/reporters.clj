@@ -172,8 +172,8 @@
 (defmethod dots* :default [_ _])
 (defmethod dots* :pass [_ _] (print (colorize "." :green)))
 (defmethod dots* :fail [_ _] (print (colorize "F" :red)))
-(defmethod dots* :begin-ns-suite [_ _] (print (colorize "(" :yellow)))
-(defmethod dots* :end-ns-suite [_ _] (print (colorize ")" :yellow)))
+(defmethod dots* :begin-test-ns [_ _] (print (colorize "(" :yellow)))
+(defmethod dots* :end-test-ns [_ _] (print (colorize ")" :yellow)))
 (defmethod dots* :end-test-run [_ _] (newline))
 
 (def dots
@@ -206,10 +206,9 @@
       (println id))))
 
 (defmethod nested* :begin-test-run [config s] (print-test-seq config s))
-(defmethod nested* :begin-ns-suite [config s] (print-test-seq config s))
+(defmethod nested* :begin-test-ns [config s] (print-test-seq config s))
 (defmethod nested* :begin-test-var [config s] (print-test-seq config s))
 (defmethod nested* :begin-test-suite [config s] (print-test-seq config s))
-(defmethod nested* :begin-test-seq [config s] (print-test-seq config s))
 (defmethod nested* :end-test-run [_ _] (newline) (flush))
 
 (defn print-test-result
@@ -291,7 +290,7 @@
     (clojure-test-fail config result)
     (clojure-test-error config result)))
 
-(defmethod clojure-test :begin-ns-suite [_ result]
+(defmethod clojure-test :begin-test-ns [_ result]
   (println "\nTesting" (ns-name (:ns-name result))))
 
 (defmethod clojure-test :end-test-run [_ m]
@@ -321,13 +320,13 @@
 (def type->name
   {
    :begin-test-run "test run"
-   :begin-ns-suite "namespace suite"
+   :begin-test-ns "namespace suite"
    :begin-test-var "test var"
    :begin-test-suite "suite"
    :begin-test-seq "suite"
    :begin-test-case "test case"
    :end-test-run "test run"
-   :end-ns-suite "namespace suite"
+   :end-test-ns "namespace suite"
    :end-test-var "test var"
    :end-test-suite "suite"
    :end-test-seq "suite"
@@ -347,13 +346,13 @@
                   (str " (" (:file s) ":" (:line s) ")")))))
 
 (defmethod debug :begin-test-run [_ _] (println "Starting test run"))
-(defmethod debug :begin-ns-suite [_config s] (print-entering s))
+(defmethod debug :begin-test-ns [_config s] (print-entering s))
 (defmethod debug :begin-test-var [_config s] (print-entering s))
 (defmethod debug :begin-test-suite [_config s] (print-entering s))
 (defmethod debug :begin-test-seq [_config s] (print-entering s))
 
 (defmethod debug :end-test-run [_ _] (println "Ending test run"))
-(defmethod debug :end-ns-suite [_config s] (print-leaving s))
+(defmethod debug :end-test-ns [_config s] (print-leaving s))
 (defmethod debug :end-test-var [_config s] (print-leaving s))
 (defmethod debug :end-test-suite [_config s] (print-leaving s))
 (defmethod debug :end-test-seq [_config s] (print-leaving s))

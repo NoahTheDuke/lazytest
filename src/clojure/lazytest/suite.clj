@@ -81,20 +81,3 @@
   "True if x is a suite result."
   [x]
   (isa? (type x) ::suite-result))
-
-(mx/defn expand-suite :- [:fn test-seq?]
-  "Expands a test suite, returning a test sequence. Copies metadata
-  from the suite function to the resulting test sequence."
-  [ste :- [:fn suite?]]
-  (vary-meta (ste) merge (dissoc (meta ste) ::suite)))
-
-(defn expand-tree
-  "Recursively expands a tree of nested test suites preserving
-  metadata."
-  [ste]
-  (if (suite? ste)
-    (let [test-seq' (expand-suite ste)]
-      (with-meta
-        (map expand-tree test-seq')
-        (meta test-seq')))
-    ste))

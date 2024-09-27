@@ -58,10 +58,14 @@
   (let [focus-fn (focus-fns config)
         var-filter (not-empty (:var-filter config))
         ns-filter (not-empty (:ns-filter config))
-        var-filter (if var-filter
+        var-filter (cond
+                     var-filter
                      (fn [v]
                        (or (var-filter (symbol v))
                            (when ns-filter
                              (ns-filter (-> v symbol namespace symbol)))))
+                     ns-filter
+                     (fn [v] (ns-filter (-> v symbol namespace symbol)))
+                     :else
                      any?)]
     (filter-tree-impl focus-fn var-filter s)))

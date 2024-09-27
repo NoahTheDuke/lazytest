@@ -62,5 +62,5 @@
   [& names]
   (let [names (or (seq names) (all-ns))
         nses (mapv the-ns names)]
-    (vary-meta (suite (test-seq (keep find-ns-suite nses)))
+    (vary-meta (suite (keep find-ns-suite nses))
                assoc :type :lazytest/run :nses nses)))

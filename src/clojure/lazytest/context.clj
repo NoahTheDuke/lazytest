@@ -2,52 +2,65 @@
   (:require
     [clojure.test :as c.t]))
 
-(defn merge-context [contexts]
-  (->> contexts
-       (map #(update-vals % vector))
-       (apply merge-with into)))
+(defn merge-context [context]
+  (reduce
+   (fn [acc cur]
+     (reduce-kv
+      (fn [m k v]
+        (-> m
+            (update k #(cond (vector? %) %
+                             (some? %) [%]
+                             :else []))
+            (update k #(if (vector? v)
+                         (into % v)
+                         (conj % v)))))
+      acc
+      cur))
+   {}
+   context))
 
 (comment
   (merge-context
    [{:before [1]}
     {:after 2}
-    {:before 3}])) ; {:before [[1] 3], :after [2]}
+    {:before 3}])) ; {:before [1 3], :after [2]}
 
 (defn run-befores
   [obj]
-  (doseq [before-fn (-> obj :lazytest/context :before)
+  (doseq [before-fn (-> obj :context :before)
           :when (fn? before-fn)]
     (before-fn)))
 
 (defn run-before-eachs
   [obj]
-  (doseq [before-each-fn (-> obj :lazytest/context :before-each)
+  (doseq [before-each-fn (-> obj :context :before-each)
           :when (fn? before-each-fn)]
     (before-each-fn)))
 
 (defn run-after-eachs
   [obj]
-  (doseq [after-each-fn (-> obj :lazytest/context :after-each)
+  (doseq [after-each-fn (-> obj :context :after-each)
           :when (fn? after-each-fn)]
     (after-each-fn)))
 
 (defn run-afters
   [obj]
-  (doseq [after-fn (-> obj :lazytest/context :after)
+  (doseq [after-fn (-> obj :context :after)
           :when (fn? after-fn)]
     (after-fn)))
 
 (defn combine-arounds
   [obj]
-  (when-let [arounds (-> obj :lazytest/context :around seq)]
+  (when-let [arounds (-> obj :context :around seq)]
     (c.t/join-fixtures arounds)))
 
 (defn propagate-eachs
-  [parent-meta child]
-  (let [child-meta (meta child)
-        updated-meta (-> child-meta
-                         (assoc-in [:lazytest/context :before-each] (into (vec (-> parent-meta :lazytest/context :before-each))
-                                                                 (-> child-meta :lazytest/context :before-each)))
-                         (assoc-in [:lazytest/context :after-each] (into (vec (-> child-meta :lazytest/context :after-each))
-                                                                (-> parent-meta :lazytest/context :after-each))))]
-    (with-meta child updated-meta)))
+  [parent child]
+  (-> child
+      (assoc-in [:context :before-each]
+                (into (-> parent :context :before-each vec)
+                      (-> child :context :before-each)))
+      (assoc-in [:context :after-each]
+                (into (-> child :context :after-each vec)
+                      (-> parent :context :after-each)))))
+

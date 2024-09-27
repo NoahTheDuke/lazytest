@@ -12,10 +12,10 @@
   Sodomka, Robert Lachlan, and Stuart Halloway."
   (:require
     [clojure.set :as set]
-    [lazytest.core :refer [defdescribe describe given throws-with-msg? expect-it it expect]]))
+    [lazytest.core :refer [defdescribe describe throws-with-msg? expect-it it expect]]))
 
 (defdescribe cycles-test "Cycles are forbidden: a tag"
-  (given [family (reduce #(apply derive (cons %1 %2)) (make-hierarchy)
+  (let [family (reduce #(apply derive (cons %1 %2)) (make-hierarchy)
                    [[::parent-1 ::ancestor-1]
                     [::parent-1 ::ancestor-2]
                     [::parent-2 ::ancestor-2]
@@ -55,7 +55,7 @@
 
 (defn is-valid-hierarchy [h]
   (describe "it is a valid hierarchy"
-    (given [tags (hierarchy-tags h)]
+    (let [tags (hierarchy-tags h)]
       (it "ancestors are the transitive closure of parents"
         (for [tag tags]
           (expect (= (transitive-closure tag #(parents h %))
@@ -91,7 +91,7 @@
           (expect (not (contains? (descendants h tag) tag))))))))
 
 (defdescribe diamong-inheritance-test "Using diamond inheritance"
-  (given [diamond (reduce #(apply derive (cons %1 %2)) (make-hierarchy)
+  (let [diamond (reduce #(apply derive (cons %1 %2)) (make-hierarchy)
                     [[::mammal ::animal]
                      [::bird ::animal]
                      [::griffin ::mammal]
@@ -102,7 +102,7 @@
     (expect-it "a griffin is a bird"
       (isa? diamond ::griffin ::bird))
     (describe "after underive"
-      (given [bird-no-more (underive diamond ::griffin ::bird)]
+      (let [bird-no-more (underive diamond ::griffin ::bird)]
         (is-valid-hierarchy bird-no-more)
         (expect-it "griffin is no longer a bird"
           (not (isa? bird-no-more ::griffin ::bird)))
@@ -110,7 +110,7 @@
           (isa? bird-no-more ::griffin ::animal))))))
 
 (defdescribe derivation-test "Derivation bridges to Java inheritance:"
-  (given [h (derive (make-hierarchy) java.util.Map ::map)]
+  (let [h (derive (make-hierarchy) java.util.Map ::map)]
     (expect-it "a Java class can be isa? a tag"
       (isa? h java.util.Map ::map))
     (expect-it "if a Java class isa? a tag, so are its subclasses..."

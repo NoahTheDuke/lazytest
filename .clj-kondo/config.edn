@@ -1,5 +1,6 @@
 {:lint-as {lazytest.core/defdescribe clojure.core/def
            lazytest.core2/defdescribe clojure.core/def
+           lazytest.core2/around clojure.core/fn
            lazytest.core/given clojure.core/let
            lazytest.core/around clojure.core/fn}
  :linters {:clojure-lsp/unused-public-var {:level :off}

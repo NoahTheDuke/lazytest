@@ -1,7 +1,7 @@
 (ns examples.base
   (:require
-    [lazytest.core :refer [defdescribe describe expect-it it given]]
-    [clojure.math :as math]))
+   [clojure.math :as math]
+   [lazytest.core :refer [defdescribe describe expect-it it]]))
 
 (defdescribe +-example "given any 2 integers"
   (expect-it "computes the sum of 3 and 4"
@@ -26,7 +26,7 @@
     (println "This test will succeed because it doesn't throw.")))
 
 (defdescribe given-example "The square root of two"
-  (given [root (math/sqrt 2)]
+  (let [root (math/sqrt 2)]
     (expect-it "is less than two"
       (< root 2))
     (expect-it "is more than one"

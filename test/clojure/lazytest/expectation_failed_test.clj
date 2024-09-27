@@ -1,12 +1,12 @@
 (ns lazytest.expectation-failed-test
   (:require
-   [lazytest.core :refer [defdescribe expect given it]])
+   [lazytest.core :refer [defdescribe expect it]])
   (:import
    clojure.lang.IExceptionInfo
    lazytest.ExpectationFailed))
 
 (defdescribe expectation-failed-test
-  (given [ex-failed (ExpectationFailed. {:foo :bar})]
+  (let [ex-failed (ExpectationFailed. {:foo :bar})]
     (it "is an AssertionError"
       (expect (instance? AssertionError ex-failed)))
     (it "is not an ExceptionInfo"

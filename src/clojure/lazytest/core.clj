@@ -17,13 +17,13 @@
     [(first args) (next args)]
     [nil args]))
 
-(defn- merged-metadata [body form docstring extra-attr-map]
+(defn- merged-data [body form docstring metadata]
   (merge {:doc docstring
           :file *file*
           :ns *ns*}
          (when (empty? body) {:pending true})
          (meta form)
-         extra-attr-map))
+         {:metadata metadata}))
 
 ;;; Public API
 
@@ -93,26 +93,43 @@
                (throw (->ex-failed ~&form ~expr {:message ~msg-gensym
                                                  :caught t#}))))))))
 
+
 (defmacro before
   "Returns a context whose teardown function evaluates body."
   [& body]
-  `{:before (fn before# [] (let [ret# (do ~@body)] ret#))})
+  `(let [before-fn# (fn before# [] (let [ret# (do ~@body)] ret#))]
+     (if *context*
+       (do (swap! *context* update-in [:context :before] (fnil conj []) before-fn#)
+           nil)
+       {:before before-fn#})))
 
 (defmacro before-each
   [& body]
-  `{:before-each (fn before-each# [] (let [ret# (do ~@body)] ret#))})
+  `(let [before-each-fn# (fn before-each# [] (let [ret# (do ~@body)] ret#))]
+     (if *context*
+       (do (swap! *context* update-in [:context :before-each] (fnil conj []) before-each-fn#)
+           nil)
+       {:before-each before-each-fn#})))
 
 (defmacro after-each
   [& body]
-  `{:after-each (fn after-each# [] (let [ret# (do ~@body)] ret#))})
+  `(let [after-each-fn# (fn after-each# [] (let [ret# (do ~@body)] ret#))]
+     (if *context*
+       (do (swap! *context* update-in [:context :after-each] (fnil conj []) after-each-fn#)
+           nil)
+       {:after-each after-each-fn#})))
 
 (defmacro after
   "Returns a context whose teardown method evaluates body."
   [& body]
-  `{:after (fn after# [] (let [ret# (do ~@body)] ret#))})
+  `(let [after-fn# (fn after# [] (let [ret# (do ~@body)] ret#))]
+     (if *context*
+       (do (swap! *context* update-in [:context :after] (fnil conj []) after-fn#)
+           nil)
+       {:after after-fn#})))
 
 (defmacro around
-  "Builds a function for the `around` context, with the anaphoric symbol `f` as the wrapped test function.
+  "Builds a function for the `around` context.
 
   Usage:
   (describe some-func
@@ -124,19 +141,18 @@
   (assert (and (vector? param)
                (= 1 (count param))
                (simple-symbol? (first param))) "Must be a vector of one symbol")
-  `{:around (fn around# ~param (let [ret# (do ~@body)] ret#))})
+  `(let [around-fn# (fn around# ~param (let [ret# (do ~@body)] ret#))]
+     (if *context*
+       (do (swap! *context* update-in [:context :around] (fnil conj []) around-fn#)
+           nil)
+       {:around around-fn#})))
 
 (defn set-ns-context!
+  "Must be a sequence of context maps, presumably built with the appropriate macros."
   [context]
   (alter-meta! *ns* assoc :lazytest/context (ctx/merge-context context)))
 
-(defn ^:no-doc cleanup-context
-  "Convert :context to :lazytest/context"
-  [metadata]
-  (cond-> metadata
-    (:context metadata)
-    (-> (assoc :lazytest/context (ctx/merge-context (:context metadata)))
-        (dissoc :context))))
+(def ^:dynamic *context* nil)
 
 (defmacro describe
   "Defines a suite of tests.
@@ -159,10 +175,19 @@
                     doc))
               doc)
         [attr-map children] (get-arg map? body)
-        metadata (merged-metadata children &form doc attr-map)]
-    `(suite (with-meta
-              (flatten [~@children])
-              (cleanup-context ~metadata)))))
+        data (merged-data children &form doc (dissoc attr-map :context))
+        context (:context attr-map)]
+    `(let [suite# (binding [*context* (atom (suite ~data))]
+                    (let [ctx-fns# ~context]
+                      (swap! *context* update :context
+                             (fn [c#]
+                               (ctx/merge-context (cons c# ctx-fns#)))))
+                    (run! #(if (sequential? %) (doall %) %) (flatten [~@children]))
+                    @*context*)]
+       (if *context*
+         (do (swap! *context* update :suites conj suite#)
+             nil)
+         suite#))))
 
 (defmacro defdescribe
   "`describe` helper that assigns a `describe` call to a Var of the given name.
@@ -180,20 +205,27 @@
   [test-name & body]
   (let [[doc body] (get-arg string? body)
         [attr-map body] (get-arg map? body)
-        m (dissoc (meta test-name) :doc)
         test-var (list 'var (symbol (str *ns*) (str test-name)))
-        attr-map (merge m (assoc attr-map :var test-var))
+        attr-map (-> (meta test-name) 
+                     (dissoc :doc)
+                     (merge attr-map)
+                     (assoc :var test-var))
         body (cond-> [(or doc (str test-name))]
                attr-map (conj attr-map)
                body (concat body))]
-    `(def ~test-name (describe ~@body))))
+    `(def ~(vary-meta test-name assoc :type :lazytest/var)
+       (fn ~(gensym (str test-name "_")) []
+         (assoc (describe ~@body) :type :lazytest/var)))))
 
 (defmacro given
-  "Like 'let' but returns the expressions of body in a vector.
+  "DEPRECATED: No longer needed. Use a normal `let`, please.
+
+  Like 'let' but returns the expressions of body in a vector.
   Suitable for nesting inside 'describe'."
+  {:deprecated "<<next>>"}
   [bindings & body]
   `(let ~bindings
-     [~@body]))
+     ~@body))
 
 (defmacro it
   "Defines a single test case that may execute arbitrary code.
@@ -217,14 +249,19 @@
   (let [doc (if (symbol? doc)
               (if (contains? &env doc)
                 doc
-                (or (resolve doc)
-                    doc))
+                (or (resolve doc) doc))
               doc)
         [attr-map body] (get-arg map? body)
-        metadata (merged-metadata body &form doc attr-map)]
-    `(test-case (with-meta
-                  (fn it# [] (let [ret# (do ~@body)] ret#))
-                  (cleanup-context ~metadata)))))
+        metadata (merged-data body &form doc (dissoc attr-map :context))
+        context (:context attr-map)]
+    `(let [test-case# (test-case
+                       (assoc ~metadata
+                              :body (fn it# [] (let [ret# (do ~@body)] ret#))
+                              :context (binding [*context* nil]
+                                         (ctx/merge-context ~context))))]
+       (if *context*
+         (swap! *context* update :tests conj test-case#)
+         test-case#))))
 
 (defmacro expect-it
   "Defines a single test case that wraps the given expr in an `expect` call.
@@ -249,14 +286,16 @@
               doc)
         [attr-map exprs] (get-arg map? body)
         [assertion] exprs
-        metadata (merged-metadata body &form doc attr-map)]
+        metadata (merged-data body &form doc attr-map)]
     (when (not= 1 (count exprs))
       (throw (IllegalArgumentException. "expect-it takes 1 expr")))
     (when (and (seq? assertion) (symbol? (first assertion)))
       (assert (not= "expect" (name (first assertion)))))
-    `(test-case (with-meta
-                  (fn expect-it# [] (expect ~assertion ~doc))
-                  ~metadata))))
+    `(let [test-case# (test-case
+                       (assoc ~metadata :body (fn expect-it# [] (expect ~assertion ~doc))))]
+       (if *context*
+         (swap! *context* update :tests conj test-case#)
+         test-case#))))
 
 (defn throws?
   "Calls f with no arguments; returns true if it throws an instance of

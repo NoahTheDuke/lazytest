@@ -1,62 +1,35 @@
 (ns lazytest.suite-test
   (:require
-   [lazytest.core :refer [causes-with-msg? defdescribe describe expect it]]
-   [lazytest.suite :refer [suite test-seq]]
-   [lazytest.test-case :refer [test-case]]))
+   [lazytest.core :refer [causes-with-msg? defdescribe describe expect it]]))
 
 ;; manually writing test cases (instead of using `it`)
 (defn common-test-cases [x]
-  (test-seq
-    [(when (= x 0)
-       (vary-meta
-         (test-case #(expect (= x 0)))
-         assoc :doc (str x " equals zero")))
-     (when (= x 1)
-       (vary-meta
-         (test-case #(expect (= x 1)))
-         assoc :doc (str x " equals one")))
-     (when (= x 2)
-       (vary-meta
-         (test-case #(expect (= x 2)))
-         assoc :doc (str x " equals two")))
-     (when (= x 3)
-       (vary-meta
-         (test-case #(expect (= x 3)))
-         assoc :doc (str x " equals three")))
-     (when (= x 4)
-       (vary-meta
-         (test-case #(expect (= x 4)))
-         assoc :doc (str x " equals four")))]))
-
-;; manually writing test-seqs
-(def s0
-  (vary-meta
-    (test-seq [(common-test-cases 0)])
-    assoc :doc "Zero"))
-
-;; manually writing suites (instead of using `describe`)
-(def s1
-  (suite
-   (vary-meta
-    (test-seq (common-test-cases 1))
-    assoc :doc "One")))
+  [(when (= x 0)
+     (it (str x " equals zero") #(expect (= x 0))))
+   (when (= x 1)
+     (it (str x " equals one") #(expect (= x 1))))
+   (when (= x 2)
+     (it (str x " equals two") #(expect (= x 2))))
+   (when (= x 3)
+     (it (str x " equals three") #(expect (= x 3))))
+   (when (= x 4)
+     (it (str x " equals four") #(expect (= x 4))))])
 
 ;; manually writing a describe var (instead of using `defdescribe`)
-(def s2
-  (describe "Two"
-    (common-test-cases 2)))
+(def s1
+  (describe "One"
+    (common-test-cases 1)))
 
 ;; writing a normal defdescribe
-(defdescribe s3
-  "Three"
-  (common-test-cases 3))
+(defdescribe s2
+  "Two"
+  (common-test-cases 2))
 
 ;; including all of the above in a distinct test
-(defdescribe s4 "Four"
+(defdescribe s3 "Three"
   s1
   s2
-  s3
-  (map common-test-cases (range 4 6)))
+  (map common-test-cases (range 3 5)))
 
 (defdescribe test-seq-test
   (it "checks describe blocks for the right types"

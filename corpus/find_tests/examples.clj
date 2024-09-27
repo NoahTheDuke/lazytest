@@ -1,7 +1,6 @@
 (ns find-tests.examples 
   (:require
-   [lazytest.core :refer [describe expect it]]
-   [lazytest.suite :refer [suite test-seq]]))
+   [lazytest.core :refer [describe expect it]]))
 
 (defn test-fn
   {:test #(expect (= 0 (test-fn 1)))}
@@ -11,14 +10,6 @@
 (defn test-test-case
   {:test (it "test case example"
            (expect (= 1 (test-test-case 1))))}
-  [a]
-  (+ a a))
-
-(defn test-suite
-  {:test (suite
-           (test-seq
-            [(it "test-seq example" (expect (= 1 (test-suite 1))))
-             (it "test-seq example two" (expect (= 0 (test-suite 1))))]))}
   [a]
   (+ a a))
 

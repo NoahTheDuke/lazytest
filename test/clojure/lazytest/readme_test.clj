@@ -1,7 +1,7 @@
 (ns lazytest.readme-test
   (:require
    [lazytest.core :refer [after around before defdescribe describe expect
-                          expect-it given it before-each]]))
+                          expect-it it before-each]]))
 
 (defdescribe +-test "with integers"
   (expect-it "computes the sum of 1 and 2"
@@ -23,14 +23,14 @@
       (> 0.00001 (abs (- 3000.0 (+ 1000.0 2000.0)))))))
 
 (defdescribe square-root-test "The square root of two"
-  (given [root (Math/sqrt 2)]
+  (let [root (Math/sqrt 2)]
     (it "is less than two"
       (expect (< root 2)))
     (it "is more than one"
       (expect (> root 1)))))
 
 (defdescribe before-and-after-test
-  (given [state (volatile! [])]
+  (let [state (volatile! [])]
     (describe "before and after"
       {:context [(before (vswap! state conj :before))
                  (after (vswap! state conj :after))]}
@@ -39,7 +39,7 @@
       (= [:before :after] @state))))
 
 (defdescribe around-test
-  (given [state (volatile! [])]
+  (let [state (volatile! [])]
     (describe "around"
       {:context [(around [f]
                    (vswap! state conj :around-before)
@@ -50,7 +50,7 @@
       (= [:around-before :around-after] @state))))
 
 (defdescribe each-test
-  (given [state (volatile! [])]
+  (let [state (volatile! [])]
     (describe "each examples"
       {:context [(before (vswap! state conj :before))
                  (before-each (vswap! state conj :before-each))]}

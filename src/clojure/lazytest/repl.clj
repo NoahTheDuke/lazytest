@@ -25,4 +25,4 @@
 (defn run-test-var
   ([v] (run-test-var v repl-config))
   ([v config]
-   (summarize (runner/run-test-var (->config config) v))))
+   (summarize (runner/run-test-var v (->config config)))))

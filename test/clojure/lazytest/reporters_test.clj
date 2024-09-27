@@ -3,7 +3,7 @@
    [clojure.stacktrace :as stack]
    [clojure.string :as str]
    [lazytest.config :refer [->config]]
-   [lazytest.core :refer [defdescribe describe expect expect-it given it ->ex-failed]]
+   [lazytest.core :refer [defdescribe describe expect expect-it it ->ex-failed]]
    [lazytest.reporters :as sut]
    [lazytest.runner :as runner]
    [lazytest.suite :as s]
@@ -279,7 +279,7 @@
 
 (defdescribe nested-test
   (describe "prints various types"
-    (given [ctx (->config nil)]
+    (let [ctx (->config nil)]
       (it "prints suites"
         (expect
           (= "  example doc\n"
@@ -299,7 +299,7 @@
                                                    :var #'identity}))
                  (with-out-str-no-color)))))))
   (describe "all of the begin-* seq types"
-    (given [ctx (->config nil)]
+    (let [ctx (->config nil)]
       (map (fn [t]
              (it (str "prints " t)
                (expect
@@ -310,7 +310,7 @@
            [:begin-test-run :begin-ns-suite :begin-test-var
             :begin-test-suite :begin-test-seq])))
   (describe "test case results"
-    (given [ctx (->config nil)]
+    (let [ctx (->config nil)]
       (it "pass"
         (expect
           (= "  √ example test-case\n"

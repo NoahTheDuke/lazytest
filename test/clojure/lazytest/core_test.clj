@@ -1,7 +1,7 @@
 (ns lazytest.core-test
   (:require
    [lazytest.core :refer [causes-with-msg? causes? defdescribe describe expect
-                          expect-it given it ok? throws-with-msg? throws?]])
+                          expect-it it ok? throws-with-msg? throws?]])
   (:import
    clojure.lang.ExceptionInfo
    lazytest.ExpectationFailed))
@@ -83,7 +83,7 @@
                (expect (= {:foo :bar} (ex-data caught)))))))))
 
 (defdescribe expect-data-test
-  (given [e1 (try (expect (= 1 (inc 2)))
+  (let [e1 (try (expect (= 1 (inc 2)))
                false
                (catch ExpectationFailed err err))
           reason (ex-data e1)]
@@ -92,7 +92,7 @@
       (expect (= '(= 1 (inc 2)) (:expected reason)))
       (expect (= (list = 1 3) (:evaluated reason)))
       (expect (false? (:actual reason)))))
-  (given [e3 (try (expect (instance? java.lang.String (+ 40 2)))
+  (let [e3 (try (expect (instance? java.lang.String (+ 40 2)))
                false
                (catch ExpectationFailed err err))
           reason (ex-data e3)]

@@ -3,69 +3,127 @@
 (defn focus-fns
   "Returns map of {:include? include-fn :exclude? exclude-fn}."
   [config]
-  (let [include? (when-let [include (:include config)]
+  (let [include? (when-let [include (seq (:include config))]
                    (apply some-fn include))
-        exclude? (when-let [exclude (:exclude config)]
+        exclude? (when-let [exclude (seq (:exclude config))]
                    (apply some-fn exclude))]
     {:include? include?
      :exclude? exclude?}))
 
-(defn filter-focused
-  "If any items in sequence s are focused, return them, with focus
-  metadata added to the sequence; else return s unchanged."
-  [{:keys [include? exclude?]} s]
-  (let [ret (reduce
-             (fn [{:keys [any-focused seqs]} cur]
-               (let [m (meta cur)
-                     this-excluded? (when exclude?
-                                      (exclude? m))
-                     this-focused? (or (:focus m)
-                                       (when include? (include? m)))
-                     cur (if this-focused?
-                           (with-meta cur (assoc m :focus true))
-                           cur)]
-                 {:any-focused (or any-focused this-focused?)
-                  :seqs (if this-excluded?
-                          seqs
-                          (conj seqs cur))}))
-             {:any-focused false
-              :seqs []}
-             s)]
-    (when-let [fs (seq (:seqs ret))]
-      (if (:any-focused ret)
-        (with-meta (filter (comp :focus meta) fs) (assoc (meta s) :focus true))
-        (with-meta fs (meta s))))))
-
-(defn filter-tree-impl
-  [focus-fns var-filter s]
-  (if (sequential? s)
-    (let [m (meta s)
-          v (:var m)
-          {:keys [exclude?]} focus-fns]
-      (when (and (if v (var-filter v) true)
-                 (not (when exclude? (exclude? m))))
-        (when-let [fs (not-empty (vec (keep #(filter-tree-impl focus-fns var-filter %) s)))]
-          (filter-focused
-           focus-fns
-           (with-meta fs (meta s))))))
-    s))
+#_(comment
+  (let [config (->config {:include #{:focus}
+                          :exclude #{}})
+        {:keys [include? exclude?]} (focus-fns config)
+        m {:a :b :focus true}]
+    (and (include? m)
+         (not (exclude? m))))
+  )
 
 (defn filter-tree
   "If any item or sequence in the tree rooted at s has focus metadata
   set to true, returns just the focused items while preserving their
   position in the tree. Otherwise returns s unchanged."
-  [config s]
-  (let [focus-fn (focus-fns config)
-        var-filter (not-empty (:var-filter config))
-        ns-filter (not-empty (:ns-filter config))
-        var-filter (cond
-                     var-filter
-                     (fn [v]
-                       (or (var-filter (symbol v))
-                           (when ns-filter
-                             (ns-filter (-> v symbol namespace symbol)))))
-                     ns-filter
-                     (fn [v] (ns-filter (-> v symbol namespace symbol)))
-                     :else
-                     any?)]
-    (filter-tree-impl focus-fn var-filter s)))
+  [suite config]
+  (let [{:keys [include? exclude?]} (focus-fns config)]
+    (letfn [(gather-items [given]
+              (let [ret (reduce
+                         (fn [{:keys [any-focused items]} cur]
+                           (let [m (:metadata cur)
+                                 this-excluded? (when exclude?
+                                                  (exclude? m))
+                                 this-focused? (or (:focus m)
+                                                   (when include? (include? m)))
+                                 cur (if this-focused?
+                                       (assoc-in cur [:metadata :focus] true)
+                                       cur)]
+                             {:any-focused (or any-focused this-focused?)
+                              :items (if this-excluded?
+                                       items
+                                       (conj items cur))}))
+                         {:any-focused false
+                          :items []}
+                         given)
+                    any-focused (:any-focused ret)]
+                (when-let [fs (not-empty (:items ret))]
+                  {:any-focused any-focused
+                   :items (if any-focused
+                            (filterv #(-> % :metadata :focus) fs)
+                            fs)})))
+            (filter-suite [suite]
+              (let [m (:metadata suite)
+                    this-excluded? (when exclude?
+                                     (exclude? m))
+                    this-focused? (or (:focus m)
+                                      (when include? (include? m)))
+                    suite (if this-focused?
+                            (assoc-in suite [:metadata :focus] true)
+                            suite)]
+                (when-not this-excluded?
+                  (let [suite (if this-focused?
+                                (-> suite
+                                    (update :tests #(mapv (fn [tc] (assoc-in tc [:metadata :focus] true)) %))
+                                    (update :suites #(mapv (fn [suite] (assoc-in suite [:metadata :focus] true)) %)))
+                                suite)
+                        {tests-focused? :any-focused
+                         tests :items} (some->> (:tests suite)
+                                                (gather-items))
+                        {suites-focused? :any-focused
+                         suites :items} (some->> (:suites suite)
+                                                 (keep filter-suite)
+                                                 (gather-items))]
+                    (when (or (seq tests)
+                              (seq suites))
+                      (cond-> (-> suite
+                                  (assoc :tests tests)
+                                  (assoc :suites suites))
+                        (or tests-focused? suites-focused?)
+                        (assoc-in [:metadata :focus] true)))))))]
+      (filter-suite suite))))
+
+#_(comment
+
+  (defn walk-tree [tree]
+    ((requiring-resolve 'clojure.walk/postwalk)
+     #(if (:doc %) (select-keys % [:doc :type :tests :suites]) %)
+     tree))
+
+  (defdescribe example-test
+    (describe "poop"
+      (let [i 50]
+        (describe "nested"
+          {:focus true}
+          (it "works"
+            (expect (= i (+ 49 1)))))
+        (describe "other"
+          (it "doesn't work"
+            (expect (= 1 2))))))
+    (describe "balls"
+      {:focus true}
+      (it "double works")))
+
+  (defdescribe example-2-test
+    (describe "poop"
+      (let [i 50]
+        (describe "nested"
+          (it "works"
+            {:integration true}
+            (expect (= i (+ 49 1)))))
+        (describe "other"
+          (it "doesn't work"
+            (expect (= 1 2))))))
+    (describe "balls"))
+
+  (walk-tree
+   (filter-tree example-2-test (->config {:include #{:integration}})))
+
+  (walk-tree
+   (filter-tree
+   @(defdescribe example-3-test
+      "top"
+      (describe "yes" {:focus true
+                       :competing true}
+        (it "works" {:integration true}))
+      (describe "no" (it "doesn't")))
+   (->config {:include #{:competing}
+              :exclude #{:integration}})))
+  )

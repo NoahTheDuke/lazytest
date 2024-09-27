@@ -2,13 +2,18 @@
 
 ## Unreleased
 
+### Changed
+
+- Rewrite internals to use nested maps instead of nested sequences and functions.
+- Deprecated `given` in favor of `let`.
+
 ### Features
 
 - Add macros `before` and `after`, and support `:context` in suite metadata. This allows for writing fixture-like code that can be reused across multiple suites or tests:
 
 ```clojure
 (defdescribe context-test
-  (given [state (volatile! [])]
+  (let [state (volatile! [])]
     (describe "it runs both"
       {:context [(before (vswap! state conj :before))
                  (after (vswap! state conj :after))]}

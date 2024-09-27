@@ -1,7 +1,7 @@
 (ns lazytest.find-test
   (:require
    [find-tests.examples]
-   [lazytest.core :refer [defdescribe expect given it]]
+   [lazytest.core :refer [defdescribe expect it]]
    [lazytest.extensions.matcher-combinators :refer [match?]]
    [lazytest.main :as main]
    [lazytest.runner :as lr]
@@ -9,7 +9,7 @@
    [clojure.string :as str]))
 
 (defdescribe find-var-test-value-test
-  (given [output (with-out-str-data-map (main/run ["--dir" "corpus/find_tests"
+  (let [output (with-out-str-data-map (main/run ["--dir" "corpus/find_tests"
                                                    "--output" "nested*"]))]
     (it "runs all suites"
       (expect
@@ -42,23 +42,6 @@
                  :thrown (ex-info "Expectation failed"
                                   {:type 'lazytest.ExpectationFailed
                                    :expected '(= 1 (test-test-case 1))})}]}
-              {::lr/source-type :lazytest/test-var
-               :var #'find-tests.examples/test-suite
-               :doc #'find-tests.examples/test-suite
-               :children
-               [{::lr/source-type :lazytest/suite
-                 :doc nil
-                 :children
-                 [{:type :fail
-                   :doc "test-seq example"
-                   :thrown (ex-info "Expectation failed"
-                                    {:type 'lazytest.ExpectationFailed
-                                     :expected '(= 1 (test-suite 1))})}
-                  {:type :fail
-                   :doc "test-seq example two"
-                   :thrown (ex-info "Expectation failed"
-                                    {:type 'lazytest.ExpectationFailed
-                                     :expected '(= 0 (test-suite 1))})}]}]}
               {::lr/source-type :lazytest/test-var
                :var #'find-tests.examples/test-describe
                :doc #'find-tests.examples/test-describe

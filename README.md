@@ -193,38 +193,41 @@ To partition your test suite based on metadata, you can use `-i`/`--include` to 
 
 ## Setup and Teardown
 
-To handle set up and tear down of stateful architecture, Lazytest provides the hooks `before`, `before-each`, `after-each`, `after`, and `around`, along with the helper `set-ns-context!`. You can add them to a `:context` vector in suite or test-case metadata:
+To handle set up and tear down of stateful architecture, Lazytest provides the hooks `before`, `before-each`, `after-each`, `after`, and `around`, along with the helper `set-ns-context!`. You can call them directly in a `describe` block or add them to a `:context` vector in suite metadata:
 
 ```clojure
 (defdescribe before-and-after-test
-  (given [state (volatile! [])]
+  (let [state (volatile! [])]
     (describe "before and after example"
-      {:context [(before (vswap! state conj :before))
-                 (after (vswap! state conj :after))]}
+      (before (vswap! state conj :before))
+      (after (vswap! state conj :after))
       (expect-it "temp" (vswap! state conj :expect)))
-    (expect-it "has been properly tracked"
-      (= [:before :expect :after] @state))))
+    (describe "results"
+      (expect-it "has been properly tracked"
+        (= [:before :expect :after] @state)))))
 
 (defdescribe around-test
-  (given [state (volatile! [])]
+  (let [state (volatile! [])]
     (describe "around example"
       {:context [(around [f]
                    (vswap! state conj :around-before)
                    (f)
                    (vswap! state conj :around-after))]}
       (expect-it "temp" true))
-    (expect-it "correctly ran the whole thing"
-      (= [:around-before :around-after] @state))))
+    (describe "results"
+      (expect-it "correctly ran the whole thing"
+        (= [:around-before :around-after] @state)))))
 
 (defdescribe each-test
-  (given [state (volatile! [])]
+  (let [state (volatile! [])]
     (describe "each examples"
       {:context [(before (vswap! state conj :before))
                  (before-each (vswap! state conj :before-each))]}
       (expect-it "temp" (vswap! state conj :expect-1))
       (expect-it "temp" (vswap! state conj :expect-2)))
-    (expect-it "has been properly tracked"
-      (= [:before :before-each :expect-1 :before-each :expect-2] @state))))
+    (describe "results"
+      (expect-it "has been properly tracked"
+        (= [:before :before-each :expect-1 :before-each :expect-2] @state)))))
 ```
 
 `(around)` hooks are combined with the same logic as `clojure.test`'s `join-fixtures`.
@@ -370,22 +373,6 @@ Execute Command: (lazytest.repl/run-test-var #'~current-var)
 Execution Namespace: Execute in current file namespace
 Results: Print results to REPL output
 ```
-
-## Lazytest Internals
-
-The smallest unit of testing is a *test case*, which is a function (see `lazytest.test-case/test-case`). When the function is called, it may throw an exception to indicate failure. If it does not throw an exception, it is assumed to have passed. The return value of a test case is always ignored. Running a test case may have side effects.
-
-NOTE: The macros `lazytest.describe/it` and `lazytest.describe/expect-it` create test cases.
-
-Tests cases are organized into *suites*. A test suite is a function (see `lazytest.suite/suite`) that returns a *test sequence*. A test sequence (see `lazytest.suite/test-seq`) is a sequence, possibly lazy, of test cases and/or test suites. Suites, therefore, may be nested inside other suites, but nothing may be nested inside a test case.
-
-NOTE: The macros `lazytest.describe/defdescribe` and `lazytest.describe/describe` create test suites.
-
-A test suite function SHOULD NOT have side effects; it is only used to generate test cases and/or other test suites.
-
-A test *runnner* is responsible for expanding suites (see `lazytest.suite/expand-suite`) and running test cases (see `lazytest.test-case/try-test-case`). It may also provide feedback on the success of tests as they run.
-
-The test runner also returns a sequence of *results*, which are either *suite results* (see `lazytest.suite/suite-result`) or *test case results* (see `lazytest.test-case/test-case-result`). That sequence of results is passed to a *reporter*, which formats results for display to the user. Multiple reporters are provided, see the namespace `lazytest.reporters`.
 
 ## License
 

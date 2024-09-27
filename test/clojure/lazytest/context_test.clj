@@ -2,86 +2,108 @@
   (:require
    [lazytest.context :refer [propagate-eachs]]
    [lazytest.core :refer [after after-each around before before-each
-                          defdescribe describe expect expect-it given it]]))
+                          defdescribe describe expect expect-it it]]))
 
 (defn vconj! [volatile value]
   (vswap! volatile conj value))
 
+(defdescribe broken-context-test
+  (let [state (volatile! [])]
+    (describe after
+      {:context [(after (vconj! state :after))]}
+      (expect-it "temp" (vconj! state :expect)))
+    (describe "results"
+      (expect-it "tracks correctly"
+        (= [:expect :after] @state)))))
+
+(comment
+  (broken-context-test))
+
 (defdescribe context-test
+  {:focus true}
   (describe "on suites"
-    (given [state (volatile! [])]
+    (let [state (volatile! [])]
       (describe "manual maps"
         {:context [{:before (fn [] (vconj! state :before))
                     :after (fn [] (vconj! state :after))}]}
         (expect-it "temp" (vconj! state :expect)))
-      (expect-it "tracks correctly"
-        (= [:before :expect :after] @state)))
-    (given [state (volatile! [])]
+      (describe "results"
+        (expect-it "tracks correctly"
+          (= [:before :expect :after] @state))))
+    (let [state (volatile! [])]
       (describe before
         {:context [(before (vconj! state :before))]}
         (expect-it "temp" (vconj! state :expect)))
-      (expect-it "tracks correctly"
-        (= [:before :expect] @state)))
-    (given [state (volatile! [])]
+      (describe "results"
+        (expect-it "tracks correctly"
+          (= [:before :expect] @state))))
+    (let [state (volatile! [])]
       (describe after
         {:context [(after (vconj! state :after))]}
         (expect-it "temp" (vconj! state :expect)))
-      (expect-it "tracks correctly"
-        (= [:expect :after] @state)))
-    (given [state (volatile! [])]
+      (describe "results"
+        (expect-it "tracks correctly"
+          (= [:expect :after] @state))))
+    (let [state (volatile! [])]
       (describe "not order dependent"
         {:context [(after (vconj! state :after))
                    (before (vconj! state :before))]}
         (expect-it "temp" (vconj! state :expect)))
-      (expect-it "tracks correctly"
-        (= [:before :expect :after] @state)))
-    (given [state (volatile! [])]
+      (describe "results"
+        (expect-it "tracks correctly"
+          (= [:before :expect :after] @state))))
+    (let [state (volatile! [])]
       (describe "around"
         {:context [{:around (fn [f]
                               (vconj! state :around-before)
                               (f)
                               (vconj! state :around-after))}]}
         (expect-it "temp" (vconj! state :expect)))
-      (expect-it "tracks correctly"
-        (= [:around-before :expect :around-after] @state)))
-    (given [state (volatile! [])]
+      (describe "results"
+        (expect-it "tracks correctly"
+          (= [:around-before :expect :around-after] @state))))
+    (let [state (volatile! [])]
       (describe around
         {:context [(around [f]
                            (vconj! state :around-before)
                            (f)
                            (vconj! state :around-after))]}
         (expect-it "temp" (vconj! state :expect)))
-      (expect-it "tracks correctly"
-        (= [:around-before :expect :around-after] @state)))
+      (describe "results"
+        (expect-it "tracks correctly"
+          (= [:around-before :expect :around-after] @state))))
     (describe before-each
-      (given [state (volatile! [])]
+      (let [state (volatile! [])]
         (describe "inner"
           {:context [(before-each (vconj! state :before-each))]}
           (expect-it "temp 1" (vconj! state :expect-1))
           (expect-it "temp 2" (vconj! state :expect-2))
           (expect-it "temp 3" (vconj! state :expect-3)))
-        (expect-it "tracks correctly"
-          (= [:before-each :expect-1 :before-each :expect-2 :before-each :expect-3] @state))))
+        (describe "results"
+          (expect-it "tracks correctly"
+            (= [:before-each :expect-1 :before-each :expect-2 :before-each :expect-3] @state)))))
     (describe after-each
-      (given [state (volatile! [])]
+      (let [state (volatile! [])]
         (describe "inner"
           {:context [(after-each (vconj! state :after-each))]}
           (expect-it "temp 1" (vconj! state :expect-1))
           (expect-it "temp 2" (vconj! state :expect-2))
           (expect-it "temp 3" (vconj! state :expect-3)))
-        (expect-it "tracks correctly"
-          (= [:expect-1 :after-each :expect-2 :after-each :expect-3 :after-each] @state))))
+        (describe "results"
+          (expect-it "tracks correctly"
+            (= [:expect-1 :after-each :expect-2 :after-each :expect-3 :after-each] @state)))))
     (describe "both before-each and after-each"
-      (given [state (volatile! [])]
+      (let [state (volatile! [])]
         (describe "inner"
           {:context [(before-each (vconj! state :before-each))
                      (after-each (vconj! state :after-each))]}
           (expect-it "temp 1" (vconj! state :expect-1))
           (expect-it "temp 2" (vconj! state :expect-2)))
-        (expect-it "tracks correctly"
-          (= [:before-each :expect-1 :after-each :before-each :expect-2 :after-each] @state))))
+        (describe "results"
+          (expect-it "tracks correctly"
+            (= [:before-each :expect-1 :after-each :before-each :expect-2 :after-each] @state)))))
     (describe "complex flat case"
-      (given [state (volatile! [])]
+      (let [state (volatile! [])]
         (describe "inner"
           {:context [(before (vconj! state :before))
                      (before-each (vconj! state :before-each))
@@ -89,17 +111,18 @@
                      (after (vconj! state :after))]}
           (expect-it "temp 1" (vconj! state :expect-1))
           (expect-it "temp 2" (vconj! state :expect-2)))
-        (expect-it "tracks correctly"
-          (= [:before :before-each :expect-1 :after-each :before-each :expect-2 :after-each :after] @state)))))
+        (describe "results"
+          (expect-it "tracks correctly"
+            (= [:before :before-each :expect-1 :after-each :before-each :expect-2 :after-each :after] @state))))))
   (describe "on test cases"
-    (given [state (volatile! [])]
+    (let [state (volatile! [])]
       (it "works correctly"
         {:context [(before (vconj! state :before))
                    (after (vconj! state :after))]}
         (expect (vconj! state :expect)))
       (expect-it "tracks correctly"
         (= [:before :expect :after] @state)))
-    (given [state (volatile! [])]
+    (let [state (volatile! [])]
       (it "around"
         {:context [(around [f]
                      (vconj! state :before)
@@ -117,7 +140,7 @@
                               (with-meta [] {:lazytest/context {:before-each [4 5 6]}}))))))
 
 (defdescribe complex-context-test
-  (given [state (volatile! [])]
+  (let [state (volatile! [])]
     (describe "top level"
       {:context [(before (vconj! state :before-top))
                  (before-each (vconj! state :before-each-top))
@@ -158,7 +181,7 @@
           :after-top] @state))))
 
 (defdescribe multiple-same-eachs-test
-  (given [state (volatile! [])]
+  (let [state (volatile! [])]
     (describe "top level"
       {:context [(after-each (vconj! state :after-each-top))
                  (after-each (vconj! state :after-each-top-2))]}

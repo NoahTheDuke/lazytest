@@ -193,7 +193,7 @@ To partition your test suite based on metadata, you can use `-i`/`--include` to 
 
 ## Setup and Teardown
 
-To handle set up and tear down of stateful architecture, Lazytest provides the hooks `before`, `before-each`, `after-each`, `after`, and `around`, along with the helper `set-ns-context!`. You can call them directly in a `describe` block or add them to a `:context` vector in suite metadata:
+To handle set up and tear down of stateful architecture, Lazytest provides the hooks `before`, `before-each`, `after-each`, `after`, and `around`, along with the helper `set-ns-context!`. You can call them directly in a `describe` block or add them to a `:context` vector in suite metadata. (To read a more specific description of how this works, please read the section titled `Run Lifecycle Overview`.)
 
 ```clojure
 (defdescribe before-and-after-test
@@ -225,9 +225,8 @@ To handle set up and tear down of stateful architecture, Lazytest provides the h
                  (before-each (vswap! state conj :before-each))]}
       (expect-it "temp" (vswap! state conj :expect-1))
       (expect-it "temp" (vswap! state conj :expect-2)))
-    (describe "results"
-      (expect-it "has been properly tracked"
-        (= [:before :before-each :expect-1 :before-each :expect-2] @state)))))
+    (expect-it "has been properly tracked"
+      (= [:before :before-each :expect-1 :before-each :expect-2] @state))))
 ```
 
 `(around)` hooks are combined with the same logic as `clojure.test`'s `join-fixtures`.
@@ -373,6 +372,36 @@ Execute Command: (lazytest.repl/run-test-var #'~current-var)
 Execution Namespace: Execute in current file namespace
 Results: Print results to REPL output
 ```
+
+## Run Lifecycle Overview
+
+This is inspired by [Mocha](https://mochajs.org)'s excellent documentation.
+
+1. A user runs Lazytest, either through leiningen or Clojure CLI.
+2. Lazytest parses the command line arguments to determine the relevant configuration.
+3. Lazytest finds test files. If the user provides `--dir`, then every file in the file trees of all given directories are checked. Otherwise, all files within the `test` directorie are checked.
+4. Lazytest loads all test files. Using `tools.namespace`, the namespace of each `.clj` is extracted and `require`d, which creates the necessary vars.
+5. Lazytest gathers all test vars from the required namespaces. It checks each var in each namespace against the following list of questions.
+    1. Is the var defined with `defdescribe`? Call the `defdescribe`-constructed function and use it.
+    2. Does the var point to a `suite`? Use it.
+    3. Does the var have `:test` metadata that is either a suite (`describe`) or a test case (`it`)? Create a new suite with `describe` and set the `:test` metadata as a child.
+    4. Does the var have `:test` metadata that is a function? Create a new suite with `describe`, create a new test case with `it`, and then set the docstring for the test case to `:test metadata`, and the body to calling the `:test` metadata function.
+6. Lazytest groups each namespace into a `:lazytest/ns` suite, and then groups all of the namespace suites into a `:lazytest/run` suite.
+7. Lazytest does a depth-first walk of the run suite, filtering nses by `--namespace`, vars by `--var`, and all suites and test cases by `--include` or `--exclude` (with `:focus` being automatically included). These are prioritized as such:
+    1. `--namespace` narrows all namespaces to those that exactly match. The namespaces of `--var` vars are included as well. If `--namespace` is not provided, all namespaces are selected.
+    2. `--var` narrows all vars from the selected namespaces. If `--namespace` is provided, all vars from those namespaces are selected as well. If `--var` is not provided, all vars are selected.
+    3. The suite for each var is selected by selecting all `--include` or `:focus` metadata suites and tests cases and then removing all `--exclude` suites and test cases. If no suites or test cases have `:focus` metadata or `--include` hasn't been provided, then everything is selected. (To be clear, `--exclude` overrides `:focus` and `--include`.)
+8. Lazytest calls the runner on the filtered run suite.
+    * For suites:
+        1. Run each `before` hook.
+        2. For each child in `:children`, restart from step 1 of the appropriate sequence.
+        3. Run each `after` hook.
+    * For test cases:
+        1. Run each `before-each` hook, outmost first, in definition order.
+        2. Execute the test function, get the `test-case-result`.
+        3. Run each `after-each` hook, innermost first, in definition order.
+9. Depending on the chosen reporter, Lazytest prints the results of each suite and test case immediately or at another point.
+10. The run is ended with `System/exit`, and the exit value is either `0` for no failures or `1` for any number of failures.
 
 ## Lazytest Internals
 

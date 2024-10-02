@@ -9,9 +9,9 @@
 (defdescribe it-test
   (it "will early exit"
     (try
-      ((it "when given multiple expressions"
-         (expect (= 1 2))
-         (throw (ex-info "never reached" {}))))
+      ((:body (it "when given multiple expressions"
+                (expect (= 1 2))
+                (throw (ex-info "never reached" {})))))
       (catch ExpectationFailed e
         (expect (= '(= 1 2) (:expected (ex-data e)))))))
   (let [state (atom 0)]
@@ -105,21 +105,21 @@
 (defdescribe alternative-assertions
   (it "can handle `ex-info`"
     (try
-      ((it "ex-info example"
-         (let [f (when-not (= 1 2)
-                   (throw (ex-info "not equal" {:extra :data})))]
-           (f))))
+      ((:body (it "ex-info example"
+                (let [f (when-not (= 1 2)
+                          (throw (ex-info "not equal" {:extra :data})))]
+                  (f)))))
       (catch ExceptionInfo e
         (expect (= "not equal" (ex-message e)))
         (expect (= {:extra :data} (ex-data e))))))
   (it "can handle `assert`"
     (try
-      ((it "assert with no doc"
-         (assert (= 1 2))))
+      ((:body (it "assert with no doc"
+                (assert (= 1 2)))))
       (catch AssertionError e
         (expect (= "Assert failed: (= 1 2)" (ex-message e)))))
     (try
-      ((it "assert with no doc"
-         (assert (= 1 2) "these should be equal")))
+      ((:body (it "assert with no doc"
+                (assert (= 1 2) "these should be equal"))))
       (catch AssertionError e
         (expect (= "Assert failed: these should be equal\n(= 1 2)" (ex-message e)))))))

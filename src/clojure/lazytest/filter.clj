@@ -10,23 +10,22 @@
     {:include? include?
      :exclude? exclude?}))
 
-#_(comment
-  (let [config (->config {:include #{:focus}
-                          :exclude #{}})
-        {:keys [include? exclude?]} (focus-fns config)
-        m {:a :b :focus true}]
-    (and (include? m)
-         (not (exclude? m))))
-  )
+(defn filter-tree-dispatch [obj _] (:type obj))
 
-(defn filter-tree
+(defmulti filter-tree
   "If any item or sequence in the tree rooted at s has focus metadata
   set to true, returns just the focused items while preserving their
   position in the tree. Otherwise returns s unchanged."
+  {:arglists '([obj config])}
+  #'filter-tree-dispatch)
+
+(defn filter-suite
+  "If any items in sequence s are focused, return them, with focus
+  metadata added to the sequence; else return s unchanged."
   [suite config]
   (let [{:keys [include? exclude?]} (focus-fns config)]
     (letfn [(gather-items [given]
-              (let [ret (reduce
+             (let [ret (reduce
                          (fn [{:keys [any-focused items]} cur]
                            (let [m (:metadata cur)
                                  this-excluded? (when exclude?
@@ -48,82 +47,49 @@
                   {:any-focused any-focused
                    :items (if any-focused
                             (filterv #(-> % :metadata :focus) fs)
-                            fs)})))
-            (filter-suite [suite]
-              (let [m (:metadata suite)
-                    this-excluded? (when exclude?
-                                     (exclude? m))
-                    this-focused? (or (:focus m)
-                                      (when include? (include? m)))
-                    suite (if this-focused?
-                            (assoc-in suite [:metadata :focus] true)
-                            suite)]
-                (when-not this-excluded?
-                  (let [suite (if this-focused?
-                                (-> suite
-                                    (update :tests #(mapv (fn [tc] (assoc-in tc [:metadata :focus] true)) %))
-                                    (update :suites #(mapv (fn [suite] (assoc-in suite [:metadata :focus] true)) %)))
-                                suite)
-                        {tests-focused? :any-focused
-                         tests :items} (some->> (:tests suite)
-                                                (gather-items))
-                        {suites-focused? :any-focused
-                         suites :items} (some->> (:suites suite)
-                                                 (keep filter-suite)
-                                                 (gather-items))]
-                    (when (or (seq tests)
-                              (seq suites))
-                      (cond-> (-> suite
-                                  (assoc :tests tests)
-                                  (assoc :suites suites))
-                        (or tests-focused? suites-focused?)
-                        (assoc-in [:metadata :focus] true)))))))]
-      (filter-suite suite))))
+                            fs)})))]
+      (let [{focused? :any-focused
+             children :items} (some->> (:children suite)
+                                       (keep #(filter-tree % config))
+                                       (gather-items))]
+      (when (seq children)
+        (-> suite
+            (assoc :children children)
+            (cond-> focused? (assoc-in [:metadata :focus] true))))))))
 
-#_(comment
+(defmethod filter-tree :lazytest/test-case
+  filter-tree--lazytest-test-case
+  [test-case _config]
+  test-case)
 
-  (defn walk-tree [tree]
-    ((requiring-resolve 'clojure.walk/postwalk)
-     #(if (:doc %) (select-keys % [:doc :type :tests :suites]) %)
-     tree))
+(defmethod filter-tree :lazytest/suite
+  filter-tree--lazytest-suite
+  [suite config]
+  (filter-suite suite config))
 
-  (defdescribe example-test
-    (describe "poop"
-      (let [i 50]
-        (describe "nested"
-          {:focus true}
-          (it "works"
-            (expect (= i (+ 49 1)))))
-        (describe "other"
-          (it "doesn't work"
-            (expect (= 1 2))))))
-    (describe "balls"
-      {:focus true}
-      (it "double works")))
+(defmethod filter-tree :lazytest/var
+  filter-tree--lazytest-var
+  [var-suite config]
+  (let [var-filter (not-empty (:var-filter config))
+        ns-filter (not-empty (:ns-filter config))]
+    (if var-filter
+      (when (or (var-filter (-> (:var var-suite) symbol))
+                (when ns-filter
+                  (ns-filter (-> (:var var-suite) symbol namespace symbol))))
+        (filter-suite var-suite config))
+      (filter-suite var-suite config))))
 
-  (defdescribe example-2-test
-    (describe "poop"
-      (let [i 50]
-        (describe "nested"
-          (it "works"
-            {:integration true}
-            (expect (= i (+ 49 1)))))
-        (describe "other"
-          (it "doesn't work"
-            (expect (= 1 2))))))
-    (describe "balls"))
+(defmethod filter-tree :lazytest/ns
+  filter-tree--lazytest-ns
+  [ns-suite config]
+  (let [var-filter (map (comp symbol namespace) (:var-filter config))
+        ns-filter (not-empty (into #{} (concat var-filter (:ns-filter config))))]
+    (when (and ns-filter
+               (ns-filter (:doc ns-suite)))
+      (filter-suite ns-suite config))
+    (filter-suite ns-suite config)))
 
-  (walk-tree
-   (filter-tree example-2-test (->config {:include #{:integration}})))
-
-  (walk-tree
-   (filter-tree
-   @(defdescribe example-3-test
-      "top"
-      (describe "yes" {:focus true
-                       :competing true}
-        (it "works" {:integration true}))
-      (describe "no" (it "doesn't")))
-   (->config {:include #{:competing}
-              :exclude #{:integration}})))
-  )
+(defmethod filter-tree :lazytest/run
+  filter-tree--lazytest-run
+  [run-suite config]
+  (filter-suite run-suite config))

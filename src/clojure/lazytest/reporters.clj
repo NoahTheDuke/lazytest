@@ -30,7 +30,7 @@
 (defmulti focused {:arglists '([config m])} #'reporter-dispatch)
 (defmethod focused :default [_ _])
 (defmethod focused :begin-test-run [_ m]
-  (when (:focus m)
+  (when (-> m :metadata :focus)
     (println "=== FOCUSED TESTS ONLY ===")
     (newline))
   (flush))
@@ -295,7 +295,7 @@
 
 (defmethod clojure-test :end-test-run [_ m]
   (let [results (:results m)
-        test-vars (count (filter #(= :lazytest/test-var (type (:source %)))
+        test-vars (count (filter #(= :lazytest/var (type (:source %)))
                                  (result-seq results)))
         test-case-results (remove suite-result? (result-seq results))
         total (count test-case-results)
@@ -383,14 +383,14 @@
 (defmethod profile :default [_ _])
 (defmethod profile :end-test-run [_config {:keys [results]}]
   (let [types (-> (group-by (comp type :source) (result-seq results))
-                  (select-keys [:lazytest/ns-suite :lazytest/test-var])
+                  (select-keys [:lazytest/ns :lazytest/var])
                   (update-vals #(filterv :lazytest.runner/duration %)))
         total-duration (->> (mapcat identity (vals types))
                             (map :lazytest.runner/duration)
                             (reduce + 0))
-        slowest-ns-suites (take 5 (sort-by :lazytest.runner/duration > (:lazytest/ns-suite types)))
+        slowest-ns-suites (take 5 (sort-by :lazytest.runner/duration > (:lazytest/ns types)))
         ns-suite-duration (reduce + 0 (map :lazytest.runner/duration slowest-ns-suites))
-        slowest-vars (take 5 (sort-by :lazytest.runner/duration > (:lazytest/test-var types)))
+        slowest-vars (take 5 (sort-by :lazytest.runner/duration > (:lazytest/var types)))
         var-duration (reduce + 0 (map :lazytest.runner/duration slowest-vars))
         ]
     (println (format "Top %s slowest test namespaces (%.5f seconds, %.1f%% of total time)"

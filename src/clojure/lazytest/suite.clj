@@ -5,7 +5,7 @@
 (set! *warn-on-reflection* true)
 
 ^:clj-reload/keep
-(defrecord Suite [type doc tests suites context ns file line var metadata])
+(defrecord Suite [type doc children context ns file line var metadata])
 
 (defn suite? "True if x is a test suite."
   [obj]
@@ -14,8 +14,7 @@
 (defn suite
   [base]
   (-> base
-      (update :tests #(or % []))
-      (update :suites #(or % []))
+      (update :children #(or % []))
       (update :context #(or % {}))
       (cond-> (not (:type base)) (assoc :type :lazytest/suite))
       (map->Suite)))

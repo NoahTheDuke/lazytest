@@ -6,7 +6,7 @@
     [lazytest.reporters :as r]))
 
 (def repl-config
-  {:reporter [r/results r/summary]})
+  {:reporter [r/focused r/results r/summary]})
 
 (defn run-tests
   "Runs tests defined in the given namespaces."

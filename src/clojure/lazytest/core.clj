@@ -31,11 +31,11 @@
   "Useful for all expectations. Sets the base
   properties on the ExpectationFailed."
   ([expr data] `(->ex-failed nil ~expr ~data))
-  ([_form expr data]
+  ([_&form expr data]
    `(let [data# ~data]
       (ExpectationFailed.
         (:message data#)
-        (merge ~(meta _form)
+        (merge ~(meta _&form)
                ~(meta expr)
                {:expected '~expr
                 :file ~*file*
@@ -95,7 +95,6 @@
 
 
 (defmacro before
-  "Returns a context whose teardown function evaluates body."
   [& body]
   `(let [before-fn# (fn before# [] (let [ret# (do ~@body)] ret#))]
      (if *context*
@@ -150,7 +149,7 @@
 (defn set-ns-context!
   "Must be a sequence of context maps, presumably built with the appropriate macros."
   [context]
-  (alter-meta! *ns* assoc :lazytest/context (ctx/merge-context context)))
+  (alter-meta! *ns* assoc :context (ctx/merge-context context)))
 
 (def ^:dynamic *context* nil)
 
@@ -178,14 +177,16 @@
         data (merged-data children &form doc (dissoc attr-map :context))
         context (:context attr-map)]
     `(let [suite# (binding [*context* (atom (suite ~data))]
-                    (let [ctx-fns# ~context]
+                    (let [ctx-fns# (binding [*context* nil] ~context)]
+                      (assert (or (nil? ctx-fns#) (sequential? ctx-fns#))
+                              ":context must be a sequence")
                       (swap! *context* update :context
                              (fn [c#]
                                (ctx/merge-context (cons c# ctx-fns#)))))
                     (run! #(if (sequential? %) (doall %) %) (flatten [~@children]))
                     @*context*)]
        (if *context*
-         (do (swap! *context* update :suites conj suite#)
+         (do (swap! *context* update :children conj suite#)
              nil)
          suite#))))
 
@@ -260,7 +261,7 @@
                               :context (binding [*context* nil]
                                          (ctx/merge-context ~context))))]
        (if *context*
-         (swap! *context* update :tests conj test-case#)
+         (swap! *context* update :children conj test-case#)
          test-case#))))
 
 (defmacro expect-it
@@ -294,7 +295,7 @@
     `(let [test-case# (test-case
                        (assoc ~metadata :body (fn expect-it# [] (expect ~assertion ~doc))))]
        (if *context*
-         (swap! *context* update :tests conj test-case#)
+         (swap! *context* update :children conj test-case#)
          test-case#))))
 
 (defn throws?

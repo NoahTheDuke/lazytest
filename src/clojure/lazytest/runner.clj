@@ -5,7 +5,7 @@
    [lazytest.find :refer [find-suite find-var-test-value]]
    [lazytest.malli]
    [lazytest.reporters :as r :refer [nested report]]
-   [lazytest.suite :as s :refer [suite-result]]
+   [lazytest.suite :as s :refer [suite-result suite]]
    [lazytest.test-case :refer [try-test-case]]))
 
 (set! *warn-on-reflection* true)
@@ -30,8 +30,7 @@
                @ret)
             #(let [child (propagate-eachs suite %)]
                (run-tree child config)))
-        results (vec (keep f (concat (:tests suite)
-                                     (:suites suite))))
+        results (vec (keep f (:children suite)))
         duration (double (- (System/nanoTime) start))]
     (-> (suite-result suite results)
         (assoc :lazytest.runner/source-type source-type)
@@ -77,13 +76,16 @@
     (run-afters suite)
     results))
 
+(defn prep-test-case [tc]
+  (with-meta (:body tc) tc))
+
 (defmethod run-tree :lazytest/test-case
   run-suite--lazytest-test-case
   [tc config]
   (let [start (System/nanoTime)]
     (report config (assoc tc :type :begin-test-case))
     (run-befores tc)
-    (let [f (with-meta (:body tc) tc)
+    (let [f (prep-test-case tc)
           results (if-let [around-fn (combine-arounds tc)]
                     (let [ret (volatile! nil)]
                       (run-before-eachs tc)
@@ -117,7 +119,9 @@
 
 (defn run-test-var
   [v config]
-  (-> (find-var-test-value v)
-      (assoc :type :lazytest/run)
-      (filter-tree config)
-      (run-tree config)))
+  (when-let [test-var (find-var-test-value v)]
+    (-> (suite {:type :lazytest/run
+                :nses [(the-ns (symbol (namespace (symbol #'run-test-var))))]
+                :children [test-var]})
+        (filter-tree config)
+        (run-tree config))))

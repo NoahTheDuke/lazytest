@@ -20,7 +20,6 @@
   (broken-context-test))
 
 (defdescribe context-test
-  {:focus true}
   (describe "on suites"
     (let [state (volatile! [])]
       (describe "manual maps"
@@ -134,10 +133,10 @@
 
 (defdescribe propagate-eachs-test
   (expect-it "combines correctly"
-    (= {:lazytest/context {:before-each [1 2 3 4 5 6]
-                           :after-each []}}
-       (meta (propagate-eachs {:lazytest/context {:before-each [1 2 3]}}
-                              (with-meta [] {:lazytest/context {:before-each [4 5 6]}}))))))
+    (= {:context {:before-each [1 2 3 4 5 6]
+                  :after-each []}}
+       (propagate-eachs {:context {:before-each [1 2 3]}}
+                        {:context {:before-each [4 5 6]}}))))
 
 (defdescribe complex-context-test
   (let [state (volatile! [])]

@@ -7,12 +7,9 @@
   (instance? TestCase obj))
 
 (defn test-case
-  "A test case function may execute arbitrary code and may have side effects.
+  "A test case body may execute arbitrary code and may have side effects.
   It should throw an exception to indicate failure. Returning without
-  throwing an exception indicates success.
-
-  Additional identifying metadata may be placed on the function, such
-  as :ns-name and :doc."
+  throwing an exception indicates success."
   {:arglists '([{:keys [type doc body context ns file line metadata] :as test-case}])}
   [base]
   (map->TestCase (-> base

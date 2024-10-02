@@ -22,15 +22,17 @@
         (suite? value)
         (set-var value this-var)
         ;; (defn example {:test (describe ...)})
-        (suite? test-metadata)
-        (set-var test-metadata this-var)
         ;; (defn example {:test (it ...)})
-        (test-case? test-metadata)
+        (or (suite? test-metadata)
+            (test-case? test-metadata))
         (let [new-test (describe this-var)]
-          (set-var (update new-test :tests conj test-metadata) this-var))
+          (set-var (update new-test :children conj test-metadata) this-var))
         ;; (defn example {:test #(expect ...)})
         (fn? test-metadata)
-        (set-var (describe this-var (it "`:test` metadata" (test-metadata))) this-var)))))
+        (set-var (describe this-var
+                   (-> (it "`:test` metadata" (test-metadata))
+                       (merge (select-keys m [:line :column]))))
+                 this-var)))))
 
 #_(comment
   (defn test-fn
@@ -55,6 +57,8 @@
     (describe "test-def-describe"
       (it "test-def-describe example")
       (it "test-def-describe example two")))
+
+  (find-var-test-value #'test-fn)
   )
 
 (defn- test-suites-for-ns [this-ns]
@@ -80,11 +84,13 @@
     (or (:test-suite (meta n)) ;; deprecated, undocumented
         (:lazytest/suite (meta n))
         (when-let [s (test-suites-for-ns n)]
-          (-> (meta n)
-              (assoc :suites s)
-              (assoc :doc (str (ns-name n)))
-              (assoc :type :lazytest/ns)
-              (suite))))))
+          (let [focused? (some #(-> % :metadata :focus) s)]
+            (-> (meta n)
+                (assoc :children s)
+                (assoc :doc (ns-name n))
+                (assoc :type :lazytest/ns)
+                (cond-> focused? (assoc-in [:metadata :focus] (boolean focused?)))
+                (suite)))))))
 
 (comment
   (find-ns-suite *ns*))
@@ -94,11 +100,14 @@
   If no names given, searches all namespaces."
   [& names]
   (let [names (or (seq names) (all-ns))
-        nses (mapv the-ns names)]
-    (suite {:type :lazytest/run
-            :nses nses
-            :suites (keep find-ns-suite nses)})))
+        nses (mapv the-ns names)
+        suites (keep find-ns-suite nses)
+        focused? (some #(-> % :metadata :focus) suites)]
+    (cond-> (suite {:type :lazytest/run
+                    :nses nses
+                    :children suites})
+      focused? (assoc-in [:metadata :focus] (boolean focused?)))))
 
 (comment
-  (:suites (find-suite)))
-
+  (load-file "corpus/find_tests/examples.clj")
+  (:children (find-suite 'find-tests.examples)))

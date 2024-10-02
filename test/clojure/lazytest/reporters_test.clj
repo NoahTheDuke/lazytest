@@ -16,11 +16,11 @@
   (expect-it "prints correctly"
     (= "=== FOCUSED TESTS ONLY ===\n\n"
        (-> (sut/focused nil {:type :begin-test-run
-                             :focus true})
+                             :metadata {:focus true}})
            (with-out-str-no-color))))
   (expect-it "prints nothing if not focused"
     (nil? (->> (sut/focused nil {:type :begin-test-run
-                                 :focus false})
+                                 :metadata {:focus false}})
                (with-out-str-no-color)))))
 
 (defn make-suite [& results]
@@ -31,10 +31,12 @@
    :children results})
 
 (defn ->passing [& {:as extra}]
-  (-> (merge {:type :pass
-              :doc "example test-case"
-              :message "passing"} extra)
-      (with-meta {:type ::tc/test-case-result})))
+  (-> (tc/test-case-result
+       :pass
+       (runner/prep-test-case
+        (tc/test-case {:doc "example test-case"
+                       :body (fn [])})))
+      (merge extra)))
 
 (defn ->failing [& {:as extra}]
   (let [data (merge {:file "example.clj"
@@ -45,7 +47,9 @@
                     extra)
         thrown (->ex-failed '() (= 1 2) data)]
     (tc/test-case-result
-      :fail (tc/test-case ^{:doc "example test-case"} (fn []))
+      :fail (runner/prep-test-case
+             (tc/test-case {:doc "example test-case"
+                            :body (fn [])}))
       thrown)))
 
 (defn ->erroring [& _]
@@ -54,7 +58,9 @@
                          :file "example.clj"
                          :line 1})]
     (tc/test-case-result
-      :fail (tc/test-case ^{:doc "example test-case"} (fn []))
+      :fail (runner/prep-test-case
+             (tc/test-case {:doc "example test-case"
+                            :body (fn [])}))
       thrown)))
 
 (defn stub-stack-trace
@@ -251,10 +257,10 @@
                  (with-out-str-no-color)))))
   (describe "ns-test-suite"
     (it "begin"
-      (expect (= "(" (-> (sut/dots* nil {:type :begin-ns-suite})
+      (expect (= "(" (-> (sut/dots* nil {:type :begin-test-ns})
                          (with-out-str-no-color)))))
     (it "end"
-      (expect (= ")" (-> (sut/dots* nil {:type :end-ns-suite})
+      (expect (= ")" (-> (sut/dots* nil {:type :end-test-ns})
                          (with-out-str-no-color))))))
   (describe "end test run"
     (it "adds a newline"
@@ -307,8 +313,7 @@
                     (-> (sut/nested* ctx (make-big-suite {:type t
                                                           :doc "example doc"}))
                         (with-out-str-no-color))))))
-           [:begin-test-run :begin-ns-suite :begin-test-var
-            :begin-test-suite :begin-test-seq])))
+           [:begin-test-run :begin-test-ns :begin-test-var :begin-test-suite])))
   (describe "test case results"
     (let [ctx (->config nil)]
       (it "pass"
@@ -347,11 +352,11 @@
 (defdescribe defdescribe-metadata-test
   (it "uses the var if given no doc string"
     (expect (= "  defdescribe-no-doc\n    √ works\n\n"
-               (-> (runner/run-test-var (->config {:reporter sut/nested*})
-                                        #'defdescribe-no-doc)
+               (-> (runner/run-test-var #'defdescribe-no-doc
+                                        (->config {:reporter sut/nested*}))
                    (with-out-str-no-color)))))
   (it "uses the doc string when available"
     (expect (= "  cool docs\n    √ works\n\n"
-               (-> (runner/run-test-var (->config {:reporter sut/nested*})
-                                        #'defdescribe-with-doc)
+               (-> (runner/run-test-var #'defdescribe-with-doc
+                                        (->config {:reporter sut/nested*}))
                    (with-out-str-no-color))))))

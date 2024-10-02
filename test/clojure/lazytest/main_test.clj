@@ -5,6 +5,10 @@
    [lazytest.main :as sut]
    [lazytest.runner :as-alias lr]))
 
+(defdescribe example-test
+  (describe "wtf"
+    (it "works?" (expect (= 1 1)))))
+
 (defdescribe filter-ns-test
   (describe "--namespace"
     (it "selects the right namespace"
@@ -15,13 +19,13 @@
           :fail 0
           :exit 0
           :results {::lr/source-type :lazytest/run
-                    :children [{::lr/source-type :lazytest/ns-suite
+                    :children [{::lr/source-type :lazytest/ns
                                 :doc 'filter-tests.a
-                                :children [{::lr/source-type :lazytest/test-var
+                                :children [{::lr/source-type :lazytest/var
                                             :doc "a-1-test"}
-                                           {::lr/source-type :lazytest/test-var
+                                           {::lr/source-type :lazytest/var
                                             :doc "a-2-test"}
-                                           {::lr/source-type :lazytest/test-var
+                                           {::lr/source-type :lazytest/var
                                             :doc "a-3-test"}]}]}}
          (sut/run ["--output" "quiet"
                    "--dir" "corpus"
@@ -33,13 +37,13 @@
           :fail 0
           :exit 0
           :results {::lr/source-type :lazytest/run
-                    :children [{::lr/source-type :lazytest/ns-suite
+                    :children [{::lr/source-type :lazytest/ns
                                 :doc 'filter-tests.b
-                                :children [{::lr/source-type :lazytest/test-var
+                                :children [{::lr/source-type :lazytest/var
                                             :doc "b-1-test"}
-                                           {::lr/source-type :lazytest/test-var
+                                           {::lr/source-type :lazytest/var
                                             :doc "b-2-test"}
-                                           {::lr/source-type :lazytest/test-var
+                                           {::lr/source-type :lazytest/var
                                             :doc "b-3-test"}]}]}}
          (sut/run ["--output" "quiet"
                    "--dir" "corpus"
@@ -53,9 +57,9 @@
           :fail 0
           :exit 0
           :results {::lr/source-type :lazytest/run
-                    :children [{::lr/source-type :lazytest/ns-suite
+                    :children [{::lr/source-type :lazytest/ns
                                 :doc 'filter-tests.a
-                                :children [{::lr/source-type :lazytest/test-var
+                                :children [{::lr/source-type :lazytest/var
                                             :doc "a-1-test"}]}]}}
          (sut/run ["--output" "quiet"
                    "--dir" "corpus"
@@ -69,13 +73,13 @@
           :exit 0
           :results {::lr/source-type :lazytest/run
                     :doc nil?
-                    :children [{::lr/source-type :lazytest/ns-suite
+                    :children [{::lr/source-type :lazytest/ns
                                 :doc 'filter-tests.a
-                                :children [{::lr/source-type :lazytest/test-var
+                                :children [{::lr/source-type :lazytest/var
                                             :doc "a-1-test"}]}
-                               {::lr/source-type :lazytest/ns-suite
+                               {::lr/source-type :lazytest/ns
                                 :doc 'filter-tests.b
-                                :children [{::lr/source-type :lazytest/test-var
+                                :children [{::lr/source-type :lazytest/var
                                             :doc "b-2-test"}]}]}}
          (sut/run ["--output" "quiet"
                    "--dir" "corpus"
@@ -90,17 +94,17 @@
         :exit 0
         :results {::lr/source-type :lazytest/run
                   :doc nil?
-                  :children [{::lr/source-type :lazytest/ns-suite
+                  :children [{::lr/source-type :lazytest/ns
                               :doc 'filter-tests.a
-                              :children [{::lr/source-type :lazytest/test-var
+                              :children [{::lr/source-type :lazytest/var
                                           :doc "a-1-test"}
-                                         {::lr/source-type :lazytest/test-var
+                                         {::lr/source-type :lazytest/var
                                           :doc "a-2-test"}
-                                         {::lr/source-type :lazytest/test-var
+                                         {::lr/source-type :lazytest/var
                                           :doc "a-3-test"}]}
-                             {::lr/source-type :lazytest/ns-suite
+                             {::lr/source-type :lazytest/ns
                               :doc 'filter-tests.b
-                              :children [{::lr/source-type :lazytest/test-var
+                              :children [{::lr/source-type :lazytest/var
                                           :doc "b-2-test"}]}]}}
        (sut/run ["--output" "quiet"
                  "--dir" "corpus"
@@ -115,9 +119,9 @@
           :fail 0
           :exit 0
           :results {::lr/source-type :lazytest/run
-                    :children [{::lr/source-type :lazytest/ns-suite
+                    :children [{::lr/source-type :lazytest/ns
                                 :doc 'filter-tests.a
-                                :children [{::lr/source-type :lazytest/test-var
+                                :children [{::lr/source-type :lazytest/var
                                             :doc "a-1-test"}]}]}}
          (sut/run ["--output" "quiet"
                    "--dir" "corpus/filter_tests"
@@ -130,9 +134,9 @@
           :fail 0
           :exit 0
           :results {::lr/source-type :lazytest/run
-                    :children [{::lr/source-type :lazytest/ns-suite
+                    :children [{::lr/source-type :lazytest/ns
                                 :doc 'filter-tests.a
-                                :children [{::lr/source-type :lazytest/test-var
+                                :children [{::lr/source-type :lazytest/var
                                             :doc "a-2-test"}]}]}}
          (sut/run ["--output" "quiet"
                    "--dir" "corpus/filter_tests"
@@ -146,19 +150,19 @@
           :fail 0
           :exit 0
           :results {::lr/source-type :lazytest/run
-                    :children [{::lr/source-type :lazytest/ns-suite
+                    :children [{::lr/source-type :lazytest/ns
                                 :doc 'filter-tests.a
-                                :children [{::lr/source-type :lazytest/test-var
+                                :children [{::lr/source-type :lazytest/var
                                             :doc "a-2-test"}
-                                           {::lr/source-type :lazytest/test-var
+                                           {::lr/source-type :lazytest/var
                                             :doc "a-3-test"}]}
-                               {::lr/source-type :lazytest/ns-suite
+                               {::lr/source-type :lazytest/ns
                                 :doc 'filter-tests.b
-                                :children [{::lr/source-type :lazytest/test-var
+                                :children [{::lr/source-type :lazytest/var
                                             :doc "b-1-test"}
-                                           {::lr/source-type :lazytest/test-var
+                                           {::lr/source-type :lazytest/var
                                             :doc "b-2-test"}
-                                           {::lr/source-type :lazytest/test-var
+                                           {::lr/source-type :lazytest/var
                                             :doc "b-3-test"}]}]}}
          (sut/run ["--output" "quiet"
                    "--dir" "corpus/filter_tests"
@@ -171,19 +175,19 @@
           :fail 0
           :exit 0
           :results {::lr/source-type :lazytest/run
-                    :children [{::lr/source-type :lazytest/ns-suite
+                    :children [{::lr/source-type :lazytest/ns
                                 :doc 'filter-tests.a
-                                :children [{::lr/source-type :lazytest/test-var
+                                :children [{::lr/source-type :lazytest/var
                                               :doc "a-1-test"}
-                                           {::lr/source-type :lazytest/test-var
+                                           {::lr/source-type :lazytest/var
                                             :doc "a-3-test"}]}
-                               {::lr/source-type :lazytest/ns-suite
+                               {::lr/source-type :lazytest/ns
                                 :doc 'filter-tests.b
-                                :children [{::lr/source-type :lazytest/test-var
+                                :children [{::lr/source-type :lazytest/var
                                             :doc "b-1-test"}
-                                           {::lr/source-type :lazytest/test-var
+                                           {::lr/source-type :lazytest/var
                                             :doc "b-2-test"}
-                                           {::lr/source-type :lazytest/test-var
+                                           {::lr/source-type :lazytest/var
                                             :doc "b-3-test"}]}]}}
          (sut/run ["--output" "quiet"
                    "--dir" "corpus/filter_tests"

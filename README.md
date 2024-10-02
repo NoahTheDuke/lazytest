@@ -374,6 +374,22 @@ Execution Namespace: Execute in current file namespace
 Results: Print results to REPL output
 ```
 
+## Lazytest Internals
+
+The smallest unit of testing is a *test case* (see `lazytest.test-case/test-case`). When the `:body` function is called, it may throw an exception to indicate failure. If it does not throw an exception, it is assumed to have passed. The return value of a test case is always ignored. Running a test case may have side effects.
+
+**Note:** The macros `lazytest.core/it` and `lazytest.core/expect-it` create test cases.
+
+Tests cases are organized into *suites* (see `lazytest.suite/suite`). A suite has `:children`, which is a sequence, possibly lazy, of test cases and/or test suites. Suites, therefore, may be nested inside other suites, but nothing may be nested inside a test case.
+
+**Note:** The macro `lazytest.core/describe` creates a test suite. The macro `lazytest.core/defdescribe` creates a no-argument function that returns a test suite.
+
+A test suite body SHOULD NOT have side effects; it is only used to generate test cases and/or other test suites.
+
+The test *runnner* is responsible for gathering suites (see `lazytest.find/find-suite` and `lazytest.filter/filter-tree`) and running test cases (see `lazytest.test-case/try-test-case`). It may also provide feedback on the success of tests as they run.
+
+The test runner also returns a sequence of *results*, which are either *suite results* (see `lazytest.suite/suite-result`) or *test case results* (see `lazytest.test-case/test-case-result`). That sequence of results is passed to a *reporter*, which formats results for display to the user. Multiple reporters are provided, see the namespace `lazytest.reporters`.
+
 ## License
 
 Originally by [Alessandra Sierra](https://www.lambdasierra.com).

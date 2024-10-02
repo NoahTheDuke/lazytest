@@ -4,7 +4,7 @@
 
 ### Changed
 
-- Rewrite internals to use nested maps instead of nested sequences and functions.
+- Rewrite internals to use nested maps instead of nested sequences and functions. Suites (and `:lazytest/run`s and `:lazytest/ns`es) have `:children`, which can be other suites or test cases.
 - Deprecated `given` in favor of `let`.
 
 ### Features

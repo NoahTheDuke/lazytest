@@ -6,7 +6,7 @@
 (def state (volatile! nil))
 
 (set-ns-context!
- [(around [f] (vreset! state []) (f) (vreset! state []))
+ [(around [f] (vreset! state []) (f) (vreset! state ::around-after))
   (before-each (vswap! state conj :before-each))])
 
 (defdescribe context-namespace-test

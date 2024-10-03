@@ -221,9 +221,8 @@
 (defmacro given
   "DEPRECATED: No longer needed. Use a normal `let`, please.
 
-  Like 'let' but returns the expressions of body in a vector.
-  Suitable for nesting inside 'describe'."
-  {:deprecated "<<next>>"}
+  Alias for 'let'."
+  {:deprecated "1.0.0"}
   [bindings & body]
   `(let ~bindings
      ~@body))

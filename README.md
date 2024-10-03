@@ -397,9 +397,9 @@ This is inspired by [Mocha](https://mochajs.org)'s excellent documentation.
         2. For each child in `:children`, restart from step 1 of the appropriate sequence.
         3. Run each `after` hook.
     * For test cases:
-        1. Run each `before-each` hook, outmost first, in definition order.
+        1. Run each `before-each` hook (including from all parents), outmost first, in definition order.
         2. Execute the test function, get the `test-case-result`.
-        3. Run each `after-each` hook, innermost first, in definition order.
+        3. Run each `after-each` hook (including from all parents), innermost first, in definition order.
 9. Depending on the chosen reporter, Lazytest prints the results of each suite and test case immediately or at another point.
 10. The run is ended with `System/exit`, and the exit value is either `0` for no failures or `1` for any number of failures.
 

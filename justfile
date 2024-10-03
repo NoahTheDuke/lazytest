@@ -11,6 +11,9 @@ current_version := `cat resources/LAZYTEST_VERSION | xargs`
     sd '{{current_version}}' '{{version}}' README.md
     sd '## Unreleased' '## Unreleased\n\n## {{version}}\n\nReleased `{{today}}`.' CHANGELOG.md
 
+clojure-lsp:
+    clojure-lsp diagnostics
+
 [no-exit-message]
 test *args:
     clojure -T:prep javac
@@ -18,7 +21,7 @@ test *args:
 
 [no-exit-message]
 test-all *args:
-    clj-kondo  --parallel --lint dev src test
+    just clojure-lsp
     just test {{args}}
 
 repl arg="":

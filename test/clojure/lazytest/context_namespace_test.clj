@@ -3,7 +3,7 @@
    [lazytest.core :refer [around before-each defdescribe expect-it
                           set-ns-context!]]))
 
-(def state (volatile! nil))
+(def state (volatile! ::baseline))
 
 (set-ns-context!
  [(around [f] (vreset! state []) (f) (vreset! state ::around-after))

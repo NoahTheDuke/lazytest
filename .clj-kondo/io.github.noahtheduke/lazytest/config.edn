@@ -1,7 +1,11 @@
 {:lint-as {lazytest.core/defdescribe clojure.core/def
+           lazytest.core/defcontext clojure.core/def
+           lazytest.core/defsuite clojure.core/def
+           lazytest.core/facts clj-kondo.lint-as/def-catch-all
+           lazytest.core/fact clj-kondo.lint-as/def-catch-all
            lazytest.core/given clojure.core/let
            lazytest.core/around clojure.core/fn
-           lazytest.clojure.test/are clojure.test/are
-           lazytest.clojure.test/deftest clojure.test/deftest
-           lazytest.clojure.test/is clojure.test/is
-           lazytest.clojure.test/testing clojure.test/testing}}
+           lazytest.core/are clojure.test/are
+           lazytest.core/deftest clojure.test/deftest
+           lazytest.core/is clojure.test/is
+           lazytest.core/testing clojure.test/testing}}

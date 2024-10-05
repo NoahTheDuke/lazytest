@@ -1,9 +1,12 @@
 (ns lazytest.core
+  (:refer-clojure :exclude [test])
   (:require
    [lazytest.context :as ctx]
    [lazytest.malli]
-   [lazytest.suite :refer [suite]]
-   [lazytest.test-case :refer [test-case]])
+   [lazytest.suite :as suite]
+   [lazytest.test-case :as test-case]
+   [clojure.string :as str]
+   [clojure.template :as temp])
   (:import
    (lazytest ExpectationFailed)))
 
@@ -176,7 +179,7 @@
         [attr-map children] (get-arg map? body)
         data (merged-data children &form doc (dissoc attr-map :context))
         context (:context attr-map)]
-    `(let [suite# (binding [*context* (atom (suite ~data))]
+    `(let [suite# (binding [*context* (atom (suite/suite ~data))]
                     (let [ctx-fns# (binding [*context* nil] ~context)]
                       (assert (or (nil? ctx-fns#) (sequential? ctx-fns#))
                               ":context must be a sequence")
@@ -204,7 +207,7 @@
   {:arglists '([test-name & children]
                [test-name doc? attr-map? & children])}
   [test-name & body]
-  (assert (symbol? test-name) "test-name must be a symbol")
+  (assert (symbol? test-name) (str "test-name must be a symbol, given " (pr-str test-name)))
   (let [[doc body] (get-arg string? body)
         [attr-map body] (get-arg map? body)
         test-var (list 'var (symbol (str *ns*) (str test-name)))
@@ -245,7 +248,7 @@
   NOTE: Because failure requires an exception, no assertions after
   the thrown exception will be run."
   {:arglists '([doc & body]
-               [doc sym? attr-map? & body])}
+               [doc|sym? attr-map? & body])}
   [doc & body]
   (assert (pos? (count body)) "Must provide body")
   (let [doc (if (symbol? doc)
@@ -256,7 +259,7 @@
         [attr-map body] (get-arg map? body)
         metadata (merged-data body &form doc (dissoc attr-map :context))
         context (:context attr-map)]
-    `(let [test-case# (test-case
+    `(let [test-case# (test-case/test-case
                        (assoc ~metadata
                               :body (fn it# [] (let [ret# (do ~@body)] ret#))
                               :context (binding [*context* nil]
@@ -278,7 +281,7 @@
   expr is a single expression, which must return logical true to
   indicate the test case passes or logical false to indicate failure."
   {:arglists '([doc expr]
-               [doc sym? attr-map? expr])}
+               [doc|sym? attr-map? expr])}
   [doc & body]
   (let [doc (if (symbol? doc)
               (if (contains? &env doc)
@@ -293,7 +296,7 @@
       (throw (IllegalArgumentException. "expect-it takes 1 expr")))
     (when (and (seq? assertion) (symbol? (first assertion)))
       (assert (not= "expect" (name (first assertion)))))
-    `(let [test-case# (test-case
+    `(let [test-case# (test-case/test-case
                        (assoc ~metadata :body (fn expect-it# [] (expect ~assertion ~doc))))]
        (if *context*
          (swap! *context* update :children conj test-case#)
@@ -374,3 +377,125 @@
   Useful in `expect-it` or `expect`."
   [f]
   (f) true)
+
+;;;; Interfaces
+
+;;; BDD interface aliases
+
+(defmacro defcontext
+  "Alias of [[defdescribe]]."
+  {:arglists '([test-name & children]
+               [test-name doc? attr-map? & children])}
+  [test-name & body]
+  (with-meta `(defdescribe ~test-name ~@body) (meta &form)))
+
+(defmacro context
+  "Alias of [[describe]]."
+  {:arglists '([doc & children]
+               [doc attr-map? & children])}
+  [doc & body]
+  (with-meta `(describe ~doc ~@body) (meta &form)))
+
+(defmacro specify
+  "Alias of [[it]]."
+  {:arglists '([doc & body]
+               [doc|sym? attr-map? & body])}
+  [doc & body]
+  (with-meta `(it ~doc ~@body) (meta &form)))
+
+;;; TDD interface
+
+(defmacro defsuite
+  "Alias of [[defdescribe]] for TDD interface."
+  {:arglists '([test-name & children]
+               [test-name doc? attr-map? & children])}
+  [test-name & body]
+  (with-meta `(defdescribe ~test-name ~@body) (meta &form)))
+
+(defmacro suite
+  "Alias of [[describe]] for TDD interface. Unrelated to [[lazytest.suite/suite]]."
+  {:arglists '([doc & children]
+               [doc attr-map? & children])}
+  [doc & body]
+  (with-meta `(describe ~doc ~@body) (meta &form)))
+
+(defmacro test
+  "Alias of [[it]] for TDD interface."
+  {:arglists '([doc & body]
+               [doc|sym? attr-map? & body])}
+  [doc & body]
+  (with-meta `(it ~doc ~@body) (meta &form)))
+
+;;; clojure.test interface
+
+(def ^:dynamic *testing-strs*
+  "Adapted from [[clojure.test/*testing-contexts*]]."
+  (list))
+
+(defmacro testing
+  "Adapted from [[clojure.test/testing]]."
+  [doc & body]
+  `(binding [*testing-strs* (cons ~doc *testing-strs*)]
+     ~@body))
+
+(defn testing-str []
+  (when (seq *testing-strs*)
+    (str/join " " (reverse *testing-strs*))))
+
+(defmacro is
+  "Adapted from [[clojure.test/is]]."
+  ([form] `(expect ~form (testing-str)))
+  ([form msg]
+   `(expect ~form (str (testing-str) "\n" ~msg))))
+
+(defmacro are
+  "Adapted from [[clojure.test/are]]."
+  [argv expr & args]
+  (if (or
+       ;; (are [] true) is meaningless but ok
+       (and (empty? argv) (empty? args))
+       ;; Catch wrong number of args
+       (and (pos? (count argv))
+            (pos? (count args))
+            (zero? (mod (count args) (count argv)))))
+    (let [checks (map (fn [a] `(is ~(with-meta (temp/apply-template argv expr a) (meta &form)))) 
+                      (partition (count argv) args))]
+      `(do ~@checks))
+    (throw (IllegalArgumentException. "The number of args doesn't match are's argv."))))
+
+(defmacro deftest
+  "Adapted from [[clojure.test/deftest]]."
+  [test-name & body]
+  (assert (symbol? test-name) "test-name must be a symbol")
+  (with-meta
+    `(defdescribe ~test-name
+      (it "" ~@body))
+    (meta &form)))
+
+;;; Midje interface
+
+(defmacro facts
+  "If given a test-name symbol while not in an existing context, [[facts]] is an alias for [[defdescribe]].
+
+  If given a string and in an existing context, [[facts]] is an alias for [[describe]].
+
+  If given a string and not in an existing context, or not given a symbol or string, throws an error."
+  {:arglists '([test-name attr-map? & children]
+               [doc attr-map? & children])}
+  [?doc & body]
+  (assert (or (string? ?doc) (symbol? ?doc)) "Must provide string or symbol.")
+  (cond
+     (symbol? ?doc)
+     (with-meta `(defdescribe ~?doc ~@body) (meta &form))
+     (string? ?doc)
+     (with-meta `(describe ~?doc ~@body) (meta &form))
+     :else
+     (throw (IllegalArgumentException. (str "Expected string or symbol, received " (type '~?doc) ".")))))
+
+(defmacro fact
+  "Alias of [[it]] for Midje interface.
+
+  Must still explicitly write assertions as no `given => result` syntax is supported."
+  ([expr] (with-meta `(it nil ~expr) (meta &form)))
+  ([doc expr]
+   (with-meta `(it ~doc ~expr) (meta &form))))

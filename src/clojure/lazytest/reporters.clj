@@ -88,8 +88,10 @@
                 child (assoc child :docs docs)]]
     (results-builder config child)))
 
-(defn- print-config [docs]
-  (loop [[doc & docs] (seq (filter identity docs))
+(defn- print-docs [docs]
+  (loop [[doc & docs] (seq (->> docs
+                                (filter identity)
+                                (remove #(when (string? %) (str/blank? %)))))
          idx 0]
     (when doc
       (indent idx)
@@ -134,8 +136,7 @@
       (newline))))
 
 (defmethod results-builder :fail [_config result]
-  (let [result (update result :docs conj (tc/identifier result))]
-    (print-config (:docs result)))
+  (print-docs (conj (:docs result) (tc/identifier result)))
   (let [message (str (when-not (instance? ExpectationFailed (:thrown result))
                        (str (.getName (class (:thrown result))) ": "))
                      (:message result))]
@@ -262,6 +263,7 @@
   (println "\nFAIL in" (clojure-test-case-str config result))
   (when-let [strings (->> (conj (:lazytest.runner/suite-history config) result)
                           (keep :doc)
+                          (drop 1)
                           (seq))]
     (println (str/join " " strings)))
   (when-let [message (:message result)]
@@ -273,6 +275,7 @@
   (println "\nERROR in" (clojure-test-case-str config result))
   (when-let [strings (->> (conj (:lazytest.runner/suite-history config) result)
                           (keep :doc)
+                          (drop 1)
                           (seq))]
     (println (str/join " " strings)))
   (when-let [message (:message result)]
@@ -291,11 +294,11 @@
     (clojure-test-error config result)))
 
 (defmethod clojure-test :begin-test-ns [_ result]
-  (println "\nTesting" (ns-name (:ns-name result))))
+  (println "\nTesting" (ns-name (:doc result))))
 
 (defmethod clojure-test :end-test-run [_ m]
   (let [results (:results m)
-        test-vars (count (filter #(= :lazytest/var (type (:source %)))
+        test-vars (count (filter #(= :lazytest/var (:type (:source %)))
                                  (result-seq results)))
         test-case-results (remove suite-result? (result-seq results))
         total (count test-case-results)
@@ -382,7 +385,7 @@
 (defmulti profile {:arglists '([config m])} #'reporter-dispatch)
 (defmethod profile :default [_ _])
 (defmethod profile :end-test-run [_config {:keys [results]}]
-  (let [types (-> (group-by (comp type :source) (result-seq results))
+  (let [types (-> (group-by (comp :type :source) (result-seq results))
                   (select-keys [:lazytest/ns :lazytest/var])
                   (update-vals #(filterv :lazytest.runner/duration %)))
         total-duration (->> (mapcat identity (vals types))

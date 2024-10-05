@@ -1,5 +1,3 @@
-{:lint-as {lazytest.core/defdescribe clojure.core/def
-           lazytest.core/given clojure.core/let
-           lazytest.core/around clojure.core/fn}
+{:config-paths ["resources/clj-kondo.exports/io.github.noahtheduke/lazytest/config.edn"]
  :linters {:clojure-lsp/unused-public-var {:level :off}
            :unused-binding {:exclude-patterns ["^this"]}}}

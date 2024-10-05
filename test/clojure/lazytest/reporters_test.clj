@@ -274,7 +274,6 @@
   ^{:type ::s/suite-result}
   {:type (:type opts)
    :doc (:doc opts)
-   :ns-name (:ns-name opts)
    :var (:var opts)
    :children
    (or (:children opts)
@@ -296,7 +295,7 @@
         (expect
           (= "  example.namespace\n"
              (-> (sut/nested* ctx (make-big-suite {:type :begin-test-run
-                                                   :ns-name "example.namespace"}))
+                                                   :doc "example.namespace"}))
                  (with-out-str-no-color)))))
       (it "prints vars"
         (expect
@@ -346,8 +345,8 @@
         (expect
           (= (* 2 depth) (- (count out) (count (str/triml out)))))))))
 
-(defdescribe defdescribe-no-doc nil (it "works"))
-(defdescribe defdescribe-with-doc "cool docs" (it "works"))
+(defdescribe defdescribe-no-doc nil (it "works" nil))
+(defdescribe defdescribe-with-doc "cool docs" (it "works" nil))
 
 (defdescribe defdescribe-metadata-test
   (it "uses the var if given no doc string"

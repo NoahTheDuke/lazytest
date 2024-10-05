@@ -204,6 +204,7 @@
   {:arglists '([test-name & children]
                [test-name doc? attr-map? & children])}
   [test-name & body]
+  (assert (symbol? test-name) "test-name must be a symbol")
   (let [[doc body] (get-arg string? body)
         [attr-map body] (get-arg map? body)
         test-var (list 'var (symbol (str *ns*) (str test-name)))
@@ -246,6 +247,7 @@
   {:arglists '([doc & body]
                [doc sym? attr-map? & body])}
   [doc & body]
+  (assert (pos? (count body)) "Must provide body")
   (let [doc (if (symbol? doc)
               (if (contains? &env doc)
                 doc

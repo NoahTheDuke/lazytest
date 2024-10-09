@@ -1,7 +1,7 @@
 (ns lazytest.core-test
   (:require
    [lazytest.core :refer [causes-with-msg? causes? defdescribe describe expect
-                          expect-it it ok? throws-with-msg? throws?]])
+                          expect-it it ok? throws-with-msg? throws? context specify]])
   (:import
    clojure.lang.ExceptionInfo
    lazytest.ExpectationFailed))
@@ -123,3 +123,8 @@
                 (assert (= 1 2) "these should be equal"))))
       (catch AssertionError e
         (expect (= "Assert failed: these should be equal\n(= 1 2)" (ex-message e)))))))
+
+(defdescribe context-test
+  (context "this works correctly"
+    (specify "inside works too"
+      (expect (= 1 1)))))

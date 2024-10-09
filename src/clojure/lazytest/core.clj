@@ -4,23 +4,24 @@
    [lazytest.context :as ctx]
    [lazytest.malli]
    [lazytest.suite :as suite]
-   [lazytest.test-case :as test-case]
-   [clojure.string :as str]
-   [clojure.template :as temp])
+   [lazytest.test-case :as test-case])
   (:import
    (lazytest ExpectationFailed)))
 
 ;;; Utilities
 
-(defn- get-arg
-  "Pops first argument from args if (pred arg) is true.
+(defn ^:no-doc get-arg
+  "For internal use only.
+  Pops first argument from args if (pred arg) is true.
   Returns a vector [first-arg remaining-args] or [nil args]."
   [pred args]
   (if (pred (first args))
     [(first args) (next args)]
     [nil args]))
 
-(defn- merged-data [body form docstring metadata]
+(defn ^:no-doc merged-data
+  "For internal use only."
+  [body form docstring metadata]
   (merge {:doc docstring
           :file *file*
           :ns *ns*}
@@ -378,16 +379,7 @@
   [f]
   (f) true)
 
-;;;; Interfaces
-
-;;; BDD interface aliases
-
-(defmacro defcontext
-  "Alias of [[defdescribe]]."
-  {:arglists '([test-name & children]
-               [test-name doc? attr-map? & children])}
-  [test-name & body]
-  (with-meta `(defdescribe ~test-name ~@body) (meta &form)))
+;;;; Aliases
 
 (defmacro context
   "Alias of [[describe]]."
@@ -402,100 +394,3 @@
                [doc|sym? attr-map? & body])}
   [doc & body]
   (with-meta `(it ~doc ~@body) (meta &form)))
-
-;;; TDD interface
-
-(defmacro defsuite
-  "Alias of [[defdescribe]] for TDD interface."
-  {:arglists '([test-name & children]
-               [test-name doc? attr-map? & children])}
-  [test-name & body]
-  (with-meta `(defdescribe ~test-name ~@body) (meta &form)))
-
-(defmacro suite
-  "Alias of [[describe]] for TDD interface. Unrelated to [[lazytest.suite/suite]]."
-  {:arglists '([doc & children]
-               [doc attr-map? & children])}
-  [doc & body]
-  (with-meta `(describe ~doc ~@body) (meta &form)))
-
-(defmacro test
-  "Alias of [[it]] for TDD interface."
-  {:arglists '([doc & body]
-               [doc|sym? attr-map? & body])}
-  [doc & body]
-  (with-meta `(it ~doc ~@body) (meta &form)))
-
-;;; clojure.test interface
-
-(def ^:dynamic *testing-strs*
-  "Adapted from [[clojure.test/*testing-contexts*]]."
-  (list))
-
-(defmacro testing
-  "Adapted from [[clojure.test/testing]]."
-  [doc & body]
-  `(binding [*testing-strs* (cons ~doc *testing-strs*)]
-     ~@body))
-
-(defn testing-str []
-  (when (seq *testing-strs*)
-    (str/join " " (reverse *testing-strs*))))
-
-(defmacro is
-  "Adapted from [[clojure.test/is]]."
-  ([form] `(expect ~form (testing-str)))
-  ([form msg]
-   `(expect ~form (str (testing-str) "\n" ~msg))))
-
-(defmacro are
-  "Adapted from [[clojure.test/are]]."
-  [argv expr & args]
-  (if (or
-       ;; (are [] true) is meaningless but ok
-       (and (empty? argv) (empty? args))
-       ;; Catch wrong number of args
-       (and (pos? (count argv))
-            (pos? (count args))
-            (zero? (mod (count args) (count argv)))))
-    (let [checks (map (fn [a] `(is ~(with-meta (temp/apply-template argv expr a) (meta &form)))) 
-                      (partition (count argv) args))]
-      `(do ~@checks))
-    (throw (IllegalArgumentException. "The number of args doesn't match are's argv."))))
-
-(defmacro deftest
-  "Adapted from [[clojure.test/deftest]]."
-  [test-name & body]
-  (assert (symbol? test-name) "test-name must be a symbol")
-  (with-meta
-    `(defdescribe ~test-name
-      (it "" ~@body))
-    (meta &form)))
-
-;;; Midje interface
-
-(defmacro facts
-  "If given a test-name symbol while not in an existing context, [[facts]] is an alias for [[defdescribe]].
-
-  If given a string and in an existing context, [[facts]] is an alias for [[describe]].
-
-  If given a string and not in an existing context, or not given a symbol or string, throws an error."
-  {:arglists '([test-name attr-map? & children]
-               [doc attr-map? & children])}
-  [?doc & body]
-  (assert (or (string? ?doc) (symbol? ?doc)) "Must provide string or symbol.")
-  (cond
-     (symbol? ?doc)
-     (with-meta `(defdescribe ~?doc ~@body) (meta &form))
-     (string? ?doc)
-     (with-meta `(describe ~?doc ~@body) (meta &form))
-     :else
-     (throw (IllegalArgumentException. (str "Expected string or symbol, received " (type '~?doc) ".")))))
-
-(defmacro fact
-  "Alias of [[it]] for Midje interface.
-
-  Must still explicitly write assertions as no `given => result` syntax is supported."
-  ([expr] (with-meta `(it nil ~expr) (meta &form)))
-  ([doc expr]
-   (with-meta `(it ~doc ~expr) (meta &form))))

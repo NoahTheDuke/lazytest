@@ -75,14 +75,14 @@
 
   By default, recurses on all Vars in a namespace looking for values
   for which lazytest.suite/suite? is true. If a namesapce
-  has :lazytest/suite metadata, uses that value instead.
+  has :lazytest/ns-suite metadata, uses that value instead.
 
   Always returns nil for the clojure.core namespace, to avoid special
   Vars such as *1, *2, *3"
   [n]
   (when-not (= (the-ns 'clojure.core) n)
     (or (:test-suite (meta n)) ;; deprecated, undocumented
-        (:lazytest/suite (meta n))
+        (:lazytest/ns-suite (meta n))
         (when-let [s (test-suites-for-ns n)]
           (let [focused? (some #(-> % :metadata :focus) s)]
             (-> (meta n)

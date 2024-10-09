@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.1.0
+
+Released `2024-10-09`.
+
 ### Features
 
 - Add 4 "interfaces", namespaces of alternative top-level vars to define test suites and test cases: `clojure.test`, `Midje`, `QUnit`, and `xUnit`. This allows for writing tests in a more comfortable API while still using Lazytest's machinery. See each namespace's docstring for further details.

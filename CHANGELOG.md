@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.1.1
+
+Released `2024-10-09`.
+
 ### Fixed
 
 - Added the `lazytest.core` aliases to the readme.

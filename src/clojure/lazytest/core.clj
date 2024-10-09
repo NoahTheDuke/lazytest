@@ -394,3 +394,10 @@
                [doc|sym? attr-map? & body])}
   [doc & body]
   (with-meta `(it ~doc ~@body) (meta &form)))
+
+(defmacro should
+  "Alias of [[expect]]."
+  ([expr]
+   (with-meta `(expect ~expr nil) (meta &form)))
+  ([expr msg]
+   (with-meta `(expect ~expr ~msg) (meta &form))))

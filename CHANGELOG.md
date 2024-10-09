@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### Features
+
+- Add 4 "interfaces", namespaces of alternative top-level vars to define test suites and test cases: `clojure.test`, `Midje`, `QUnit`, and `xUnit`. This allows for writing tests in a more comfortable API while still using Lazytest's machinery. See each namespace's docstring for further details.
+- Add popular aliases for `lazytest.core` vars:
+    - `describe` -> `context`
+    - `it` -> `specify`
+    - `expect` -> `should`
+
+### Fixed
+
+- Change documentation from `:lazytest/suite` to `:lazytest/ns-suite` for namespace-defined suites.
+- Clean up reporters checking types instead of `:type`.
+
 ## 1.0.0
 
 Released `2024-10-03`.

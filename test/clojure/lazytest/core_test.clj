@@ -1,7 +1,8 @@
 (ns lazytest.core-test
   (:require
-   [lazytest.core :refer [causes-with-msg? causes? defdescribe describe expect
-                          expect-it it ok? throws-with-msg? throws? context specify]])
+   [lazytest.core :refer [causes-with-msg? causes? context defdescribe
+                          describe expect expect-it it ok? should specify
+                          throws-with-msg? throws?]])
   (:import
    clojure.lang.ExceptionInfo
    lazytest.ExpectationFailed))
@@ -127,4 +128,4 @@
 (defdescribe context-test
   (context "this works correctly"
     (specify "inside works too"
-      (expect (= 1 1)))))
+      (should (= 1 1)))))

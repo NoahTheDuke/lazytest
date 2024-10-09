@@ -11,7 +11,7 @@ Add it to your deps.edn or project.clj:
 
 ```clojure
 {:aliases
- {:test {:extra-deps {io.github.noahtheduke/lazytest {:mvn/version "1.0.0"}}
+ {:test {:extra-deps {io.github.noahtheduke/lazytest {:mvn/version "1.1.0"}}
          :extra-paths ["test"]
          :main-opts ["-m" "lazytest.main"]}}}
 ```
@@ -130,6 +130,31 @@ Define tests with `defdescribe`, group test suites and test cases together into 
 The `expect` macro is like `assert` but carries more information about the failure, such as the given form, the returned value, and the location of the call. It throws an exception if the expression does not evaluate to logical true.
 
 If an `it` runs to completion without throwing an exception, the test case is considered to have passed.
+
+### Aliases
+
+To help write meaningful tests, a couple aliases have been defined for those who prefer different vocabulary:
+
+* `context` for `describe`
+* `specify` for `it`
+* `should` for `expect`
+
+These can be used interchangeably:
+
+```clojure
+(defdescribe +-test
+  (context "with integers"
+    (specify "that sums work"
+      (should (= 7 (+ 3 4)) "follows basic math")
+      (expect (not= 7 (1 + 1)))))
+```
+
+There are a number of experimental namespaces that define other aliases, with distinct behavior, if the base set of vars don't fit your needs:
+
+* [[lazytest.experimental.interfaces.clojure-test]] to mimic `clojure.test`.
+* [[lazytest.experimental.interfaces.midje]] to mimic [Midje](https://github.com/marick/midje).
+* [[lazytest.experimental.interfaces.qunit]] to mimic [QUnit](https://qunitjs.com/).
+* [[lazytest.experimental.interfaces.xunit]] to mimic a standard [xUnit](https://en.wikipedia.org/wiki/XUnit) framework.
 
 ### Var Metadata
 

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Fixed
+
+- Added the `lazytest.core` aliases to the readme.
+- Added a note about the experimental to the readme.
+- Hide some of the helper functions from the docs.
+
 ## 1.1.0
 
 Released `2024-10-09`.

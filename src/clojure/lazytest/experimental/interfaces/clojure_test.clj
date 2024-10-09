@@ -1,9 +1,9 @@
 (ns lazytest.experimental.interfaces.clojure-test 
   "EXPERIMENTAL. COULD BE CHANGED AT ANY TIME. Please share usage reports at https://github.com/noahtheduke/lazytest/issues
 
-  An adaption of the built-in `clojure.test` framework. [[testing]] works the same way as [[clojure.test/testing]], so it does not support metadata selection like [[lazytest.core/describe]].
+  An adaption of the built-in `clojure.test` framework. [[testing]] works the same way as `clojure.test/testing`, so it does not support metadata selection like [[lazytest.core/describe]].
 
-  Supported [[clojure.test]] vars:
+  Supported `clojure.test` vars:
   * [[deftest]]
   * [[testing]]
   * [[is]]
@@ -30,28 +30,28 @@
     [lazytest.core :refer [expect defdescribe it]]
     [clojure.template :as temp]))
 
-(def ^:dynamic *testing-strs*
-  "Adapted from [[clojure.test/*testing-contexts*]]."
+(def ^:dynamic ^:no-doc *testing-strs*
+  "Adapted from `clojure.test/*testing-contexts*`."
   (list))
 
 (defmacro testing
-  "Adapted from [[clojure.test/testing]]."
+  "Adapted from `clojure.test/testing`."
   [doc & body]
   `(binding [*testing-strs* (cons ~doc *testing-strs*)]
      ~@body))
 
-(defn testing-str []
+(defn ^:no-doc testing-str []
   (when (seq *testing-strs*)
     (str/join " " (reverse *testing-strs*))))
 
 (defmacro is
-  "Adapted from [[clojure.test/is]]."
+  "Adapted from `clojure.test/is`."
   ([form] `(expect ~form (testing-str)))
   ([form msg]
    `(expect ~form (str (testing-str) "\n" ~msg))))
 
 (defmacro are
-  "Adapted from [[clojure.test/are]]."
+  "Adapted from `clojure.test/are`."
   [argv expr & args]
   (if (or
        (and (empty? argv) (empty? args))
@@ -64,7 +64,7 @@
     (throw (IllegalArgumentException. "The number of args doesn't match are's argv."))))
 
 (defmacro deftest
-  "Adapted from [[clojure.test/deftest]]."
+  "Adapted from `clojure.test/deftest`."
   [test-name & body]
   (assert (symbol? test-name) "test-name must be a symbol")
   (with-meta

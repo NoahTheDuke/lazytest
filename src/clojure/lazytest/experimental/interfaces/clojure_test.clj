@@ -1,4 +1,4 @@
-(ns lazytest.experimental.interfaces.clojure-test 
+(ns lazytest.experimental.interfaces.clojure-test
   "EXPERIMENTAL. COULD BE CHANGED AT ANY TIME. Please share usage reports at https://github.com/noahtheduke/lazytest/issues
 
   An adaption of the built-in `clojure.test` framework. [[testing]] works the same way as `clojure.test/testing`, so it does not support metadata selection like [[lazytest.core/describe]].

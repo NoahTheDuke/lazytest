@@ -5,7 +5,7 @@
    [lazytest.find :refer [find-suite find-var-test-value]]
    [lazytest.malli]
    [lazytest.reporters :as r :refer [nested report]]
-   [lazytest.suite :as s :refer [suite-result suite]]
+   [lazytest.suite :as s :refer [suite-result suite suite?]]
    [lazytest.test-case :refer [try-test-case]]))
 
 (set! *warn-on-reflection* true)
@@ -125,3 +125,11 @@
                 :children [test-var]})
         (filter-tree config)
         (run-tree config))))
+
+(defn run-test-suite
+  [s config]
+  (assert (suite? s) "Must provide a suite.")
+  (-> (suite {:type :lazytest/run
+              :children [s]})
+      (filter-tree config)
+      (run-tree config)))

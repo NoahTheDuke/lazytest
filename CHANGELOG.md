@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- `lazytest.runner/run-test-suite`: For running a suite directly instead of running a namespace or a var.
+
+### Changed
+
+- Better tests for interfaces.
+
 ## 1.1.1
 
 Released `2024-10-09`.

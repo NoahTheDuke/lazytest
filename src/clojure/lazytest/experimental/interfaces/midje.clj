@@ -24,9 +24,8 @@
   ```
   "
   (:require
-   [lazytest.core :refer [describe it *context* get-arg merged-data]]
-   [lazytest.suite :refer [suite]]
-   [lazytest.context :as ctx]))
+   [lazytest.core :refer [describe it]]
+   [lazytest.suite :refer [suite]]))
 
 (defn prep-ns-suite!
   "Set the *ns* :lazytest/ns-suite to a fresh suite."
@@ -40,22 +39,9 @@
                [doc attr-map? & children])}
   [doc & body]
   (assert (string? doc) "Must provide a string.")
-  (let [[attr-map children] (get-arg map? body)
-        data (merged-data children &form doc (dissoc attr-map :context))
-        context (:context attr-map)]
-    `(let [suite# (binding [*context* (atom (suite ~data))]
-                    (let [ctx-fns# (binding [*context* nil] ~context)]
-                      (assert (or (nil? ctx-fns#) (sequential? ctx-fns#))
-                              ":context must be a sequence")
-                      (swap! *context* update :context
-                             (fn [c#]
-                               (ctx/merge-context (cons c# ctx-fns#)))))
-                    (run! #(if (sequential? %) (doall %) %) (flatten [~@children]))
-                    @*context*)]
-       (if *context*
-         (swap! *context* update :children conj suite#)
-         (alter-meta! *ns* update-in [:lazytest/ns-suite :children] conj suite#))
-       nil)))
+  `(when-let [suite# (describe ~doc ~@body)]
+     (alter-meta! *ns* update-in [:lazytest/ns-suite :children] conj suite#)
+     nil))
 
 (defmacro fact
   [doc & body]

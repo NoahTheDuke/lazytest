@@ -1,7 +1,13 @@
-(ns lazytest.experimental.interfaces.midje-test 
+(ns lazytest.experimental.interfaces.midje-test
   (:require
-   [lazytest.core :refer [expect]]
-   [lazytest.experimental.interfaces.midje :refer [facts fact prep-ns-suite!]]))
+   [lazytest.core :refer [defdescribe expect it]]
+   [lazytest.extensions.matcher-combinators :refer [match?]]))
+
+(in-ns 'midje-temp)
+(clojure.core/refer 'clojure.core)
+(clojure.core/require
+ '[lazytest.core :refer [expect]]
+ '[lazytest.experimental.interfaces.midje :refer [fact facts prep-ns-suite!]])
 
 (prep-ns-suite!)
 
@@ -15,3 +21,42 @@
 (facts "another top level fact"
   (fact "with nested fact"
     (expect true "it just works")))
+
+(in-ns 'lazytest.experimental.interfaces.midje-test)
+
+(let [ns-suite (:lazytest/ns-suite (meta (the-ns 'midje-temp)))]
+  (defn existing-tests [] ns-suite))
+
+(remove-ns 'midje-temp)
+
+(defdescribe midje-tests
+  (it "has the right shape"
+    (expect
+      (match?
+       {:type :lazytest/ns
+        :children
+        [{:type :lazytest/suite
+          :doc "top level facts"
+          :children
+          [{:type :lazytest/suite
+            :doc "must be nested"
+            :children
+            [{:type :lazytest/test-case
+              :doc "fact test case"}]}
+           {:type :lazytest/suite
+            :doc "nested facts works"
+            :children
+            [{:type :lazytest/suite
+              :doc "fact works"
+              :children
+              [{:type :lazytest/test-case
+                :doc "fact test case"}]}]}]}
+         {:type :lazytest/suite
+          :doc "another top level fact"
+          :children
+          [{:type :lazytest/suite
+            :doc "with nested fact"
+            :children
+            [{:type :lazytest/test-case
+              :doc "fact test case"}]}]}]}
+       (existing-tests)))))

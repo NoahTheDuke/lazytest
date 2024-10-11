@@ -22,6 +22,9 @@
   (fact "with nested fact"
     (expect true "it just works")))
 
+(fact "top level fact"
+  (expect true "it works"))
+
 (in-ns 'lazytest.experimental.interfaces.midje-test)
 
 (let [ns-suite (:lazytest/ns-suite (meta (the-ns 'midje-temp)))]
@@ -38,25 +41,18 @@
         [{:type :lazytest/suite
           :doc "top level facts"
           :children
-          [{:type :lazytest/suite
-            :doc "must be nested"
-            :children
-            [{:type :lazytest/test-case
-              :doc "fact test case"}]}
+          [{:type :lazytest/test-case
+            :doc "must be nested"}
            {:type :lazytest/suite
             :doc "nested facts works"
             :children
-            [{:type :lazytest/suite
-              :doc "fact works"
-              :children
-              [{:type :lazytest/test-case
-                :doc "fact test case"}]}]}]}
+            [{:type :lazytest/test-case
+              :doc "fact works"}]}]}
          {:type :lazytest/suite
           :doc "another top level fact"
           :children
-          [{:type :lazytest/suite
-            :doc "with nested fact"
-            :children
-            [{:type :lazytest/test-case
-              :doc "fact test case"}]}]}]}
+          [{:type :lazytest/test-case
+            :doc "with nested fact"}]}
+         {:type :lazytest/test-case
+          :doc "top level fact"}]}
        (existing-tests)))))

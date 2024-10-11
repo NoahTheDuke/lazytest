@@ -2,13 +2,16 @@
 
 ## Unreleased
 
+Wrote better documentation for `lazytest.core`, highlighting the primary vars and their use cases.
+
 ### Added
 
-- `lazytest.runner/run-test-suite`: For running a suite directly instead of running a namespace or a var.
+- `lazytest.runner/run-test-suite`: For running a suite value instead of running a namespace or a var.
 
 ### Changed
 
 - Better tests for interfaces.
+- `lazytest.core/it` and `lazytest.core/expect-it` return `nil` if within `*context*`.
 
 ## 1.1.1
 

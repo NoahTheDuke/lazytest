@@ -35,14 +35,17 @@
   nil)
 
 (defmacro facts
+  "Define a suite. If top-level, place the suite in the namespace suite, otherwise act like [[lazytest.core/describe]]."
   {:arglists '([test-name attr-map? & children]
                [doc attr-map? & children])}
   [doc & body]
-  (assert (string? doc) "Must provide a string.")
-  `(when-let [suite# (describe ~doc ~@body)]
+  `(when-let [suite# ~(with-meta `(describe ~doc ~@body) (meta &form))]
      (alter-meta! *ns* update-in [:lazytest/ns-suite :children] conj suite#)
      nil))
 
 (defmacro fact
+  "Define a test case. If top-level, place it in the namespace suite, otherwise act like [[lazytest.core/it]]."
   [doc & body]
-  (with-meta `(describe ~doc (it "fact test case" ~@body)) (meta &form)))
+  `(when-let [test-case# ~(with-meta `(it ~doc ~@body) (meta &form))]
+     (alter-meta! *ns* update-in [:lazytest/ns-suite :children] conj test-case#)
+     nil))

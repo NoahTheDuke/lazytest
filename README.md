@@ -151,10 +151,15 @@ These can be used interchangeably:
 
 There are a number of experimental namespaces that define other aliases, with distinct behavior, if the base set of vars don't fit your needs:
 
-* [[lazytest.experimental.interfaces.clojure-test]] to mimic `clojure.test`.
-* [[lazytest.experimental.interfaces.midje]] to mimic [Midje](https://github.com/marick/midje).
-* [[lazytest.experimental.interfaces.qunit]] to mimic [QUnit](https://qunitjs.com/).
-* [[lazytest.experimental.interfaces.xunit]] to mimic a standard [xUnit](https://en.wikipedia.org/wiki/XUnit) framework.
+* [lazytest.experimental.interfaces.clojure-test][lazytest.clojure-test] to mimic `clojure.test`.
+* [lazytest.experimental.interfaces.midje][lazytest.midje] to mimic [Midje](https://github.com/marick/midje).
+* [lazytest.experimental.interfaces.qunit][lazytest.qunit] to mimic [QUnit](https://qunitjs.com/).
+* [lazytest.experimental.interfaces.xunit][lazytest.xunit] to mimic a standard [xUnit](https://en.wikipedia.org/wiki/XUnit) framework.
+
+[lazytest.clojure-test]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/LATEST/api/lazytest.experimental.interfaces.clojure-test
+[lazytest.midje]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/LATEST/api/lazytest.experimental.interfaces.midje
+[lazytest.qunit]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/LATEST/api/lazytest.experimental.interfaces.qunit
+[lazytest.xunit]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/LATEST/api/lazytest.experimental.interfaces.xunit
 
 ### Var Metadata
 

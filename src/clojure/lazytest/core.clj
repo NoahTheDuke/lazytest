@@ -1,4 +1,37 @@
 (ns lazytest.core
+  "A BDD testing framework.
+
+  In short: Tests are defined with [[defdescribe]], suites (groups of nested suites and test cases) are defined with [[describe]], test cases are defined with [[it]], and assertions are defined with [[expect]] but can be any function that throws an exception on failure. When `lazytest.main/run` is called, all loaded namespaces are checked for tests, and the contained test cases are run (with suites providing context and additional documentation).
+
+  Hooks can be used in `:context` metadata on suites, and assertion helpers can be used in test cases.
+
+  For more information, please check the `README.md`.
+
+  Test definition vars:
+  * [[expect]]: Create an assertion. Throws if expression returns logical false.
+  * [[it]]: Creates a test case, which runs arbitrary code. If the code throws, it's considered a failing test. Otherwise, it's considered a passing test.
+  * [[expect-it]]: Combination of [[expect]] and [[it]] to assert a single expression.
+  * [[describe]]: Creates a test suite, which is a collection of test cases or other test suites.
+  * [[defdescribe]]: Defines a var containing a test suite.
+
+  Test definition aliases:
+  * [[should]]: Alias for [[expect]].
+  * [[specify]]: Alias for [[it]].
+  * [[context]]: Alias for [[describe]].
+
+  Hook vars:
+  * [[before]], [[after]]: Runs arbitrary code once before (or after) all nested suites and test cases.
+  * [[before-each]], [[after-each]]: Runs arbitrary code before (or after) each nested test case.
+  * [[around]]: Run a function taking a single arg, with the arg being a function executing the nested suites or test cases. Useful for `binding` (or similar) calls
+  * [[set-ns-context!]]: Add hooks to the namespace suite, instead of to a test suite.
+
+  Assertion helper vars:
+  * [[throws?]]: Calls given no-arg function, returns true if it throws expected class.
+  * [[throws-with-msg?]]: Calls given function with no arguments, returns true if it throw expected class and message matches given regex.
+  * [[causes?]]: Calls given no-arg function, returns true if it throws expected class anywhere in the cause chain.
+  * [[causes-with-msg?]]: Calls given no-arg function, returns true if it throws expected class anywhere in the cause chain and the cause's message matches given regex.
+  * [[ok?]]: Calls given no-arg function, returns true if no exception is thrown. (Useful for ignoring logical false return values.)
+  "
   (:refer-clojure :exclude [test])
   (:require
    [lazytest.context :as ctx]
@@ -59,7 +92,7 @@
                      (let [f (var-get v)]
                        (fn? f))))))))
 
-(defn expect-fn
+(defn ^:no-doc expect-fn
   [expr msg]
   `(let [f# ~(first expr)
          args# (list ~@(rest expr))
@@ -69,7 +102,7 @@
                                     :evaluated (list* f# args#)
                                     :actual result#})))))
 
-(defn expect-any
+(defn ^:no-doc expect-any
   [expr msg]
   `(let [result# ~expr]
      (or result#
@@ -97,8 +130,10 @@
                (throw (->ex-failed ~&form ~expr {:message ~msg-gensym
                                                  :caught t#}))))))))
 
-
 (defmacro before
+  "Runs `body` (presumably for side effects) once before all nested suites and test cases. Wraps `body` in a function, calls and discards the result during test runs.
+
+  If called outside of a `*context*`, returns `{:before (fn [] ~@body)}`."
   [& body]
   `(let [before-fn# (fn before# [] (let [ret# (do ~@body)] ret#))]
      (if *context*
@@ -107,6 +142,9 @@
        {:before before-fn#})))
 
 (defmacro before-each
+  "Runs `body` (presumably for side effects) before each nested test case. Wraps `body` in a function, calls and discards the result during test runs.
+
+  If called outside of a `*context*`, returns `{:before-each (fn [] ~@body)}`."
   [& body]
   `(let [before-each-fn# (fn before-each# [] (let [ret# (do ~@body)] ret#))]
      (if *context*
@@ -115,6 +153,9 @@
        {:before-each before-each-fn#})))
 
 (defmacro after-each
+  "Runs `body` (presumably for side effects) after each nested test case. Wraps `body` in a function, calls and discards the result during test runs.
+
+  If called outside of a `*context*`, returns `{:after-each (fn [] ~@body)}`."
   [& body]
   `(let [after-each-fn# (fn after-each# [] (let [ret# (do ~@body)] ret#))]
      (if *context*
@@ -123,7 +164,9 @@
        {:after-each after-each-fn#})))
 
 (defmacro after
-  "Returns a context whose teardown method evaluates body."
+  "Runs `body` (presumably for side effects) once after all nested suites and test cases. Wraps `body` in a function, calls and discards the result during test runs.
+
+  If called outside of a `*context*`, returns `{:after (fn [] ~@body)}`."
   [& body]
   `(let [after-fn# (fn after# [] (let [ret# (do ~@body)] ret#))]
      (if *context*
@@ -151,7 +194,9 @@
        {:around around-fn#})))
 
 (defn set-ns-context!
-  "Must be a sequence of context maps, presumably built with the appropriate macros."
+  "Add hooks to the namespace suite, instead of to a var or test suite.
+
+  `context` must be a sequence of context maps."
   [context]
   (alter-meta! *ns* assoc :context (ctx/merge-context context)))
 
@@ -266,7 +311,8 @@
                               :context (binding [*context* nil]
                                          (ctx/merge-context ~context))))]
        (if *context*
-         (swap! *context* update :children conj test-case#)
+         (do (swap! *context* update :children conj test-case#)
+             nil)
          test-case#))))
 
 (defmacro expect-it
@@ -300,8 +346,11 @@
     `(let [test-case# (test-case/test-case
                        (assoc ~metadata :body (fn expect-it# [] (expect ~assertion ~doc))))]
        (if *context*
-         (swap! *context* update :children conj test-case#)
+         (do (swap! *context* update :children conj test-case#)
+             nil)
          test-case#))))
+
+;;; Helpers
 
 (defn throws?
   "Calls f with no arguments; returns true if it throws an instance of
@@ -316,12 +365,9 @@
              (throw t)))))
 
 (defn throws-with-msg?
-  "Calls f with no arguments; catches exceptions of class c. If the
-  message of the caught exception does not match re (with re-find),
-  throws ExpectationFailed. Any other exception not of class c will
-  be re-thrown. Returns false if f throws no exceptions.
+  "Calls f with no arguments; catches exceptions of class c. If the message of the caught exception does not match re (with re-find), throws ExpectationFailed. Any other exception not of class c will be re-thrown. Returns false if f throws no exceptions.
 
-  Useful in `expect-it` or `expect`."
+  Useful in [[expect]] or [[expect-it]]."
   [c re f]
   (try (f) false
        (catch Throwable t
@@ -329,20 +375,17 @@
            (re-find re (ex-message t))
            (throw t)))))
 
-(defn cause-seq
-  "Given a Throwable, returns a sequence of causes. The first element
-  of the sequence is the given throwable itself."
+(defn ^:no-doc cause-seq
+  "Given a Throwable, returns a sequence of causes. The first element of the sequence is the given throwable itself."
   [throwable]
-  (when (instance? Throwable throwable)
-    (cons throwable (lazy-seq (cause-seq (ex-cause throwable))))))
+  (lazy-seq
+   (when (instance? Throwable throwable)
+     (cons throwable (lazy-seq (cause-seq (ex-cause throwable)))))))
 
 (defn causes?
-  "Calls f with no arguments; returns true if it throws an exception
-  whose cause chain includes an instance of class c. Any other
-  exception will be re-thrown. Returns false if f throws no
-  exceptions.
+  "Calls f with no arguments; returns true if it throws an exception whose cause chain includes an instance of class c. Any other exception will be re-thrown. Returns false if f throws no exceptions.
 
-  Useful in `expect-it` or `expect`."
+  Useful in [[expect]] or [[expect-it]]."
   [c f]
   (try (f) false
        (catch Throwable t
@@ -351,13 +394,9 @@
            (throw t)))))
 
 (defn causes-with-msg?
-  "Calls f with no arguments; catches exceptions with an instance of
-  class c in their cause chain. If the message of the causing
-  exception does not match re (with re-find), throws
-  ExpectationFailed. Any non-matching exception will be re-thrown.
-  Returns false if f throws no exceptions.
+  "Calls f with no arguments; catches exceptions with an instance of class c in their cause chain. If the message of the causing exception does not match re (with re-find), throws ExpectationFailed. Any non-matching exception will be re-thrown. Returns false if f throws no exceptions.
 
-  Useful in `expect-it` or `expect`."
+  Useful in [[expect]] or [[expect-it]]."
   [c re f]
   (try (f) false
        (catch Throwable t
@@ -371,11 +410,9 @@
            (throw t)))))
 
 (defn ok?
-  "Calls f with no arguments and discards its return value. Returns
-  true if f does not throw any exceptions. Use when checking an expression
-  that returns a logical false value.
+  "Calls f with no arguments and discards its return value. Returns true if f does not throw any exceptions. Use when checking an expression that returns a logical false value.
 
-  Useful in `expect-it` or `expect`."
+  Useful in [[expect]] or [[expect-it]]."
   [f]
   (f) true)
 

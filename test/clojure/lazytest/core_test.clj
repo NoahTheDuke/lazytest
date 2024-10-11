@@ -2,7 +2,7 @@
   (:require
    [lazytest.core :refer [causes-with-msg? causes? context defdescribe
                           describe expect expect-it it ok? should specify
-                          throws-with-msg? throws?]])
+                          throws-with-msg? throws? cause-seq]])
   (:import
    clojure.lang.ExceptionInfo
    lazytest.ExpectationFailed))
@@ -129,3 +129,11 @@
   (context "this works correctly"
     (specify "inside works too"
       (should (= 1 1)))))
+
+(defdescribe cause-seq-test
+  (expect-it "returns a lazy-seq"
+    (seq? (cause-seq (ex-info "" {}))))
+  (expect-it "works outermost inward"
+    (= [clojure.lang.ExceptionInfo Exception IllegalArgumentException]
+       (map class (cause-seq
+                   (ex-info "" {} (Exception. "" (IllegalArgumentException. ""))))))))

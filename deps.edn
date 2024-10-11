@@ -19,8 +19,10 @@
 
   ;; I like nrepl and rebel-readline.
   :repl {:extra-deps {nrepl/nrepl {:mvn/version "1.2.0"}
+                      cider/cider-nrepl {:mvn/version "0.50.2"}
                       com.bhauman/rebel-readline {:mvn/version "0.1.4"}}
          :main-opts  ["-m" "nrepl.cmdline"
+                      "--middleware" "[cider.nrepl/cider-middleware]"
                       "--interactive"
                       "-f" "rebel-readline.main/-main"]}
 

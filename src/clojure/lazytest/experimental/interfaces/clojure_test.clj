@@ -26,9 +26,9 @@
   ```
   "
   (:require
-    [clojure.string :as str]
-    [lazytest.core :refer [expect defdescribe it]]
-    [clojure.template :as temp]))
+   [clojure.string :as str]
+   [clojure.template :as temp]
+   [lazytest.core :refer [defdescribe expect it]]))
 
 (def ^:dynamic ^:no-doc *testing-strs*
   "Adapted from `clojure.test/*testing-contexts*`."

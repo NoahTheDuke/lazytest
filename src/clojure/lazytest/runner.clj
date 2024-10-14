@@ -1,11 +1,12 @@
 (ns lazytest.runner
   (:require
-   [lazytest.context :refer [run-afters run-befores combine-arounds run-before-eachs run-after-eachs propagate-eachs]]
+   [lazytest.context :refer [combine-arounds propagate-eachs run-after-eachs
+                             run-afters run-before-eachs run-befores]]
    [lazytest.filter :refer [filter-tree]]
    [lazytest.find :refer [find-suite find-var-test-value]]
    [lazytest.malli]
    [lazytest.reporters :as r :refer [nested report]]
-   [lazytest.suite :as s :refer [suite-result suite suite?]]
+   [lazytest.suite :as s :refer [suite suite-result suite?]]
    [lazytest.test-case :refer [try-test-case]]))
 
 (set! *warn-on-reflection* true)

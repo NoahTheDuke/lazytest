@@ -1,6 +1,6 @@
 (ns lazytest.cli-test
   (:require
-   [lazytest.core :refer [defdescribe describe it expect]]))
+   [lazytest.core :refer [defdescribe describe expect it]]))
 
 ;; This exists merely to test the -i and -e flags
 (defdescribe metadata-test

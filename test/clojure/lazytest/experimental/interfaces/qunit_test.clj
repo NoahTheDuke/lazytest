@@ -1,6 +1,6 @@
 (ns lazytest.experimental.interfaces.qunit-test
   (:require
-   [lazytest.core :refer [defdescribe it expect]]
+   [lazytest.core :refer [defdescribe expect it]]
    [lazytest.extensions.matcher-combinators :refer [match?]]))
 
 (in-ns 'qunit-temp)

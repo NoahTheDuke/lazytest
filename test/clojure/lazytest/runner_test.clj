@@ -1,11 +1,11 @@
 (ns lazytest.runner-test 
   (:require
+   [clojure.string :as str]
    [lazytest.config :refer [->config]]
    [lazytest.core :refer [*context* defdescribe describe expect it]]
    [lazytest.reporters :as reporters]
    [lazytest.runner :as sut]
-   [lazytest.test-utils :refer [with-out-str-no-color]]
-   [clojure.string :as str]))
+   [lazytest.test-utils :refer [with-out-str-no-color]]))
 
 (defn make-suite []
   (binding [*context* nil]

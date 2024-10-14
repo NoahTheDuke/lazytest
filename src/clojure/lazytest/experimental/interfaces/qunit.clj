@@ -21,7 +21,7 @@
     (assert! (false? (pos? 0)) \"Expected to be false\"))
   ```"
   (:require
-   [lazytest.core :refer [*context* it expect]]
+   [lazytest.core :refer [*context* expect it]]
    [lazytest.suite :refer [suite suite?]]))
 
 (defn prep-ns-suite!

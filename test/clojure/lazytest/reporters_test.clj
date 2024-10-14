@@ -3,7 +3,7 @@
    [clojure.stacktrace :as stack]
    [clojure.string :as str]
    [lazytest.config :refer [->config]]
-   [lazytest.core :refer [defdescribe describe expect expect-it it ->ex-failed]]
+   [lazytest.core :refer [->ex-failed defdescribe describe expect expect-it it]]
    [lazytest.reporters :as sut]
    [lazytest.runner :as runner]
    [lazytest.suite :as s]

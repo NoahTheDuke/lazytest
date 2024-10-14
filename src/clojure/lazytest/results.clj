@@ -1,6 +1,6 @@
 (ns lazytest.results
   (:require
-    [lazytest.suite :refer [suite-result?]]))
+   [lazytest.suite :refer [suite-result?]]))
 
 (defn result-seq
   "Given a single suite result, returns a depth-first sequence of all

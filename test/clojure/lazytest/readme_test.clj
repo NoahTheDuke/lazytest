@@ -1,7 +1,7 @@
 (ns lazytest.readme-test
   (:require
-   [lazytest.core :refer [after around before defdescribe describe expect
-                          expect-it it before-each]]))
+   [lazytest.core :refer [after around before before-each defdescribe describe
+                          expect expect-it it]]))
 
 (defdescribe +-test "with integers"
   (expect-it "computes the sum of 1 and 2"

@@ -9,7 +9,7 @@
    [lazytest.suite :as s :refer [suite-result?]]
    [lazytest.test-case :as tc])
   (:import
-    lazytest.ExpectationFailed))
+   lazytest.ExpectationFailed))
 
 (defn report [config m]
   (when-let [reporter (:reporter config)]

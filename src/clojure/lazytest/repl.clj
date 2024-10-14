@@ -1,9 +1,9 @@
 (ns lazytest.repl
   (:require
-    [lazytest.config :refer [->config]]
-    [lazytest.results :refer [summarize]]
-    [lazytest.runner :as runner]
-    [lazytest.reporters :as r]))
+   [lazytest.config :refer [->config]]
+   [lazytest.reporters :as r]
+   [lazytest.results :refer [summarize]]
+   [lazytest.runner :as runner]))
 
 (def repl-config
   {:reporter [r/focused r/results r/summary]})

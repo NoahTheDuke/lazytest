@@ -1,7 +1,7 @@
 (ns lazytest.malli
   (:require
-    [malli.core :as m]
-    [malli.registry :as mr]))
+   [malli.core :as m]
+   [malli.registry :as mr]))
 
 (defonce ^:private registry* (atom {}))
 

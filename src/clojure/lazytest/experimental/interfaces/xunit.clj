@@ -23,7 +23,7 @@
         (assert! true))))
   ```"
   (:require
-    [lazytest.core :refer [defdescribe describe it expect]]))
+   [lazytest.core :refer [defdescribe describe expect it]]))
 
 (defmacro defsuite
   "Alias of [[lazytest.core/defdescribe]] for the xUnit interface."

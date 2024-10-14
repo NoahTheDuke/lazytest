@@ -1,6 +1,6 @@
 (ns lazytest.context 
   (:require
-    [clojure.test :as c.t]))
+   [clojure.test :as c.t]))
 
 (defn merge-context [context]
   (reduce

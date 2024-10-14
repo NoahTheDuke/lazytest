@@ -1,8 +1,8 @@
 (ns lazytest.watch
   (:require
    [clj-reload.core :as reload]
-   [clojure.string :as str]
    [clojure.java.io :as io]
+   [clojure.string :as str]
    [lazytest.color :refer [colorize]]) 
   (:import
    [java.io File]

@@ -1,8 +1,8 @@
 (ns lazytest.core-test
   (:require
-   [lazytest.core :refer [causes-with-msg? causes? context defdescribe
-                          describe expect expect-it it ok? should specify
-                          throws-with-msg? throws? cause-seq]])
+   [lazytest.core :refer [cause-seq causes-with-msg? causes? context
+                          defdescribe describe expect expect-it it ok? should
+                          specify throws-with-msg? throws?]])
   (:import
    clojure.lang.ExceptionInfo
    lazytest.ExpectationFailed))

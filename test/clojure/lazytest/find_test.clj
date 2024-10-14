@@ -1,12 +1,12 @@
 (ns lazytest.find-test
   {:focus true}
   (:require
-   [lazytest.core :refer [defdescribe expect it describe before after]]
+   [clojure.string :as str]
+   [lazytest.core :refer [after before defdescribe describe expect it]]
    [lazytest.extensions.matcher-combinators :refer [match?]]
    [lazytest.main :as main]
    [lazytest.runner :as lr]
-   [lazytest.test-utils :refer [with-out-str-data-map]]
-   [clojure.string :as str]))
+   [lazytest.test-utils :refer [with-out-str-data-map]]))
 
 (defdescribe find-var-test-value-test
   (let [output (volatile! nil)]

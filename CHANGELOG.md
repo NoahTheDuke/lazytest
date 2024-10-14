@@ -10,8 +10,8 @@ Wrote better documentation for `lazytest.core`, highlighting the primary vars an
 
 ### Changed
 
-- Better tests for interfaces.
 - `lazytest.core/it` and `lazytest.core/expect-it` return `nil` if within `*context*`.
+- `lazytest.experimental.interfaces.midje/fact` no longer wraps `it` in a `describe`.
 
 ## 1.1.1
 

@@ -13,7 +13,7 @@
   ([namespaces] (run-tests namespaces repl-config))
   ([namespaces config]
    (if (sequential? namespaces)
-     (summarize (runner/run-tests (->config config) namespaces))
+     (summarize (runner/run-tests namespaces (->config config)))
      (run-tests [namespaces] config))))
 
 (defn run-all-tests

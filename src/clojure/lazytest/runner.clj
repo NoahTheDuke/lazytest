@@ -103,33 +103,39 @@
       (run-afters tc)
       results)))
 
+(defn ^:no-doc filter-and-run
+  [suite config]
+  (-> suite
+      (filter-tree config)
+      (run-tree config)))
+
 (defn run-tests
-  "Runs tests defined in the given namespaces."
-  ([namespaces] (run-tests {:reporter nested} namespaces))
-  ([config namespaces]
-   (let [suite (apply find-suite namespaces)
-         suite (filter-tree suite config)]
-     (run-tree suite config))))
+  "Runs tests defined in the given namespaces. Applies filters in config."
+  ([namespaces] (run-tests namespaces {:reporter nested}))
+  ([namespaces config]
+   (-> (apply find-suite namespaces)
+       (filter-and-run config))))
 
 (defn run-all-tests
-  "Run tests defined in all namespaces."
+  "Run tests defined in all loaded namespaces. Applies filters in config."
   ([] (run-all-tests nil))
   ([config]
-   (run-tests config nil)))
+   (run-tests nil config)))
 
 (defn run-test-var
+  "Run test var. Looks for a suite as the var's value or in `:test` metadata. Applies filters in config."
   [v config]
+  (assert (var? v) "Must be a var")
   (when-let [test-var (find-var-test-value v)]
     (-> (suite {:type :lazytest/run
-                :nses [(the-ns (symbol (namespace (symbol #'run-test-var))))]
+                :nses [(the-ns (symbol (namespace (symbol v))))]
                 :children [test-var]})
-        (filter-tree config)
-        (run-tree config))))
+        (filter-and-run config))))
 
 (defn run-test-suite
+  "Run test suite. Applies filters in config."
   [s config]
   (assert (suite? s) "Must provide a suite.")
   (-> (suite {:type :lazytest/run
               :children [s]})
-      (filter-tree config)
-      (run-tree config)))
+      (filter-and-run config)))

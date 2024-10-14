@@ -99,8 +99,8 @@
   "Returns test suite containing suites for the given namespaces.
   If no names given, searches all namespaces."
   [& names]
-  (let [names (or (seq names) (all-ns))
-        nses (mapv the-ns names)
+  (let [names' (or (seq names) (all-ns))
+        nses (mapv the-ns names')
         suites (keep find-ns-suite nses)
         focused? (some #(-> % :metadata :focus) suites)]
     (cond-> (suite {:type :lazytest/run

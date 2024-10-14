@@ -38,7 +38,7 @@
   (let [output (or (not-empty output) ['lazytest.reporters/nested])
         config (->config (assoc config :output output :reporter output))
         nses (require-dirs config dir)]
-    (run-tests config nses)))
+    (run-tests nses config)))
 
 (defn run [args]
   (let [{:keys [exit-message ok] :as opts} (validate-opts args)]

@@ -410,9 +410,11 @@
                      (count slowest-vars)
                      (double (/ var-duration 1e9))
                      (double (* (/ var-duration total-duration) 100))))
-    (println (->> (for [suite slowest-vars]
+    (println (->> (for [suite slowest-vars
+                        :let [ns (some-> suite :source :var symbol namespace)
+                              id (str ns (when ns "/") (s/identifier suite))]]
                     (format "  %s %.5f seconds"
-                            (s/identifier suite)
+                            id
                             (double (/ (:lazytest.runner/duration suite) 1e9))))
                   (str/join \newline)))
     (flush)))

@@ -6,9 +6,12 @@
    [lazytest.core :refer [->ex-failed defdescribe describe expect expect-it it]]
    [lazytest.reporters :as sut]
    [lazytest.runner :as runner]
-   [lazytest.suite :as s]
+   [lazytest.suite :as s :refer [suite]]
    [lazytest.test-case :as tc]
-   [lazytest.test-utils :refer [with-out-str-no-color]]))
+   [lazytest.test-utils :refer [with-out-str-no-color]]
+   [lazytest.extensions.matcher-combinators :refer [match?]]) 
+  (:import
+    [java.util.regex Pattern]))
 
 (set! *warn-on-reflection* true)
 
@@ -31,37 +34,29 @@
    :children results})
 
 (defn ->passing [& {:as extra}]
-  (-> (tc/test-case-result
-       :pass
-       (runner/prep-test-case
-        (tc/test-case {:doc "example test-case"
-                       :body (fn [])})))
+  (-> (tc/test-case {:doc "example test-case"
+                     :body (fn [] true)})
+      (runner/run-tree (->config {:reporter [(constantly nil)]}))
       (merge extra)))
 
 (defn ->failing [& {:as extra}]
-  (let [data (merge {:file "example.clj"
-                     :line 1
-                     :message "failing"
-                     :evaluated (list = 1 2)
-                     :actual false}
-                    extra)
-        thrown (->ex-failed '() (= 1 2) data)]
-    (tc/test-case-result
-      :fail (runner/prep-test-case
-             (tc/test-case {:doc "example test-case"
-                            :body (fn [])}))
-      thrown)))
+  (-> (tc/test-case {:doc "example test-case"
+                     :body (fn [] (expect (= 1 2) (if (contains? extra :message)
+                                                    (:message extra)
+                                                    "failing")))})
+      (runner/run-tree (->config {:reporter [(constantly nil)]}))
+      (assoc :file "example.clj")
+      (assoc :line 1)
+      (merge (dissoc extra :message))))
 
 (defn ->erroring [& _]
   (let [thrown (ex-info "deliberate error"
                         {:ex :info
                          :file "example.clj"
                          :line 1})]
-    (tc/test-case-result
-      :fail (runner/prep-test-case
-             (tc/test-case {:doc "example test-case"
-                            :body (fn [])}))
-      thrown)))
+    (-> (tc/test-case {:doc "example test-case"
+                       :body (fn [] (throw thrown))})
+        (runner/run-tree (->config {:reporter [(constantly nil)]})))))
 
 (defn stub-stack-trace
   [_ex]
@@ -344,6 +339,21 @@
                     (with-out-str-no-color))]
         (expect
           (= (* 2 depth) (- (count out) (count (str/triml out)))))))))
+
+(defdescribe profile-test
+  (it "prints the right times"
+    (let [test-suite (-> (describe "suite"
+                           (it "it" (expect (= 2 1))))
+                         (assoc :type :lazytest/var :var #'profile-test))
+          results (runner/run-test-suite
+                    (suite {:type :lazytest/ns
+                            :nses [*ns*]
+                            :children [test-suite]})
+                    (->config {:reporter (constantly nil)}))
+          suite-results (assoc test-suite :type :end-test-run :results results)]
+      (expect (match? (Pattern/compile "Top 1 slowest test namespaces.*Top 1 slowest test vars" Pattern/DOTALL)
+                      (-> (sut/profile nil suite-results)
+                          (with-out-str-no-color)))))))
 
 (defdescribe defdescribe-no-doc nil (it "works" nil))
 (defdescribe defdescribe-with-doc "cool docs" (it "works" nil))

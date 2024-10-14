@@ -22,8 +22,8 @@
   (let [id (:doc suite)
         start (System/nanoTime)
         config (-> config
-                   (update :lazytest.runner/depth #(if id (inc %) %))
-                   (update :lazytest.runner/suite-history conj suite))
+                   (update ::depth #(if id (inc %) %))
+                   (update ::suite-history conj suite))
         f (if-let [around-fn (combine-arounds suite)]
             #(let [ret (volatile! nil)
                    tests (propagate-eachs suite %)]
@@ -34,8 +34,8 @@
         results (vec (keep f (:children suite)))
         duration (double (- (System/nanoTime) start))]
     (-> (suite-result suite results)
-        (assoc :lazytest.runner/source-type source-type)
-        (assoc :lazytest.runner/duration duration))))
+        (assoc ::source-type source-type)
+        (assoc ::duration duration))))
 
 (defmethod run-tree :lazytest/run
   run-test--lazytest-run

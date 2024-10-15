@@ -343,7 +343,7 @@
 (defdescribe profile-test
   (it "prints the right times"
     (let [test-suite (-> (describe "suite"
-                           (it "it" (expect (= 2 1))))
+                           (it "test case" (expect (= 2 1))))
                          (assoc :type :lazytest/var :var #'profile-test))
           results (runner/run-test-suite
                     (suite {:type :lazytest/ns

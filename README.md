@@ -11,7 +11,7 @@ Add it to your deps.edn or project.clj:
 
 ```clojure
 {:aliases
- {:test {:extra-deps {io.github.noahtheduke/lazytest {:mvn/version "1.1.1"}}
+ {:test {:extra-deps {io.github.noahtheduke/lazytest {:mvn/version "1.2.0"}}
          :extra-paths ["test"]
          :main-opts ["-m" "lazytest.main"]}}}
 ```

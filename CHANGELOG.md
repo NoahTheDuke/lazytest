@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.2.0
+
+Released `2024-10-15`.
+
 Wrote better documentation for `lazytest.core`, highlighting the primary vars and their use cases.
 
 Added generic support for skipping test cases or suites with `:skip` metadata.

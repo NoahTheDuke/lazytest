@@ -30,3 +30,20 @@ repl arg="":
 
 @clojars:
     env CLOJARS_USERNAME='noahtheduke' CLOJARS_PASSWORD=`cat ../clojars.txt` clojure -M:clein deploy
+
+# Builds the uberjar, builds the jar, sends the jar to clojars
+@release version:
+    echo 'Running tests'
+    just test-all
+    echo 'Setting new version {{version}}'
+    just set-version {{version}}
+    echo 'Commit and tag'
+    git commit -a -m 'Bump version for release'
+    git tag v{{version}}
+    echo 'Pushing to github'
+    git push
+    git push --tags
+    echo 'Building uber'
+    clojure -M:clein uberjar
+    echo 'Deploying to clojars'
+    just clojars

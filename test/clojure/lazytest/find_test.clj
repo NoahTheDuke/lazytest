@@ -1,5 +1,4 @@
 (ns lazytest.find-test
-  {:focus true}
   (:require
    [clojure.string :as str]
    [lazytest.core :refer [after before defdescribe describe expect it]]

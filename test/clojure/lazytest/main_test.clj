@@ -20,7 +20,7 @@
           :exit 0
           :results {::lr/source-type :lazytest/run
                     :children [{::lr/source-type :lazytest/ns
-                                :doc 'filter-tests.a
+                                :doc 'cli-filter-tests.a
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "a-1-test"}
                                            {::lr/source-type :lazytest/var
@@ -29,7 +29,7 @@
                                             :doc "a-3-test"}]}]}}
          (sut/run ["--output" "quiet"
                    "--dir" "corpus"
-                   "--namespace" "filter-tests.a"])))
+                   "--namespace" "cli-filter-tests.a"])))
       (expect
         (match?
          {:total 3
@@ -38,7 +38,7 @@
           :exit 0
           :results {::lr/source-type :lazytest/run
                     :children [{::lr/source-type :lazytest/ns
-                                :doc 'filter-tests.b
+                                :doc 'cli-filter-tests.b
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "b-1-test"}
                                            {::lr/source-type :lazytest/var
@@ -47,7 +47,7 @@
                                             :doc "b-3-test"}]}]}}
          (sut/run ["--output" "quiet"
                    "--dir" "corpus"
-                   "--namespace" "filter-tests.b"])))))
+                   "--namespace" "cli-filter-tests.b"])))))
   (describe "--var"
     (it "selects the right var"
       (expect
@@ -58,12 +58,12 @@
           :exit 0
           :results {::lr/source-type :lazytest/run
                     :children [{::lr/source-type :lazytest/ns
-                                :doc 'filter-tests.a
+                                :doc 'cli-filter-tests.a
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "a-1-test"}]}]}}
          (sut/run ["--output" "quiet"
                    "--dir" "corpus"
-                   "--var" "filter-tests.a/a-1-test"]))))
+                   "--var" "cli-filter-tests.a/a-1-test"]))))
     (it "can select multiple vars"
       (expect
         (match?
@@ -74,17 +74,17 @@
           :results {::lr/source-type :lazytest/run
                     :doc nil?
                     :children [{::lr/source-type :lazytest/ns
-                                :doc 'filter-tests.a
+                                :doc 'cli-filter-tests.a
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "a-1-test"}]}
                                {::lr/source-type :lazytest/ns
-                                :doc 'filter-tests.b
+                                :doc 'cli-filter-tests.b
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "b-2-test"}]}]}}
          (sut/run ["--output" "quiet"
                    "--dir" "corpus"
-                   "--var" "filter-tests.a/a-1-test"
-                   "--var" "filter-tests.b/b-2-test"])))))
+                   "--var" "cli-filter-tests.a/a-1-test"
+                   "--var" "cli-filter-tests.b/b-2-test"])))))
   (it "handles mismatched var and namespace filters"
     (expect
       (match?
@@ -95,7 +95,7 @@
         :results {::lr/source-type :lazytest/run
                   :doc nil?
                   :children [{::lr/source-type :lazytest/ns
-                              :doc 'filter-tests.a
+                              :doc 'cli-filter-tests.a
                               :children [{::lr/source-type :lazytest/var
                                           :doc "a-1-test"}
                                          {::lr/source-type :lazytest/var
@@ -103,13 +103,13 @@
                                          {::lr/source-type :lazytest/var
                                           :doc "a-3-test"}]}
                              {::lr/source-type :lazytest/ns
-                              :doc 'filter-tests.b
+                              :doc 'cli-filter-tests.b
                               :children [{::lr/source-type :lazytest/var
                                           :doc "b-2-test"}]}]}}
        (sut/run ["--output" "quiet"
                  "--dir" "corpus"
-                 "--namespace" "filter-tests.a"
-                 "--var" "filter-tests.b/b-2-test"]))))
+                 "--namespace" "cli-filter-tests.a"
+                 "--var" "cli-filter-tests.b/b-2-test"]))))
   (describe "--include"
     (it "selects by metadata on var"
       (expect
@@ -120,11 +120,11 @@
           :exit 0
           :results {::lr/source-type :lazytest/run
                     :children [{::lr/source-type :lazytest/ns
-                                :doc 'filter-tests.a
+                                :doc 'cli-filter-tests.a
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "a-1-test"}]}]}}
          (sut/run ["--output" "quiet"
-                   "--dir" "corpus/filter_tests"
+                   "--dir" "corpus/cli_filter_tests"
                    "--include" "on-var"]))))
     (it "selects by metadata in attr-map"
       (expect
@@ -135,11 +135,11 @@
           :exit 0
           :results {::lr/source-type :lazytest/run
                     :children [{::lr/source-type :lazytest/ns
-                                :doc 'filter-tests.a
+                                :doc 'cli-filter-tests.a
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "a-2-test"}]}]}}
          (sut/run ["--output" "quiet"
-                   "--dir" "corpus/filter_tests"
+                   "--dir" "corpus/cli_filter_tests"
                    "--include" "in-attr-map"])))))
   (describe "--exclude"
     (it "selects by metadata on var"
@@ -151,13 +151,13 @@
           :exit 0
           :results {::lr/source-type :lazytest/run
                     :children [{::lr/source-type :lazytest/ns
-                                :doc 'filter-tests.a
+                                :doc 'cli-filter-tests.a
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "a-2-test"}
                                            {::lr/source-type :lazytest/var
                                             :doc "a-3-test"}]}
                                {::lr/source-type :lazytest/ns
-                                :doc 'filter-tests.b
+                                :doc 'cli-filter-tests.b
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "b-1-test"}
                                            {::lr/source-type :lazytest/var
@@ -165,7 +165,7 @@
                                            {::lr/source-type :lazytest/var
                                             :doc "b-3-test"}]}]}}
          (sut/run ["--output" "quiet"
-                   "--dir" "corpus/filter_tests"
+                   "--dir" "corpus/cli_filter_tests"
                    "--exclude" "on-var"]))))
     (it "selects by metadata in attr-map"
       (expect
@@ -176,13 +176,13 @@
           :exit 0
           :results {::lr/source-type :lazytest/run
                     :children [{::lr/source-type :lazytest/ns
-                                :doc 'filter-tests.a
+                                :doc 'cli-filter-tests.a
                                 :children [{::lr/source-type :lazytest/var
                                               :doc "a-1-test"}
                                            {::lr/source-type :lazytest/var
                                             :doc "a-3-test"}]}
                                {::lr/source-type :lazytest/ns
-                                :doc 'filter-tests.b
+                                :doc 'cli-filter-tests.b
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "b-1-test"}
                                            {::lr/source-type :lazytest/var
@@ -190,5 +190,5 @@
                                            {::lr/source-type :lazytest/var
                                             :doc "b-3-test"}]}]}}
          (sut/run ["--output" "quiet"
-                   "--dir" "corpus/filter_tests"
+                   "--dir" "corpus/cli_filter_tests"
                    "--exclude" "in-attr-map"]))))))

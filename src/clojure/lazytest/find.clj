@@ -89,6 +89,7 @@
                 (assoc :children s)
                 (assoc :doc (ns-name n))
                 (assoc :type :lazytest/ns)
+                (assoc :metadata (meta n))
                 (cond-> focused? (assoc-in [:metadata :focus] (boolean focused?)))
                 (suite)))))))
 

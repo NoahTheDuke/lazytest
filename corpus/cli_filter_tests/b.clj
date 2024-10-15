@@ -1,16 +1,15 @@
-(ns filter-tests.a
+(ns cli-filter-tests.b
   (:require
    [lazytest.core :refer [defdescribe expect it]]))
 
-(defdescribe ^:on-var a-1-test
+(defdescribe b-1-test
   (it "works"
     (expect (+ 1 1))))
 
-(defdescribe a-2-test
-  {:in-attr-map true}
+(defdescribe b-2-test
   (it "works"
     (expect (+ 1 1))))
 
-(defdescribe a-3-test
+(defdescribe b-3-test
   (it "works"
     (expect (+ 1 1))))

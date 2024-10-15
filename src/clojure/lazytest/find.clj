@@ -81,17 +81,18 @@
   Vars such as *1, *2, *3"
   [n]
   (when-not (= (the-ns 'clojure.core) n)
-    (or (:test-suite (meta n)) ;; deprecated, undocumented
-        (:lazytest/ns-suite (meta n))
-        (when-let [s (test-suites-for-ns n)]
-          (let [focused? (some #(-> % :metadata :focus) s)]
-            (-> (meta n)
-                (assoc :children s)
-                (assoc :doc (ns-name n))
-                (assoc :type :lazytest/ns)
-                (assoc :metadata (meta n))
-                (cond-> focused? (assoc-in [:metadata :focus] (boolean focused?)))
-                (suite)))))))
+    (let [nmeta (meta n)]
+      (or (:test-suite nmeta) ;; deprecated, undocumented
+          (:lazytest/ns-suite nmeta)
+          (when-let [s (test-suites-for-ns n)]
+            (let [focused? (some #(-> % :metadata :focus) s)]
+              (-> {:children s
+                   :doc (ns-name n)
+                   :type :lazytest/ns
+                   :metadata (dissoc nmeta :context)
+                   :context (:context nmeta)}
+                  (cond-> focused? (assoc-in [:metadata :focus] (boolean focused?)))
+                  (suite))))))))
 
 (comment
   (find-ns-suite *ns*))

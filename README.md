@@ -103,9 +103,11 @@ Any of the below `[options]` can also be provided:
 * `--help`: Print help information.
 * `--version`: Print version information.
 
-Note: If both `--namespace` and `--var` are provided, then Lazytest will run all tests within the namespaces AND the specified vars. They are inclusive, not exclusive.
+> [!NOTE]
+> If both `--namespace` and `--var` are provided, then Lazytest will run all tests within the namespaces AND the specified vars. They are inclusive, not exclusive.
 
-Note: `--exclude` overrides `--include`, if both are provided.
+> [!NOTE]
+> `--exclude` overrides `--include`, if both are provided.
 
 ### Watch mode
 
@@ -206,16 +208,32 @@ These can get unweildy if multiple test cases are included before a given implem
              (expect (= 2.0 (describe-example 1.0 1.0)))))})
 ```
 
-## Focusing on Individual Tests and Suites
+## Partitioning Individual Tests and Suites
 
 All of the test suite and test case macros (`defdescribe`, `describe`, `it`, `expect-it`) take a metadata map after the docstring. Adding `:focus true` to this map will cause *only* that test/suite to be run. Removing it will return to the normal behavior (run all tests).
 
 ```clojure
-(defdescribe my-test
-  "fancy test"
-  {:focus true}
-  ...)
+(defdescribe focus-test
+  (it "will be run"
+    {:focus true}
+    (expect (= 1 2)))
+  (it "will be skipped"
+    (expect (= 1 1))))
 ```
+
+And adding `:skip true` to the metadata map will cause that test/suite to be *not* run:
+
+```clojure
+(defdescribe skip-test
+  (it "will be skipped"
+    {:skip true}
+    (expect (= 1 2)))
+  (it "will be run"
+    (expect (= 1 1))))
+```
+
+> [!NOTE]
+> `:skip` overrides `:focus`, so `{:focus true :skip true}` will be skipped.
 
 Additionally, you can use the cli option `-n`/`--namespace` to specify one or more namespaces to focus wholly, or you can use the cli option `-v`/`--var` to specify one or more fully-qualified vars to focus. This allows for testing from the command line without modifying source files.
 
@@ -437,11 +455,13 @@ This is inspired by [Mocha](https://mochajs.org)'s excellent documentation.
 
 The smallest unit of testing is a *test case* (see `lazytest.test-case/test-case`). When the `:body` function is called, it may throw an exception to indicate failure. If it does not throw an exception, it is assumed to have passed. The return value of a test case is always ignored. Running a test case may have side effects.
 
-**Note:** The macros `lazytest.core/it` and `lazytest.core/expect-it` create test cases.
+> [!NOTE]
+> The macros `lazytest.core/it` and `lazytest.core/expect-it` create test cases.
 
 Tests cases are organized into *suites* (see `lazytest.suite/suite`). A suite has `:children`, which is a sequence, possibly lazy, of test cases and/or test suites. Suites, therefore, may be nested inside other suites, but nothing may be nested inside a test case.
 
-**Note:** The macro `lazytest.core/describe` creates a test suite. The macro `lazytest.core/defdescribe` creates a no-argument function that returns a test suite.
+> [!NOTE]
+> The macro `lazytest.core/describe` creates a test suite. The macro `lazytest.core/defdescribe` creates a no-argument function that returns a test suite.
 
 A test suite body SHOULD NOT have side effects; it is only used to generate test cases and/or other test suites.
 

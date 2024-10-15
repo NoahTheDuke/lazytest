@@ -4,10 +4,22 @@
 
 Wrote better documentation for `lazytest.core`, highlighting the primary vars and their use cases.
 
+Added generic support for skipping test cases or suites with `:skip` metadata.
+
+```clojure
+(describe "many cases"
+  (it "will be skipped"
+    {:skip true}
+    (expect (= 1 2)))
+  (it "will be ran"
+    (expect (= 1 1))))
+```
+
 ### Added
 
 - `lazytest.runner/run-test-suite`: For running a suite value instead of running a namespace or a var.
 - `lazytest.core/update-children`: An intended-for-internal-use function useful in defining suites and test-cases.
+- Support `:skip` metadata on suites and test-cases.
 
 ### Changed
 

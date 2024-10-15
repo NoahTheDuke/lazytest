@@ -30,8 +30,9 @@
              (let [ret (reduce
                          (fn [{:keys [any-focused items]} cur]
                            (let [m (:metadata cur)
-                                 this-excluded? (when exclude?
-                                                  (exclude? m))
+                                 this-excluded? (or (:skip m)
+                                                    (when exclude?
+                                                      (exclude? m)))
                                  this-focused? (or (:focus m)
                                                    (when include? (include? m)))
                                  cur (if this-focused?

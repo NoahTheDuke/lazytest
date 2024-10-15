@@ -3,7 +3,7 @@
    [clj-reload.core :as reload]
    [clojure.java.io :as io]
    [clojure.string :as str]
-   [lazytest.color :refer [colorize]]) 
+   [lazytest.color :refer [colorize]])
   (:import
    [java.io File]
    [java.util.concurrent ScheduledThreadPoolExecutor TimeUnit]))

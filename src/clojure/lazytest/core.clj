@@ -257,7 +257,7 @@
   (let [[doc body] (get-arg string? body)
         [attr-map body] (get-arg map? body)
         test-var (list 'var (symbol (str *ns*) (str test-name)))
-        attr-map (-> (meta test-name) 
+        attr-map (-> (meta test-name)
                      (dissoc :doc)
                      (merge attr-map)
                      (assoc :var test-var))

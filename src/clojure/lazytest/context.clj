@@ -1,4 +1,4 @@
-(ns lazytest.context 
+(ns lazytest.context
   (:require
    [clojure.test :as c.t]))
 

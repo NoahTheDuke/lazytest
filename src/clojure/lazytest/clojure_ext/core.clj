@@ -1,4 +1,4 @@
-(ns lazytest.clojure-ext.core 
+(ns lazytest.clojure-ext.core
   (:import
     (java.util.regex Pattern)))
 

@@ -308,7 +308,7 @@
     (newline)
     (println (format "Ran %s tests containing %s test cases." test-vars total))
     (println (format "%s %s, %s %s."
-                     fails 
+                     fails
                      (str "failure" (when (not= 1 fails) "s"))
                      errors
                      (str "error" (when (not= 1 errors) "s"))))

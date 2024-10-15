@@ -1,4 +1,4 @@
-(ns lazytest.runner-test 
+(ns lazytest.runner-test
   (:require
    [clojure.string :as str]
    [lazytest.config :refer [->config]]

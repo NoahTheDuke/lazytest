@@ -1,4 +1,4 @@
-(ns lazytest.config 
+(ns lazytest.config
   (:require
    [clojure.java.io :as io]
    [clojure.string :as str]))

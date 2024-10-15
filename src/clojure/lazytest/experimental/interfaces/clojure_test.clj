@@ -58,7 +58,7 @@
        (and (pos? (count argv))
             (pos? (count args))
             (zero? (mod (count args) (count argv)))))
-    (let [checks (map (fn [a] `(is ~(with-meta (temp/apply-template argv expr a) (meta &form)))) 
+    (let [checks (map (fn [a] `(is ~(with-meta (temp/apply-template argv expr a) (meta &form))))
                       (partition (count argv) args))]
       `(do ~@checks))
     (throw (IllegalArgumentException. "The number of args doesn't match are's argv."))))

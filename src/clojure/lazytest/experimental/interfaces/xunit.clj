@@ -1,4 +1,4 @@
-(ns lazytest.experimental.interfaces.xunit 
+(ns lazytest.experimental.interfaces.xunit
   "EXPERIMENTAL. COULD BE CHANGED AT ANY TIME. Please share usage reports at <https://github.com/noahtheduke/lazytest/issues>.
 
   An adaption of the [xUnit](https://en.wikipedia.org/wiki/XUnit) style of test frameworks. A fairly simple aliasing of the [[lazytest.core]] macros:

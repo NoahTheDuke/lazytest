@@ -10,7 +10,7 @@
   "A test case body may execute arbitrary code and may have side effects.
   It should throw an exception to indicate failure. Returning without
   throwing an exception indicates success."
-  {:arglists '([{:keys [type doc body context ns file line metadata] :as test-case}])}
+  {:arglists '([{:keys [doc body context ns file line metadata] :as test-case}])}
   [base]
   (map->TestCase (-> base
                      (update :context #(or % {}))

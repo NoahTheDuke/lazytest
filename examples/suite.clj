@@ -1,30 +1,49 @@
 (ns examples.suite
   (:require
    [lazytest.core :refer [defdescribe describe expect]]
-   [lazytest.suite :refer [suite test-seq]]
+   [lazytest.suite :refer [suite]]
    [lazytest.test-case :refer [test-case]]))
 
 ;; manually writing test cases (instead of using `it`)
 (defn common-test-cases [x]
-  [(vary-meta
-    (test-case #(expect (= x 1)))
-    assoc :doc (str x " equals one"))
-   (vary-meta
-    (test-case #(expect (= x 2)))
-    assoc :doc (str x " equals two"))])
+  [(when (= x 0)
+     (test-case {:doc (str x " equals zero")
+                 :body #(expect (= x 1))}))
+   (when (= x 1)
+     (test-case {:doc (str x " equals one")
+                 :body #(expect (= x 1))}))
+   (when (= x 2)
+     (test-case {:doc (str x " equals two")
+                 :body #(expect (= x 2))}))
+   (when (= x 3)
+     (test-case {:doc (str x " equals three")
+                 :body #(expect (= x 3))}))
+   (when (= x 4)
+     (test-case {:doc (str x " equals four")
+                 :body #(expect (= x 4))}))
+   (when (= x 5)
+     (test-case {:doc (str x " equals five")
+                 :body #(expect (= x 5))}))])
 
-;; manually writing suites (instead of using `describe`)
+;; manually writing a suite (instead of using `describe`)
 (def s1
   (suite
-   (vary-meta
-    (test-seq (common-test-cases 1))
-    assoc :doc "One")))
+    {:doc "One"
+     :children (common-test-cases 1)}))
 
 ;; manually writing a describe var (instead of using `defdescribe`)
 (def s2
   (describe "Two"
     (common-test-cases 2)))
 
-;; using the above in a normal `defdescribe`
-(defdescribe s3 "Three"
-  (map common-test-cases (range 3 5)))
+;; writing a normal defdescribe
+(defdescribe s3
+  "Three"
+  (common-test-cases 3))
+
+;; including all of the above in a distinct test
+(defdescribe s4 "Four"
+  s1
+  s2
+  (s3)
+  (map common-test-cases (range 4 6)))

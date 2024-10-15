@@ -1,6 +1,6 @@
 (ns lazytest.clojure-ext.core
   (:import
-    (java.util.regex Pattern)))
+   (java.util.regex Pattern)))
 
 (def pattern-flags
   {:case-insensitive Pattern/CASE_INSENSITIVE

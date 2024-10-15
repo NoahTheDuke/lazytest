@@ -32,7 +32,6 @@
   * [[causes-with-msg?]]: Calls given no-arg function, returns true if it throws expected class anywhere in the cause chain and the cause's message matches given regex.
   * [[ok?]]: Calls given no-arg function, returns true if no exception is thrown. (Useful for ignoring logical false return values.)
   "
-  (:refer-clojure :exclude [test])
   (:require
    [lazytest.context :as ctx]
    [lazytest.malli]
@@ -202,6 +201,15 @@
 
 (def ^:dynamic *context* nil)
 
+(defn update-children
+  "If in a *context* and child is a suite or test-case, append to the context's :children and return nil. Otherwise, return the child."
+  [child]
+  (if (and *context* (or (suite/suite? child)
+                         (test-case/test-case? child)))
+    (do (swap! *context* update :children conj child)
+        nil)
+    child))
+
 (defmacro describe
   "Defines a suite of tests.
 
@@ -232,12 +240,9 @@
                       (swap! *context* update :context
                              (fn [c#]
                                (ctx/merge-context (cons c# ctx-fns#)))))
-                    (run! #(if (sequential? %) (doall %) %) (flatten [~@children]))
+                    (run! update-children (flatten [~@children]))
                     @*context*)]
-       (if *context*
-         (do (swap! *context* update :children conj suite#)
-             nil)
-         suite#))))
+       (update-children suite#))))
 
 (defmacro defdescribe
   "`describe` helper that assigns a `describe` call to a Var of the given name.
@@ -266,7 +271,8 @@
                body (concat body))]
     `(def ~(vary-meta test-name assoc :type :lazytest/var)
        (fn ~(gensym (str test-name "_")) []
-         (assoc (describe ~@body) :type :lazytest/var)))))
+         (binding [*context* nil]
+           (assoc (describe ~@body) :type :lazytest/var))))))
 
 (defmacro given
   "DEPRECATED: No longer needed. Use a normal `let`, please.
@@ -310,10 +316,7 @@
                               :body (fn it# [] (let [ret# (do ~@body)] ret#))
                               :context (binding [*context* nil]
                                          (ctx/merge-context ~context))))]
-       (if *context*
-         (do (swap! *context* update :children conj test-case#)
-             nil)
-         test-case#))))
+       (update-children test-case#))))
 
 (defmacro expect-it
   "Defines a single test case that wraps the given expr in an `expect` call.
@@ -345,10 +348,7 @@
       (assert (not= "expect" (name (first assertion)))))
     `(let [test-case# (test-case/test-case
                        (assoc ~metadata :body (fn expect-it# [] (expect ~assertion ~doc))))]
-       (if *context*
-         (do (swap! *context* update :children conj test-case#)
-             nil)
-         test-case#))))
+       (update-children test-case#))))
 
 ;;; Helpers
 

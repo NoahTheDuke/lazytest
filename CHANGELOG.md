@@ -7,11 +7,13 @@ Wrote better documentation for `lazytest.core`, highlighting the primary vars an
 ### Added
 
 - `lazytest.runner/run-test-suite`: For running a suite value instead of running a namespace or a var.
+- `lazytest.core/update-children`: An intended-for-internal-use function useful in defining suites and test-cases.
 
 ### Changed
 
 - `lazytest.core/it` and `lazytest.core/expect-it` return `nil` if within `*context*`.
 - `lazytest.experimental.interfaces.midje/fact` no longer wraps `it` in a `describe`.
+- `lazytest.core/defdescribe` ignores `*context*`, allowing it to be nested.
 
 ## 1.1.1
 

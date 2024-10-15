@@ -19,6 +19,8 @@
   {:arglists '([obj config])}
   #'filter-tree-dispatch)
 
+(defmethod filter-tree nil [_obj _config] nil)
+
 (defn filter-suite
   "If any items in sequence s are focused, return them, with focus
   metadata added to the sequence; else return s unchanged."

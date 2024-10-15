@@ -12,6 +12,8 @@
   (instance? Suite obj))
 
 (defn suite
+  "A suite is a container of children, which may be another suite or a test-case."
+  {:arglists '([{:keys [type doc children context ns file line var metadata] :as suite}])}
   [base]
   (-> base
       (update :children #(or % []))

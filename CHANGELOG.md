@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Add support for [Expectations v2](https://github.com/clojure-expectations/clojure-test) in `lazytest.extensions.expectations`. Only ports over `expect` and related helpers.
+
 ## 1.2.0
 
 Released `2024-10-15`.

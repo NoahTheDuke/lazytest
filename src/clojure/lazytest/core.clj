@@ -66,6 +66,8 @@
 (defmacro ->ex-failed
   "Useful for all expectations. Sets the base
   properties on the ExpectationFailed."
+  {:arglists '([expr data]
+               [&form expr {:keys [message evaluated actual]}])}
   ([expr data] `(->ex-failed nil ~expr ~data))
   ([_&form expr data]
    `(let [data# ~data]

@@ -125,7 +125,10 @@
                 (expect-fn expr msg-gensym)
                 (expect-any expr msg-gensym))
              (catch ExpectationFailed ex#
-               (let [data# (update (ex-data ex#) :message #(or % ~msg-gensym))]
+               (let [data# (-> (ex-data ex#)
+                               (update :message #(or % ~msg-gensym))
+                               (assoc :line ~(:line (meta &form)))
+                               (assoc :column ~(:column (meta &form))))]
                  (throw (->ex-failed nil data#))))
              (catch Throwable t#
                (throw (->ex-failed ~&form ~expr {:message ~msg-gensym
@@ -304,7 +307,7 @@
   {:arglists '([doc & body]
                [doc|sym? attr-map? & body])}
   [doc & body]
-  (assert (pos? (count body)) "Must provide body")
+  (assert (pos? (count body)) (str "Must provide body for " (pr-str doc)))
   (let [doc (if (symbol? doc)
               (if (contains? &env doc)
                 doc

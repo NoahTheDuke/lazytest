@@ -48,4 +48,4 @@ jobs:
       - name: tests
         run: |
           clojure -T:prep javac
-          clojure -M:provided:dev:test:run
+          clojure -M:provided:dev:test:ci

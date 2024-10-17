@@ -9,6 +9,7 @@
    [lazytest.cli :refer [validate-opts]]
    [lazytest.config :refer [->config]]
    [lazytest.malli]
+   [lazytest.md-parser :as md]
    [lazytest.results :refer [summarize summary-exit-value]]
    [lazytest.runner :refer [run-tests]]
    [lazytest.watch :as watch]))
@@ -26,11 +27,19 @@
                 (filter ns-filter))
           dirs)))
 
+(defn add-md-tests
+  [config]
+  (->> (:md config)
+       (map io/file)
+       (keep #(md/build-tests-for-file % (slurp %)))))
+
 (defn require-dirs [config dir]
   (let [dirs (map io/file (or dir #{"test"}))
-        nses (find-ns-decls config dirs)]
+        md-nses (add-md-tests config)
+        nses (into (find-ns-decls config dirs)
+                   md-nses)]
     (when (empty? nses)
-      (throw (ex-info "No namespaces to run" {})))
+      (throw (ex-info "No namespaces to run" {:dir dir})))
     (apply require nses)
     nses))
 

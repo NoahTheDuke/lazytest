@@ -9,19 +9,22 @@ An alternative to `clojure.test`, aiming to be feature-rich and easily extensibl
 
 Add it to your deps.edn or project.clj:
 
-```clojure
+```clojure skip=true
 {:aliases
  {:test {:extra-deps {io.github.noahtheduke/lazytest {:mvn/version "1.2.0"}}
          :extra-paths ["test"]
          :main-opts ["-m" "lazytest.main"]}}}
 ```
 
-In a test file:
+In a test file, import with:
 
 ```clojure
-(ns example.readme-test
-  (:require [lazytest.core :refer [defdescribe describe expect it]]))
+(require '[lazytest.core :refer [after around before before-each defdescribe describe expect expect-it it]])
+```
 
+And then write a simple test:
+
+```clojure skip=true
 (defdescribe seq-fns-test
   (describe keep
     (it "should reject nils"
@@ -144,11 +147,13 @@ To help write meaningful tests, a couple aliases have been defined for those who
 These can be used interchangeably:
 
 ```clojure
-(defdescribe +-test
+(require '[lazytest.core :refer [context specify should]])
+
+(defdescribe context-test
   (context "with integers"
     (specify "that sums work"
       (should (= 7 (+ 3 4)) "follows basic math")
-      (expect (not= 7 (1 + 1)))))
+      (expect (not= 7 (+ 1 1))))))
 ```
 
 There are a number of experimental namespaces that define other aliases, with distinct behavior, if the base set of vars don't fit your needs:
@@ -170,49 +175,51 @@ In addition to finding the tests defined with `defdescribe`, Lazytest also check
 How to write them:
 
 ```clojure
-(ns example.metadata-test ...)
-
-(defn fn-example {:test #(expect ...)})
-(defn test-case-example {:test (it "test case example docstring" ...)})
-(defn suite-example {:test (suite ...)})
-(defn describe-example {:test (describe "top level docstring" ...)})
+(defn fn-example
+  {:test #(expect (= 1 1))}
+  [])
+(defn test-case-example
+  {:test (it "test case example docstring" (expect (= 1 1)))}
+  [])
+(defn describe-example
+  {:test (describe "top level docstring"
+           (it "first test case" (expect (= 1 1)))
+           (it "second test case" (expect (= 1 1))))}
+  [])
 ```
 
 How they're printed:
 
 ```
-  example.metadata-test
-    #'example.metadata-test/fn-example
+  lazytest.readme-test
+    #'lazytest.readme-test/fn-example
       √ `:test` metadata
-    #'example.metadata-test/test-case-example
+    #'lazytest.readme-test/test-case-example
       √ test case example docstring
-    #'example.metadata-test/suite-example
-      √ first test case
-      √ second test case
-    #'example.metadata-test/describe-example
+    #'lazytest.readme-test/describe-example
       top level docstring
-        √ third test case
-        √ fourth test case
+        √ first test case
+        √ second test case
 ```
 
 These can get unweildy if multiple test cases are included before a given implementation, so I recommend either moving them to a dedicated test file or moving the `attr-map` to the end of the function definition:
 
 ```clojure
-(defn describe-example
+(defn post-attr-example
   ([a b]
    (+ a b))
   {:test (describe "Should be simple addition"
            (it "handles ints"
-             (expect (= 2 (describe-example 1 1))))
+             (expect (= 2 (post-attr-example 1 1))))
            (it "handles floats"
-             (expect (= 2.0 (describe-example 1.0 1.0)))))})
+             (expect (= 2.0 (post-attr-example 1.0 1.0)))))})
 ```
 
 ## Partitioning Individual Tests and Suites
 
 All of the test suite and test case macros (`defdescribe`, `describe`, `it`, `expect-it`) take a metadata map after the docstring. Adding `:focus true` to this map will cause *only* that test/suite to be run. Removing it will return to the normal behavior (run all tests).
 
-```clojure
+```clojure skip=true
 (defdescribe focus-test
   (it "will be run"
     {:focus true}
@@ -223,7 +230,7 @@ All of the test suite and test case macros (`defdescribe`, `describe`, `it`, `ex
 
 And adding `:skip true` to the metadata map will cause that test/suite to be *not* run:
 
-```clojure
+```clojure skip=true
 (defdescribe skip-test
   (it "will be skipped"
     {:skip true}
@@ -249,7 +256,7 @@ To handle set up and tear down of stateful architecture, Lazytest provides the h
     (describe "before and after example"
       (before (vswap! state conj :before))
       (after (vswap! state conj :after))
-      (expect-it "temp" (vswap! state conj :expect)))
+      (expect-it "can do side effects" (vswap! state conj :expect)))
     (describe "results"
       (expect-it "has been properly tracked"
         (= [:before :expect :after] @state)))))
@@ -261,7 +268,7 @@ To handle set up and tear down of stateful architecture, Lazytest provides the h
                    (vswap! state conj :around-before)
                    (f)
                    (vswap! state conj :around-after))]}
-      (expect-it "temp" true))
+      (expect-it "can do side effects" true))
     (describe "results"
       (expect-it "correctly ran the whole thing"
         (= [:around-before :around-after] @state)))))
@@ -271,8 +278,8 @@ To handle set up and tear down of stateful architecture, Lazytest provides the h
     (describe "each examples"
       {:context [(before (vswap! state conj :before))
                  (before-each (vswap! state conj :before-each))]}
-      (expect-it "temp" (vswap! state conj :expect-1))
-      (expect-it "temp" (vswap! state conj :expect-2)))
+      (expect-it "can do side effects" (vswap! state conj :expect-1))
+      (expect-it "can do side effects" (vswap! state conj :expect-2)))
     (expect-it "has been properly tracked"
       (= [:before :before-each :expect-1 :before-each :expect-2] @state))))
 ```
@@ -292,7 +299,6 @@ Lazytest comes with a number of reporters built-in. These print various informat
 The default Lazytest reporter. Inspired heavily by [Mocha's Spec][mocha spec] reporter, it prints each suite and test case indented as they are written in the test files.
 
 [mocha spec]: https://mochajs.org/#spec
-
 
 ```
   lazytest.core-test

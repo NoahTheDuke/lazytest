@@ -4,6 +4,7 @@
         org.clojure/tools.namespace {:mvn/version "1.5.0"}
         io.github.tonsky/clj-reload {:mvn/version "0.7.0"}
         dev.weavejester/medley {:mvn/version "1.8.1"}
+        cond-plus/cond-plus {:mvn/version "1.1.1"}
         metosin/malli {:mvn/version "0.16.3"}}
  :deps/prep-lib {:ensure "target/classes"
                  :alias :prep
@@ -28,6 +29,8 @@
 
   ;; Run the tests with `-M:test:run`.
   :test {:extra-paths ["test/clojure"]}
+
+  :ci {:main-opts ["-m" "lazytest.main" "--md" "README.md"]}
 
   :examples {:extra-paths ["."]}
 

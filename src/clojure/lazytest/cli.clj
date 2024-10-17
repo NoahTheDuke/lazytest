@@ -1,10 +1,11 @@
 (ns lazytest.cli
   (:require
+   [clojure.java.io :as io]
    [clojure.string :as str]
    [clojure.tools.cli :as cli]
    [lazytest.config :refer [lazytest-version]]))
 
-(defn update-args [m k v]
+(defn update-vec [m k v]
   (update m k #(conj (or % []) v)))
 
 (defn update-set [m k v]
@@ -12,7 +13,7 @@
 
 (def cli-options
   [["-d" "--dir DIR" "Directory containing tests. (Defaults to \"test\".)"
-    :assoc-fn update-args]
+    :assoc-fn update-vec]
    ["-n" "--namespace SYMBOL" "Run only the specified test namespaces. Can be given multiple times."
     :id :ns-filter
     :parse-fn symbol
@@ -33,7 +34,10 @@
                 (let [output (if (qualified-symbol? v)
                                v
                                (symbol "lazytest.reporters" (name v)))]
-                  (update-args args k output)))]
+                  (update-vec args k output)))]
+   [nil "--md FILE" "Run doctests for given file. Can be given multiple times."
+    :parse-fn io/file
+    :assoc-fn update-vec]
    [nil "--watch" "Run under Watch mode. Uses clj-reload to reload changed and dependent namespaces, then reruns test suite."]
    [nil "--delay NUM" "(Watch mode) How many milliseconds to wait before checking for changes. (Defaults to 500.)"
     :parse-fn parse-long]

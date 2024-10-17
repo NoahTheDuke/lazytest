@@ -30,9 +30,11 @@
     :else reporter))
 
 (defn ->config [config]
-  (let [runner (resolve-reporter
-                 (or (:reporter config) 'lazytest.reporters/nested))]
-    (-> config
-        (assoc :lazytest.runner/depth 1)
-        (assoc :lazytest.runner/suite-history [])
-        (assoc :reporter runner))))
+  (if (:lazytest.runner/depth config)
+    config
+    (let [reporter (resolve-reporter
+                    (or (:reporter config) 'lazytest.reporters/nested))]
+      (-> config
+          (assoc :lazytest.runner/depth 1)
+          (assoc :lazytest.runner/suite-history [])
+          (assoc :reporter reporter)))))

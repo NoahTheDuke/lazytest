@@ -1,5 +1,6 @@
 (ns lazytest.runner
   (:require
+   [lazytest.config :refer [->config]]
    [lazytest.context :refer [combine-arounds propagate-eachs run-after-eachs
                              run-afters run-before-eachs run-befores]]
    [lazytest.filter :refer [filter-tree]]
@@ -106,37 +107,40 @@
 
 (defn ^:no-doc filter-and-run
   [suite config]
-  (-> suite
-      (filter-tree config)
-      (run-tree config)))
+  (let [config (->config config)]
+    (-> suite
+        (filter-tree config)
+        (run-tree config))))
 
 (defn run-tests
   "Runs tests defined in the given namespaces. Applies filters in config."
-  ([namespaces] (run-tests namespaces {:reporter nested}))
+  ([namespaces] (run-tests namespaces (->config {:reporter nested})))
   ([namespaces config]
    (-> (apply find-suite namespaces)
        (filter-and-run config))))
 
 (defn run-all-tests
   "Run tests defined in all loaded namespaces. Applies filters in config."
-  ([] (run-all-tests nil))
+  ([] (run-all-tests (->config nil)))
   ([config]
    (run-tests nil config)))
 
 (defn run-test-var
   "Run test var. Looks for a suite as the var's value or in `:test` metadata. Applies filters in config."
-  [v config]
-  (assert (var? v) "Must be a var")
-  (when-let [test-var (find-var-test-value v)]
-    (-> (suite {:type :lazytest/run
-                :nses [(the-ns (symbol (namespace (symbol v))))]
-                :children [test-var]})
-        (filter-and-run config))))
+  ([v] (run-test-var v (->config nil)))
+  ([v config]
+   (assert (var? v) "Must be a var")
+   (when-let [test-var (find-var-test-value v)]
+     (-> (suite {:type :lazytest/run
+                 :nses [(the-ns (symbol (namespace (symbol v))))]
+                 :children [test-var]})
+         (filter-and-run config)))))
 
 (defn run-test-suite
   "Run test suite. Applies filters in config."
-  [s config]
-  (assert (suite? s) "Must provide a suite.")
-  (-> (suite {:type :lazytest/run
-              :children [s]})
-      (filter-and-run config)))
+  ([s] (run-test-suite s (->config nil)))
+  ([s config]
+   (assert (suite? s) "Must provide a suite.")
+   (-> (suite {:type :lazytest/run
+               :children [s]})
+       (filter-and-run config))))

@@ -5,6 +5,8 @@
 ### Added
 
 - Add support for [Expectations v2](https://github.com/clojure-expectations/clojure-test) in `lazytest.extensions.expectations`. Only ports over `expect` and related helpers.
+- Add rudimentary test-doc support, which allows for specifying markdown files to parse and treat as tests for the purposes of test runs.
+- `--md FILE` is how to specify markdown files to parse and treat as Lazytest tests.
 
 ## 1.2.0
 

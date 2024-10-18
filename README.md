@@ -5,6 +5,33 @@
 
 An alternative to `clojure.test`, aiming to be feature-rich and easily extensible.
 
+## Table of Contents
+
+<!-- toc -->
+
+- [Getting Started](#getting-started)
+- [Why a new test framework?](#why-a-new-test-framework)
+- [Usage](#usage)
+  * [Watch mode](#watch-mode)
+- [Writing tests with 'lazytest'](#writing-tests-with-lazytest)
+  * [Aliases](#aliases)
+  * [Var Metadata](#var-metadata)
+- [Partitioning Individual Tests and Suites](#partitioning-individual-tests-and-suites)
+- [Setup and Teardown](#setup-and-teardown)
+- [Output](#output)
+  * [`lazytest.reporters/nested`](#lazytestreportersnested)
+  * [`lazytest.reporters/dots`](#lazytestreportersdots)
+  * [`lazytest.reporters/clojure-test`](#lazytestreportersclojure-test)
+  * [`lazytest.reporters/quiet`](#lazytestreportersquiet)
+  * [`lazytest.reporters/debug`](#lazytestreportersdebug)
+- [Editor Integration](#editor-integration)
+  * [Example configuration](#example-configuration)
+- [Run Lifecycle Overview](#run-lifecycle-overview)
+- [Lazytest Internals](#lazytest-internals)
+- [License](#license)
+
+<!-- tocstop -->
+
 ## Getting Started
 
 Add it to your deps.edn or project.clj:
@@ -19,7 +46,7 @@ Add it to your deps.edn or project.clj:
 In a test file, import with:
 
 ```clojure
-(require '[lazytest.core :refer [after around before before-each defdescribe describe expect expect-it it]])
+(require '[lazytest.core :refer [defdescribe describe expect it]])
 ```
 
 And then write a simple test:
@@ -60,8 +87,6 @@ in lazytest/readme_test.clj:11
 Ran 2 test cases in 0.00272 seconds.
 1 failure.
 ```
-
-[TOC]
 
 ## Why a new test framework?
 
@@ -253,6 +278,8 @@ To partition your test suite based on metadata, you can use `-i`/`--include` to 
 To handle set up and tear down of stateful architecture, Lazytest provides the hooks `before`, `before-each`, `after-each`, `after`, and `around`, along with the helper `set-ns-context!`. You can call them directly in a `describe` block or add them to a `:context` vector in suite metadata. (To read a more specific description of how this works, please read the section titled `Run Lifecycle Overview`.)
 
 ```clojure
+(require '[lazytest.core :refer [expect-it before after around]])
+
 (defdescribe before-and-after-test
   (let [state (volatile! [])]
     (describe "before and after example"

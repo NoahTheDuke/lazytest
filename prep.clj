@@ -4,7 +4,8 @@
    [clojure.tools.build.api :as b]))
 
 (def class-dir "target/classes")
-(def basis (delay (b/create-basis {:project "deps.edn"})))
+(def basis (delay (b/create-basis {:project "deps.edn"
+                                   :aliases [:provided]})))
 
 (defn clean [opts]
   (println "Cleaning target")

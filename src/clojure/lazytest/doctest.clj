@@ -1,4 +1,4 @@
-(ns lazytest.md-parser 
+(ns lazytest.doctest 
   (:require
    [clojure.string :as str]
    [cond-plus.core :refer [cond+]]
@@ -180,7 +180,7 @@ Lots of interesting stuff here
        (str/join sep $)))))
 
 (defn build-tests-for-file
-  [file file-str]
+  [[file file-str]]
   (let [parsed-file (parse-md file-str)
         non-test-code (->> {:children parsed-file}
                            (tree-seq (some-fn :children :code)
@@ -209,5 +209,5 @@ Lots of interesting stuff here
 (comment
   (require '[lazytest.runner :as runner])
   (remove-ns 'readme-md)
-  (build-tests-for-file "README.md" example-file)
+  (build-tests-for-file ["README.md" example-file])
   (lazytest.runner/run-tests [(the-ns 'readme-md)]))

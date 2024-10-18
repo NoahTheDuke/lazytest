@@ -9,7 +9,7 @@
    [lazytest.cli :refer [validate-opts]]
    [lazytest.config :refer [->config]]
    [lazytest.malli]
-   [lazytest.md-parser :as md]
+   [lazytest.doctest :as dt]
    [lazytest.results :refer [summarize summary-exit-value]]
    [lazytest.runner :refer [run-tests]]
    [lazytest.watch :as watch]))
@@ -31,7 +31,8 @@
   [config]
   (->> (:md config)
        (map io/file)
-       (keep #(md/build-tests-for-file % (slurp %)))))
+       (map (juxt identity slurp))
+       (keep dt/build-tests-for-file)))
 
 (defn require-dirs [config dir]
   (let [dirs (map io/file (or dir #{"test"}))

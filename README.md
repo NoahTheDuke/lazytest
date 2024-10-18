@@ -61,6 +61,8 @@ Ran 2 test cases in 0.00272 seconds.
 1 failure.
 ```
 
+[TOC]
+
 ## Why a new test framework?
 
 `clojure.test` has existed since 1.1 and while it's both ubiquitous and useful, it has a number of [problems][problems]:

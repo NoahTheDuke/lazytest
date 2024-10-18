@@ -176,6 +176,9 @@ Lots of interesting stuff here
 (defn build-tests-for-file
   [[file file-str]]
   (let [parsed-file (parse-md file-str)
+        parsed-file (if (= 1 (:level (first parsed-file)))
+                      (next parsed-file)
+                      parsed-file)
         tests (build-single-test 0 parsed-file)
         new-ns (slugify (str file))
         test-file (str (format "(ns %s)" new-ns)

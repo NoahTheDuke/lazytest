@@ -1,8 +1,7 @@
-(ns lazytest.doctest 
+(ns lazytest.doctest
   (:require
    [clojure.string :as str]
-   [cond-plus.core :refer [cond+]]
-   [medley.core :as med]) 
+   [cond-plus.core :refer [cond+]]) 
   (:import
    [java.util.regex Matcher]))
 
@@ -28,6 +27,8 @@ Lots of interesting stuff here
 
 ### Subheader 1
 ```clojure
+(require '[clojure.pprint :refer [pprint]])
+
 (+ 2 2)
 ;;=> 4
 ```
@@ -68,7 +69,7 @@ Lots of interesting stuff here
 (defn parse-test-code [code]
   (let [[actual expected] (str/split code output-marker-re)]
     (when (nil? expected)
-      (throw (ex-info (str "Missing ;;=> result in code block") {:code code})))
+      (throw (ex-info (str "Missing => result in code block") {:code code})))
     {:expected (str/trim expected)
      :actual (str/trim actual)}))
 
@@ -126,44 +127,8 @@ Lots of interesting stuff here
         (recur state s))
       (:blocks state))))
 
-(defn build-single-test
-  [lvl [section & sections]]
-  (when section
-    (let [[current sections]
-          (if (= :header (:type section))
-            (let [[children siblings] (split-with #(or (= :code (:type %))
-                                                       (< lvl (:level %)))
-                                        sections)
-                  lvl' (:level (first (filter :level children)) lvl)
-                  children-str (build-single-test lvl' children)]
-              [(format "%s^{:line %s} (describe %s%s)"
-                       (str/join (repeat (* 2 (dec lvl)) " "))
-                       (:line section)
-                       (pr-str (:title section))
-                       (if children-str
-                         (str "\n" children-str)
-                         ""))
-               siblings])
-            (let [code-str (->> (:code section)
-                                (filter :expected)
-                                (map #(format "%s^{:line %s} (expect (= %s %s))"
-                                              (str/join (repeat (* 3 lvl) " "))
-                                              (:line section)
-                                              (:expected %)
-                                              (:actual %)))
-                                (str/join "\n"))]
-              [(if (str/blank? code-str)
-                 ""
-                 (format "%s^{:line %s} (it %s\n%s)"
-                         (str/join (repeat (* 2 lvl) " "))
-                         (:line section)
-                         (pr-str (str "Line " (:line section)))
-                         code-str))
-               sections]))
-          rest-of (build-single-test lvl sections)]
-      (if rest-of
-        (str current "\n\n" rest-of)
-        current))))
+(comment
+  (parse-md example-file))
 
 (defn slugify
   "As defined here: https://you.tools/slugify/"
@@ -179,25 +144,45 @@ Lots of interesting stuff here
        (filter seq $)
        (str/join sep $)))))
 
+(def ^:dynamic *headers* (list))
+
+(defn join-headers [sep]
+  (str/join sep (map :title (reverse *headers*))))
+
+(defn build-single-test
+  [level [section & sections]]
+  (cond
+    (nil? section) nil
+    (= :code (:type section))
+    (-> (for [code (:code section)]
+          (or (not-empty (:non code))
+              (format
+               "(defdescribe %s\n  (it %s\n     (expect ^{:line %s} (= %s %s))))"
+               (gensym (str (slugify (join-headers "-")) "--"))
+               (pr-str (join-headers " - "))
+               (:line section)
+               (:expected code)
+               (:actual code))))
+        (concat (build-single-test level sections))
+        (vec))
+    (< level (:level section))
+    (binding [*headers* (conj *headers* section)]
+      (build-single-test (:level section) sections))
+    :else
+    (let [headers (drop-while #(<= (:level section) (:level %)) *headers*)]
+      (binding [*headers* (conj headers section)]
+        (build-single-test (:level section) sections)))))
+
 (defn build-tests-for-file
   [[file file-str]]
   (let [parsed-file (parse-md file-str)
-        non-test-code (->> {:children parsed-file}
-                           (tree-seq (some-fn :children :code)
-                                     (some-fn :children :code))
-                           (keep :non))
-        groups (med/partition-before #(= 1 (:level %)) parsed-file)
-        tests (keep #(build-single-test (:level (ffirst groups) 1) %) groups)
+        tests (build-single-test 0 parsed-file)
         new-ns (slugify (str file))
         test-file (str (format "(ns %s)" new-ns)
                        "\n\n"
                        "(require '[lazytest.core :refer :all])"
-                       "\n"
-                       (str/join "\n\n" non-test-code)
                        "\n\n"
-                       (->> tests
-                            (map #(str/replace-first % "(describe " (format "(defdescribe %s " (gensym))))
-                            (str/join "\n\n")))]
+                       (str/join "\n\n" tests))]
     (try (Compiler/load (java.io.StringReader. test-file) (str file) (str file))
          (catch clojure.lang.Compiler$CompilerException ex
            (throw (ex-info (str "Failed to load doc test for " file)

@@ -12,20 +12,12 @@ An alternative to `clojure.test`, aiming to be feature-rich and easily extensibl
 - [Getting Started](#getting-started)
 - [Why a new test framework?](#why-a-new-test-framework)
 - [Usage](#usage)
-  * [Watch mode](#watch-mode)
-- [Writing tests with 'lazytest'](#writing-tests-with-lazytest)
-  * [Aliases](#aliases)
-  * [Var Metadata](#var-metadata)
+- [Writing tests with Lazytest](#writing-tests-with-lazytest)
 - [Partitioning Individual Tests and Suites](#partitioning-individual-tests-and-suites)
 - [Setup and Teardown](#setup-and-teardown)
 - [Output](#output)
-  * [`lazytest.reporters/nested`](#lazytestreportersnested)
-  * [`lazytest.reporters/dots`](#lazytestreportersdots)
-  * [`lazytest.reporters/clojure-test`](#lazytestreportersclojure-test)
-  * [`lazytest.reporters/quiet`](#lazytestreportersquiet)
-  * [`lazytest.reporters/debug`](#lazytestreportersdebug)
+- [Doc Tests](#doc-tests)
 - [Editor Integration](#editor-integration)
-  * [Example configuration](#example-configuration)
 - [Run Lifecycle Overview](#run-lifecycle-overview)
 - [Lazytest Internals](#lazytest-internals)
 - [License](#license)
@@ -145,7 +137,7 @@ Watch mode uses [clj-reload](https://github.com/tonsky/clj-reload) to reload all
 
 Type `CTRL-C` to stop.
 
-## Writing tests with 'lazytest'
+## Writing tests with Lazytest
 
 The primary api is found in `lazytest.core` namespace. It mimics the behavior-driven testing style popularized by libraries such as [RSpec](https://rspec.info/) and [Mocha](https://mochajs.org).
 
@@ -275,7 +267,7 @@ To partition your test suite based on metadata, you can use `-i`/`--include` to 
 
 ## Setup and Teardown
 
-To handle set up and tear down of stateful architecture, Lazytest provides the hooks `before`, `before-each`, `after-each`, `after`, and `around`, along with the helper `set-ns-context!`. You can call them directly in a `describe` block or add them to a `:context` vector in suite metadata. (To read a more specific description of how this works, please read the section titled `Run Lifecycle Overview`.)
+To handle set up and tear down of stateful architecture, Lazytest provides the hook macros `before`, `before-each`, `after-each`, `after`, and `around`, along with the helper function `set-ns-context!`. You can call them directly in a `describe` block or add them to a `:context` vector in suite metadata. (To read a more specific description of how this works, please read the section titled `Run Lifecycle Overview`.)
 
 ```clojure
 (require '[lazytest.core :refer [expect-it before after around]])
@@ -313,11 +305,26 @@ To handle set up and tear down of stateful architecture, Lazytest provides the h
       (= [:before :before-each :expect-1 :before-each :expect-2] @state))))
 ```
 
-`(around)` hooks are combined with the same logic as `clojure.test`'s `join-fixtures`.
+`around` hooks are combined with the same logic as `clojure.test`'s `join-fixtures`.
 
 Context functions of the same kind are run in the order they're defined. When executing a given suite or test-case, all `before` hooks are run once, then each `before-each` hook is run, then the `around` hooks are called on the nested tests (if they exist), then each `after-each` hook is run, then all `after` hooks are run once.
 
 To set context functions for an entire namespace, use `set-ns-context!`. There is currently no way to define run-wide context functions.
+
+`(clojure.test/use-fixtures :each ...)` will set the provided fixtures to wrap each test var. To achieve the same in Lazytest, define a var of the target hook and add it to the `defdescribe`'s `:context` block of each var in the namespace. This is necessarily more tedious than `use-fixtures`, but it is also more explicit and gracefully handles special cases (define multiple functions to handle subtle differences, use whichever is situationally helpful).
+
+```clojure skip=true
+(defonce ^:dynamic *db-connection* nil)
+(def prep-db
+  (around [f]
+    (binding [*db-connection* (get-db-connection ...)]
+      (f))))
+
+(defdescribe needs-a-db-test
+  {:context [prep-db]}
+  (it "has the right connection"
+    (expect (= 1 (count (sql/query *db-connection* "SELECT * FROM users;"))))))
+```
 
 ## Output
 
@@ -395,11 +402,42 @@ Prints nothing. Useful if all you want is the return code.
 
 Prints loudly about every step of the run. Incredibly noise, not recommended for anything other than debugging Lazytest internals.
 
+## Doc Tests
+
+Lazytest can run tests in code blocks of your markdown files with `--md FILE`. It looks for any triple backtic-delimited code block that has `clojure` or `clj` as the language specifier, and that doesn't have `skip=true` in the info-string, bundles it into a standalone `describe` block, and then runs all of the suites as a single suite under the name of the markdown file.
+
+It determines what should be considered a test (`(expect (= x y))`) by the presence of `=>`. Code immediately before a line containing `=>` (leading `;` optional) is treated as the actual, and the value after treated as the expected result.
+
+This will run:
+
+````markdown
+```clojure
+(defn adder [a b]
+  (+ a b))
+
+(adder 5 6)
+;; => 11
+```
+````
+
+Whereas these will not (first is skipped, second isn't Clojure):
+
+````markdown
+```clojure skip=true
+(System/exit 1)
+;; => exit!!!
+```
+
+```python
+print("Hello world!")
+```
+````
+
 ## Editor Integration
 
 The entry-points are at `lazytest.repl`: `run-all-tests`, `run-tests`, and `run-test-var`. The first runs all loaded test namespaces, the second runs the provided namespaces (either a single namespace or a collection of namespaces), and the third runs a single test var. If your editor can define custom repl functions, then it's fairly easy to set these as your test runner.
 
-### Example configuration
+### Neovim
 
 Neovim with [Conjure](https://github.com/Olical/conjure):
 
@@ -417,6 +455,8 @@ runners["test-runners"].lazytest = {
 }
 vim.g["conjure#client#clojure#nrepl#test#runner"] = "lazytest"
 ```
+
+### VSCode
 
 VSCode with [Calva](https://calva.io/custom-commands):
 
@@ -436,6 +476,8 @@ VSCode with [Calva](https://calva.io/custom-commands):
     }
 ],
 ```
+
+### IntelliJ
 
 IntelliJ with [Cursive](https://cursive-ide.com/userguide/repl.html#repl-commands):
 

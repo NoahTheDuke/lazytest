@@ -11,6 +11,10 @@ current_version := `cat resources/LAZYTEST_VERSION | xargs`
     sd '{{current_version}}' '{{version}}' README.md
     sd '## Unreleased' '## Unreleased\n\n## {{version}}\n\nReleased `{{today}}`.' CHANGELOG.md
 
+@gen-docs:
+    markdown-toc -i --maxdepth 2 README.md
+    # clojure -M:gen-docs
+
 clojure-lsp:
     clojure-lsp diagnostics
 

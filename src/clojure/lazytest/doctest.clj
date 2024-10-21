@@ -1,7 +1,11 @@
 (ns lazytest.doctest
   (:require
    [clojure.string :as str]
-   [cond-plus.core :refer [cond+]]) 
+   [cond-plus.core :refer [cond+]]
+   [lazytest.clojure-ext.core :refer [re-compile]]
+   [medley.core :as med]
+   [rewrite-clj.node :as n]
+   [rewrite-clj.zip :as z]) 
   (:import
    [java.util.regex Matcher]))
 
@@ -17,12 +21,21 @@ Lots of interesting stuff here
 
 (str/blank? \"\")
 ;; => true
+(str/blank? \"a\")
+;; => false
 ```
 
 # Header 2
 ```clojure
 (+ 1 1)
+;; => 2
+(+ 1 2)
 ;; => 3
+```
+
+Watch out for side-effecting actions:
+```clojure lazytest/skip=true
+(System/exit 1)
 ```
 
 ### Subheader 1
@@ -35,7 +48,7 @@ Lots of interesting stuff here
 
 ## Subheader 2
 ```clojure
-(+ 3 3)
+(str (+ 3 3))
 ;; =>6
 ```
 ")
@@ -61,37 +74,24 @@ Lots of interesting stuff here
      {}
      pairs)))
 
-(def output-marker-re #"(;+\s*)?=>\s*")
+(def output-marker-re
+  (re-compile "^(;+\\s*)?=>\\s*"
+              :multiline))
 
-(defn parse-non-test-code [code]
-  {:non code})
-
-(defn parse-test-code [code]
-  (let [[actual expected] (str/split code output-marker-re)]
-    (when (nil? expected)
-      (throw (ex-info (str "Missing => result in code block") {:code code})))
-    {:expected (str/trim expected)
-     :actual (str/trim actual)}))
-
-(defn parse-code [code]
-  (-> code
-      (str/trim)
-      (str/split #"\n\n")
-      (->> (remove str/blank?)
-           (map #(if (re-find output-marker-re %)
-                   (parse-test-code %)
-                   (parse-non-test-code %))))))
+(comment
+  (str/split "(sql/format sqlmap)
+=> ['SELECT a, b, c FROM foo WHERE foo.a = ?' 'baz']" output-marker-re))
 
 (defn parse-code-block
   [state ^Matcher m]
   (let [info-string (parse-info-string (.group m "infostring"))
         code (.group m "code")
         lang (.group m "lang")]
-    (when-not (= "true" (get info-string "skip"))
-      (when (#{"clojure" "clj"} lang)
+    (when-not (= "true" (get info-string "lazytest/skip"))
+      (when (#{"clojure" "clj"} (str/lower-case lang))
         {:type :code
          :lang lang
-         :code (parse-code code)
+         :code code
          :info-string info-string
          :line (:line state)}))))
 
@@ -130,6 +130,11 @@ Lots of interesting stuff here
 (comment
   (parse-md example-file))
 
+(def ^:dynamic *headers* (list))
+
+(defn join-headers [sep]
+  (str/join sep (map :title (reverse *headers*))))
+
 (defn slugify
   "As defined here: https://you.tools/slugify/"
   ([string] (slugify string "-"))
@@ -144,25 +149,83 @@ Lots of interesting stuff here
        (filter seq $)
        (str/join sep $)))))
 
-(def ^:dynamic *headers* (list))
+(defn assertion-zloc?
+  [zloc]
+  (and (= :token (z/tag zloc))
+       (not (n/printable-only? (z/node zloc)))
+       (= '=> (z/sexpr zloc))))
 
-(defn join-headers [sep]
-  (str/join sep (map :title (reverse *headers*))))
+(defn make-test-node [line actual expected]
+  (let [[a-row _col] (:position actual)
+        [e-row _col] (:position expected)
+        pos-diff (- e-row a-row)]
+    (n/list-node
+     [(n/token-node 'lazytest.core/defdescribe)
+      (n/spaces 1)
+      (n/token-node (gensym (str (slugify (join-headers "-")) "--")))
+      (if (zero? pos-diff) (n/spaces 1) (n/newlines 1))
+      (n/list-node
+       [(n/token-node 'lazytest.core/it)
+        (n/spaces 1)
+        (n/string-node (join-headers " - "))
+        (cond
+          (or (zero? pos-diff)
+              (= 1 pos-diff)) (n/spaces 1)
+          (< 1 pos-diff) (n/newlines 1))
+        (n/list-node
+         [(n/token-node 'lazytest.core/expect)
+          (n/spaces 1)
+          (n/meta-node
+           (n/map-node [(n/keyword-node :line)
+                        (n/spaces 1)
+                        (n/token-node (+ a-row line))])
+           (n/list-node
+            [(n/token-node 'clojure.core/=)
+             (n/spaces 1)
+             (n/quote-node (z/node expected))
+             (n/spaces 1)
+             (z/node actual)]))])])])))
+
+(defn rewrite-code
+  [block]
+  (let [code-str (-> (:code block)
+                     (str/trim)
+                     (str/replace output-marker-re "=> "))]
+    (loop [zloc (z/of-string code-str {:track-position? true})]
+      (let [zloc
+            (cond
+              (not zloc) (throw (ex-info "wtf" {}))
+              (z/end? zloc) zloc
+              (and (assertion-zloc? zloc)
+                   (z/left zloc)
+                   (z/right zloc))
+              (let [actual (z/left zloc)
+                    expected (z/right zloc)]
+                (-> actual
+                    (z/remove)
+                    (z/next)
+                    (z/remove)
+                    (z/next)
+                    (z/replace (make-test-node (:line block) actual expected))))
+              :else zloc)]
+        (if (z/end? zloc)
+          (z/root-string zloc)
+          (recur (z/next zloc)))))))
+
+(comment
+  (binding [*headers* [{:title "header 1"}]]
+    (->> example-file
+         (parse-md)
+         (med/find-first #(= :code (:type %)))
+         (rewrite-code)
+         (println))))
 
 (defn build-single-test
   [level [section & sections]]
   (cond
     (nil? section) nil
     (= :code (:type section))
-    (-> (for [code (:code section)]
-          (or (not-empty (:non code))
-              (format
-               "(defdescribe %s\n  (it %s\n     (expect ^{:line %s} (= %s %s))))"
-               (gensym (str (slugify (join-headers "-")) "--"))
-               (pr-str (join-headers " - "))
-               (:line section)
-               (:expected code)
-               (:actual code))))
+    (-> [(rewrite-code section)]
         (concat (build-single-test level sections))
         (vec))
     (< level (:level section))
@@ -183,7 +246,7 @@ Lots of interesting stuff here
         new-ns (slugify (str file))
         test-file (str (format "(ns %s)" new-ns)
                        "\n\n"
-                       "(require '[lazytest.core :refer :all])"
+                       "(require '[lazytest.core])"
                        "\n\n"
                        (str/join "\n\n" tests))]
     (try (Compiler/load (java.io.StringReader. test-file) (str file) (str file))
@@ -198,4 +261,5 @@ Lots of interesting stuff here
   (require '[lazytest.runner :as runner])
   (remove-ns 'readme-md)
   (build-tests-for-file ["README.md" example-file])
-  (lazytest.runner/run-tests [(the-ns 'readme-md)]))
+  (do (lazytest.runner/run-tests [(the-ns 'readme-md)])
+      nil))

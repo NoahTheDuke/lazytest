@@ -28,7 +28,7 @@ An alternative to `clojure.test`, aiming to be feature-rich and easily extensibl
 
 Add it to your deps.edn or project.clj:
 
-```clojure skip=true
+```clojure lazytest/skip=true
 {:aliases
  {:test {:extra-deps {io.github.noahtheduke/lazytest {:mvn/version "1.2.0"}}
          :extra-paths ["test"]
@@ -43,7 +43,7 @@ In a test file, import with:
 
 And then write a simple test:
 
-```clojure skip=true
+```clojure lazytest/skip=true
 (defdescribe seq-fns-test
   (describe keep
     (it "should reject nils"
@@ -238,7 +238,7 @@ These can get unweildy if multiple test cases are included before a given implem
 
 All of the test suite and test case macros (`defdescribe`, `describe`, `it`, `expect-it`) take a metadata map after the docstring. Adding `:focus true` to this map will cause *only* that test/suite to be run. Removing it will return to the normal behavior (run all tests).
 
-```clojure skip=true
+```clojure lazytest/skip=true
 (defdescribe focus-test
   (it "will be run"
     {:focus true}
@@ -249,7 +249,7 @@ All of the test suite and test case macros (`defdescribe`, `describe`, `it`, `ex
 
 And adding `:skip true` to the metadata map will cause that test/suite to be *not* run:
 
-```clojure skip=true
+```clojure lazytest/skip=true
 (defdescribe skip-test
   (it "will be skipped"
     {:skip true}
@@ -270,7 +270,7 @@ To partition your test suite based on metadata, you can use `-i`/`--include` to 
 To handle set up and tear down of stateful architecture, Lazytest provides the hook macros `before`, `before-each`, `after-each`, `after`, and `around`, along with the helper function `set-ns-context!`. You can call them directly in a `describe` block or add them to a `:context` vector in suite metadata. (To read a more specific description of how this works, please read the section titled `Run Lifecycle Overview`.)
 
 ```clojure
-(require '[lazytest.core :refer [expect-it before after around]])
+(require '[lazytest.core :refer [expect-it before before-each after-each after around]])
 
 (defdescribe before-and-after-test
   (let [state (volatile! [])]
@@ -313,7 +313,7 @@ To set context functions for an entire namespace, use `set-ns-context!`. There i
 
 `(clojure.test/use-fixtures :each ...)` will set the provided fixtures to wrap each test var. To achieve the same in Lazytest, define a var of the target hook and add it to the `defdescribe`'s `:context` block of each var in the namespace. This is necessarily more tedious than `use-fixtures`, but it is also more explicit and gracefully handles special cases (define multiple functions to handle subtle differences, use whichever is situationally helpful).
 
-```clojure skip=true
+```clojure lazytest/skip=true
 (defonce ^:dynamic *db-connection* nil)
 (def prep-db
   (around [f]
@@ -404,7 +404,7 @@ Prints loudly about every step of the run. Incredibly noise, not recommended for
 
 ## Doc Tests
 
-Lazytest can run tests in code blocks of your markdown files with `--md FILE`. It looks for any triple backtic-delimited code block that has `clojure` or `clj` as the language specifier, and that doesn't have `skip=true` in the info-string, bundles it into a standalone `describe` block, and then runs all of the suites as a single suite under the name of the markdown file.
+Lazytest can run tests in code blocks of your markdown files with `--md FILE`. It looks for any triple backtic-delimited code block that has `clojure` or `clj` as the language specifier, and that doesn't have `lazytest/skip=true` in the info-string, bundles it into a standalone `describe` block, and then runs all of the suites as a single suite under the name of the markdown file.
 
 It determines what should be considered a test (`(expect (= x y))`) by the presence of `=>`. Code immediately before a line containing `=>` (leading `;` optional) is treated as the actual, and the value after treated as the expected result.
 
@@ -423,7 +423,7 @@ This will run:
 Whereas these will not (first is skipped, second isn't Clojure):
 
 ````markdown
-```clojure skip=true
+```clojure lazytest/skip=true
 (System/exit 1)
 ;; => exit!!!
 ```

@@ -5,6 +5,7 @@
         io.github.tonsky/clj-reload {:mvn/version "0.7.0"}
         dev.weavejester/medley {:mvn/version "1.8.1"}
         cond-plus/cond-plus {:mvn/version "1.1.1"}
+        rewrite-clj/rewrite-clj {:mvn/version "1.1.48"}
         metosin/malli {:mvn/version "0.16.3"}}
  :deps/prep-lib {:ensure "target/classes"
                  :alias :prep
@@ -16,7 +17,9 @@
   :dev {:extra-paths ["dev" "corpus"]
         :extra-deps {org.clojure/spec.alpha {:mvn/version "0.5.238"}
                      criterium/criterium {:mvn/version "0.4.6"}
-                     com.clojure-goes-fast/clj-java-decompiler {:mvn/version "0.3.6"}}}
+                     com.clojure-goes-fast/clj-java-decompiler {:mvn/version "0.3.6"}
+                     com.github.seancorfield/honeysql {:mvn/version "2.6.1196"}
+                     org.clojure/tools.gitlibs {:mvn/version "2.5.197"}}}
 
   ;; I like nrepl and rebel-readline.
   :repl {:extra-deps {nrepl/nrepl {:mvn/version "1.2.0"}

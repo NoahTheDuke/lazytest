@@ -11,6 +11,7 @@ An alternative to `clojure.test`, aiming to be feature-rich and easily extensibl
 
 - [Getting Started](#getting-started)
 - [Why a new test framework?](#why-a-new-test-framework)
+- [Why no Clojurescript/other flavors?](#why-no-clojurescriptother-flavors)
 - [Usage](#usage)
 - [Writing tests with Lazytest](#writing-tests-with-lazytest)
 - [Partitioning Individual Tests and Suites](#partitioning-individual-tests-and-suites)
@@ -107,6 +108,10 @@ Other alternatives such as [Midje][midje], [classic Expectations][expectations v
 [speclj]: https://github.com/slagyr/speclj
 
 I like the ideas put forth in Alessandra's post above about Lazytest and hope to experiment with achieving them 14 years later, while borrowing heavily from the work in both the Clojure community and test runners frameworks in other languages.
+
+## Why no Clojurescript/other flavors?
+
+I am not nearly familiar enough with other flavors of Clojure and don't have the bandwidth to support them. If someone from the community is willing to steward that work, I'm open to adding support.
 
 ## Usage
 
@@ -420,7 +425,7 @@ This will run:
 ```
 ````
 
-Whereas these will not (first is skipped, second isn't Clojure):
+Whereas these will not (first is skipped, second isn't "clojure" or "clj"):
 
 ````markdown
 ```clojure lazytest/skip=true
@@ -428,7 +433,7 @@ Whereas these will not (first is skipped, second isn't Clojure):
 ;; => exit!!!
 ```
 
-```python
+```clojurescript
 print("Hello world!")
 ```
 ````

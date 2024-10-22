@@ -1,7 +1,6 @@
 (ns lazytest.find
   (:require
    [lazytest.core :refer [describe it]]
-   [lazytest.malli]
    [lazytest.suite :refer [suite suite?]]
    [lazytest.test-case :refer [test-case?]]))
 

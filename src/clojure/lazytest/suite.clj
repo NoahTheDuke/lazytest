@@ -1,6 +1,4 @@
-(ns lazytest.suite
-  (:require
-   [lazytest.malli]))
+(ns lazytest.suite)
 
 (set! *warn-on-reflection* true)
 

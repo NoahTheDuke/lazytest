@@ -5,7 +5,6 @@
                              run-afters run-before-eachs run-befores]]
    [lazytest.filter :refer [filter-tree]]
    [lazytest.find :refer [find-suite find-var-test-value]]
-   [lazytest.malli]
    [lazytest.reporters :as r :refer [nested report]]
    [lazytest.suite :as s :refer [suite suite-result suite?]]
    [lazytest.test-case :refer [try-test-case]]))

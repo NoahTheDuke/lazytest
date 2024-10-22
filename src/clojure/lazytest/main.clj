@@ -8,7 +8,6 @@
    [clojure.tools.namespace.find :refer [find-sources-in-dir]]
    [lazytest.cli :refer [validate-opts]]
    [lazytest.config :refer [->config]]
-   [lazytest.malli]
    [lazytest.doctest :as dt]
    [lazytest.results :refer [summarize summary-exit-value]]
    [lazytest.runner :refer [run-tests]]

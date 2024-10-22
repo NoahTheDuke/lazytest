@@ -2,9 +2,7 @@
   (:require
    [clj-java-decompiler.core :as decompiler]
    [clojure.spec.test.alpha :as stest]
-   [criterium.core :as criterium]
-   [malli.dev :as mdev]
-   [malli.dev.pretty :as mpretty]))
+   [criterium.core :as criterium]))
 
 (set! *warn-on-reflection* true)
 
@@ -19,19 +17,6 @@
   :runtime, and :verbose."
   [expr & opts]
   `(criterium/quick-bench ~expr ~@opts))
-
-(defn malli-start!
-  "Start malli function instrumentation."
-  ([] (malli-start! {:report (mpretty/thrower)}))
-  ([opts]
-   (with-out-str (mdev/start! opts))))
-
-(malli-start!)
-
-(defn malli-stop!
-  "Stop malli function instrumentation."
-  []
-  (with-out-str (mdev/stop!)))
 
 (defn spec-start! [] (stest/instrument))
 (defn spec-stop! [] (stest/unstrument))

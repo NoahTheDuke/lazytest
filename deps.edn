@@ -5,8 +5,7 @@
         io.github.tonsky/clj-reload {:mvn/version "0.7.0"}
         dev.weavejester/medley {:mvn/version "1.8.1"}
         cond-plus/cond-plus {:mvn/version "1.1.1"}
-        rewrite-clj/rewrite-clj {:mvn/version "1.1.48"}
-        metosin/malli {:mvn/version "0.16.3"}}
+        rewrite-clj/rewrite-clj {:mvn/version "1.1.48"}}
  :deps/prep-lib {:ensure "target/classes"
                  :alias :prep
                  :fn javac}

@@ -34,7 +34,6 @@
   "
   (:require
    [lazytest.context :as ctx]
-   [lazytest.malli]
    [lazytest.suite :as suite]
    [lazytest.test-case :as test-case])
   (:import

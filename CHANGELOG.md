@@ -5,6 +5,14 @@
 ### Changed
 
 - Removed Malli dependency as it's no longer used.
+- Support doc tests where the expected value is a function:
+
+```clojure
+(+ 1 1)
+=> int?
+```
+
+is rewritten as `(expect (int? (+ 1 1)))`.
 
 ## 1.3.0
 

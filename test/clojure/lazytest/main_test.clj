@@ -5,10 +5,6 @@
    [lazytest.main :as sut]
    [lazytest.runner :as-alias lr]))
 
-(defdescribe example-test
-  (describe "wtf"
-    (it "works?" (expect (= 1 1)))))
-
 (defdescribe filter-ns-test
   (describe "--namespace"
     (it "selects the right namespace"

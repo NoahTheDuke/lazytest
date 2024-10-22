@@ -119,13 +119,14 @@ With the above `:test` alias, call `clojure -M:test [options]` to run your test 
 
 Any of the below `[options]` can also be provided:
 
-* `-d`, `--dir DIR`: Directory containing tests. (Defaults to `test`.)
+* `-d`, `--dir DIR`: Directory containing tests. Can be given multiple times. (Defaults to `test`.)
 * `-n`, `--namespace SYMBOL`: Run only the specified test namespaces. Can be given multiple times.
-* `-v`, `--var SYMBOL`: Run only the specified fully-qualified symbol.
-* `-i`, `--include KEYWORD`: Run only test sequences or vars with this metadata keyword.
-* `-e`, `--exclude KEYWORD`: Exclude test sequences or vars with this metadata keyword.
+* `-v`, `--var SYMBOL`: Run only the specified fully-qualified symbol. Can be given multiple times.
+* `-i`, `--include KEYWORD`: Run only test sequences or vars with this metadata keyword. Can be given multiple times.
+* `-e`, `--exclude KEYWORD`: Exclude test sequences or vars with this metadata keyword. Can be given multiple times.
 * `--output SYMBOL`: Output format. Can be given multiple times. (Defaults to `nested`.)
-* `--watch`: As noted above, runs under "Watch mode", which reloads and reruns your test suite as project or test code changes.
+* `--md FILE`: Run doc tests in markdown file. Can be given multiple times. (See [Doc Tests](#doc-tests) below.)
+* `--watch`: Runs under "Watch mode", which reloads and reruns your test suite as project or test code changes.
 * `--delay NUM`: How many milliseconds to wait before checking for changes to reload. Only used in "Watch mode". (Defaults to 500.)
 * `--help`: Print help information.
 * `--version`: Print version information.

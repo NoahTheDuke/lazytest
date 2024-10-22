@@ -22,7 +22,9 @@
                                "```clojure lazytest/skip=true\n")))]
     (it "can run all readme tests"
       {:context [(before (remove-ns (symbol (slugify (str @readme)))))]}
-      (let [honeysql-ns (build-tests-for-file [@readme @readme-str])]
+      (let [honeysql-ns (let [s (java.io.StringWriter.)]
+                          (binding [*err* s]
+                            (build-tests-for-file [@readme @readme-str])))]
         (expect
           (match? {:total 80 :pass 80 :fail 0}
                   (summarize

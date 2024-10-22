@@ -22,7 +22,7 @@ Lots of interesting stuff here
 (str/blank? \"\")
 ;; => true
 (str/blank? \"a\")
-;; => false
+;; => boolean?
 ```
 
 # Header 2
@@ -158,7 +158,8 @@ Watch out for side-effecting actions:
 (defn make-test-node [line actual expected]
   (let [[a-row _col] (:position actual)
         [e-row _col] (:position expected)
-        pos-diff (- e-row a-row)]
+        pos-diff (- e-row a-row)
+        expected-sexpr (z/sexpr expected)]
     (n/list-node
      [(n/token-node 'lazytest.core/defdescribe)
       (n/spaces 1)
@@ -180,11 +181,15 @@ Watch out for side-effecting actions:
                         (n/spaces 1)
                         (n/token-node (+ a-row line))])
            (n/list-node
-            [(n/token-node 'clojure.core/=)
-             (n/spaces 1)
-             (n/quote-node (z/node expected))
-             (n/spaces 1)
-             (z/node actual)]))])])])))
+            (if (symbol? expected-sexpr)
+              [(z/node expected)
+               (n/spaces 1)
+               (z/node actual)]
+              [(n/token-node 'clojure.core/=)
+               (n/spaces 1)
+               (n/quote-node (z/node expected))
+               (n/spaces 1)
+               (z/node actual)])))])])])))
 
 (defn rewrite-code
   [block]
@@ -244,9 +249,7 @@ Watch out for side-effecting actions:
                       parsed-file)
         tests (build-single-test 0 parsed-file)
         new-ns (slugify (str file))
-        test-file (str (format "(ns %s)" new-ns)
-                       "\n\n"
-                       "(require '[lazytest.core])"
+        test-file (str (format "(ns %s\n  (:require [lazytest.core]))" new-ns)
                        "\n\n"
                        (str/join "\n\n" tests))]
     (try (Compiler/load (java.io.StringReader. test-file) (str file) (str file))

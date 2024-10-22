@@ -71,8 +71,9 @@
      :source - the input function
      :pass?  - true if the function ran without throwing
      :thrown - the Throwable instance if thrown"
-  [f]
-  (try (f)
-    (test-case-result :pass f)
-    (catch Throwable t
-      (test-case-result :fail f t))))
+  [tc]
+  (let [f (with-meta (:body tc) tc)]
+    (try (f)
+      (test-case-result :pass f)
+      (catch Throwable t
+        (test-case-result :fail f t)))))

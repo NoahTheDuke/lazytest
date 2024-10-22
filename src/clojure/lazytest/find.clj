@@ -2,63 +2,39 @@
   (:require
    [lazytest.core :refer [describe it]]
    [lazytest.suite :refer [suite suite?]]
-   [lazytest.test-case :refer [test-case?]]))
+   [lazytest.test-case :refer [test-case?]]
+   [lazytest.doctest :as dt]))
 
 (defn- set-var [value this-var]
   (assoc value :type :lazytest/var :var this-var))
 
 (defn find-var-test-value
-  [this-var]
-  (when (bound? this-var)
-    (let [value (var-get this-var)
-          m (meta this-var)
+  [the-var]
+  (when (bound? the-var)
+    (let [value (var-get the-var)
+          m (meta the-var)
           test-metadata (:test m)]
       (cond
         ;; (defdescribe example ...)
         (= :lazytest/var (:type m))
-        (set-var (value) this-var)
+        (set-var (value) the-var)
         ;; (def example (describe ...))
         (suite? value)
-        (set-var value this-var)
+        (set-var value the-var)
         ;; (defn example {:test (describe ...)})
         ;; (defn example {:test (it ...)})
         (or (suite? test-metadata)
             (test-case? test-metadata))
-        (let [new-test (describe this-var)]
-          (set-var (update new-test :children conj test-metadata) this-var))
+        (let [new-test (describe the-var)]
+          (set-var (update new-test :children conj test-metadata) the-var))
         ;; (defn example {:test #(expect ...)})
         (fn? test-metadata)
-        (set-var (describe this-var
+        (set-var (describe the-var
                    (-> (it "`:test` metadata" (test-metadata))
                        (merge (select-keys m [:line :column]))))
-                 this-var)))))
-
-#_(comment
-  (defn test-fn
-    {:test #(expect (= 0 (test-fn 1)))}
-    [a]
-    (+ a a))
-
-  (defn test-test-case
-    {:test (it "test case example"
-             (expect (= 1 (test-test-case 1))))}
-    [a]
-    (+ a a))
-
-  (defn test-describe
-    {:test (describe "top level"
-             (it "test-describe example" (expect (= 1 (test-describe 1))))
-             (it "test-describe example two" (expect (= 0 (test-describe 1)))))}
-    [a]
-    (+ a a))
-
-  (def test-describe-def
-    (describe "test-def-describe"
-      (it "test-def-describe example")
-      (it "test-def-describe example two")))
-
-  (find-var-test-value #'test-fn)
-  )
+                 the-var)
+        (:doc m)
+        (dt/build-tests-for-var the-var)))))
 
 (defn- test-suites-for-ns [this-ns]
   (->> (ns-interns this-ns)

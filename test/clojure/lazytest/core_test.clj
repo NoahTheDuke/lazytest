@@ -2,10 +2,12 @@
   (:require
    [lazytest.core :refer [cause-seq causes-with-msg? causes? context
                           defdescribe describe expect expect-it it ok? should
-                          specify throws-with-msg? throws?]])
+                          specify throws-with-msg? throws?]]
+   [lazytest.extensions.matcher-combinators :refer [match?]])
   (:import
    clojure.lang.ExceptionInfo
-   lazytest.ExpectationFailed))
+   lazytest.ExpectationFailed
+   [java.util.regex Pattern]))
 
 (defdescribe it-test
   (it "will early exit"
@@ -49,17 +51,27 @@
   (describe throws-with-msg?
     (it "checks the thrown message"
       (expect (throws-with-msg? Exception #"foo message"
-                #(do (throw (Exception. "the foo message for this exception")))))))
+                #(do (throw (Exception. "the foo message for this exception")))))
+      (try (throws-with-msg? Exception #"bar message"
+                #(do (throw (Exception. "the foo message for this exception"))))
+           (expect nil "Should have failed")
+           (catch ExpectationFailed ex
+             (expect
+               (match? {:message "java.lang.Exception found but not with expected message"
+                        :expected
+                        (list 're-find
+                          #(instance? Pattern %)
+                          "the foo message for this exception")
+                        :actual "the foo message for this exception"}
+                       (ex-data ex)))))))
   (describe causes?
     (expect-it "checks the base throwable"
       (causes? IllegalArgumentException
                #(throw (IllegalArgumentException. "bad arguments"))))
     (it "checks the causes too"
       (expect (causes? IllegalArgumentException
-                       #(try
-                          (throw (IllegalArgumentException. "bad stuff"))
-                          (catch IllegalArgumentException e
-                            (throw (RuntimeException. "wrapped stuff" e))))))))
+                       #(throw (RuntimeException. "wrapped stuff"
+                                                  (IllegalArgumentException. "bad stuff")))))))
   (describe causes-with-msg?
     (it "checks the base throwable"
       (expect (causes-with-msg? ExceptionInfo
@@ -71,7 +83,23 @@
                 #(throw (IllegalArgumentException.
                           "bad argument"
                           (ex-info "foo message" {:extra :data}
-                                   (ex-info "worser message" {:foo :bar}))))))))
+                                   (ex-info "worser message" {:foo :bar}))))))
+      (try (causes-with-msg? ExceptionInfo
+                #"worsest message"
+                #(throw (IllegalArgumentException.
+                          "bad argument"
+                          (ex-info "foo message" {:extra :data}
+                                   (ex-info "worser message" {:foo :bar})))))
+           (expect nil "Should have failed")
+           (catch ExpectationFailed ex
+             (expect
+               (match? {:message "clojure.lang.ExceptionInfo found but not with expected message"
+                        :expected
+                        (list 're-find
+                          #(instance? Pattern %)
+                          "foo message")
+                        :actual "foo message"}
+                       (ex-data ex)))))))
   (describe ok?
     (it "returns true"
       (expect (true? (expect (ok? (constantly false))))))
@@ -136,4 +164,4 @@
   (expect-it "works outermost inward"
     (= [clojure.lang.ExceptionInfo Exception IllegalArgumentException]
        (map class (cause-seq
-                   (ex-info "" {} (Exception. "" (IllegalArgumentException. ""))))))))
+                     (ex-info "" {} (Exception. "" (IllegalArgumentException. ""))))))))

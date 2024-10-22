@@ -32,7 +32,12 @@
   ;; Run the tests with `-M:test:run`.
   :test {:extra-paths ["test/clojure"]}
 
-  :ci {:main-opts ["-m" "lazytest.main" "--md" "README.md"]}
+  :ci {:main-opts ["-m" "lazytest.main"
+                   "--dir" "src"
+                   "--dir" "test"
+                   "--dir" "docs"
+                   "--doctests"
+                   "--md" "README.md"]}
 
   :examples {:extra-paths ["."]}
 

@@ -39,7 +39,8 @@
 
 (defn watch [run-impl opts]
   (reload/init
-    {:dirs (get-local-classpath)})
+    {:dirs (get-local-classpath)
+     :files #".*[.](clj|cljc|md)"})
   (let [opts (update opts :output #(or (not-empty %) ['lazytest.reporters/dots]))
         f (fn [] (reload-and-run run-impl opts))]
     ;; initial run

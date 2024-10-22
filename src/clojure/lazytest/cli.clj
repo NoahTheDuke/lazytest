@@ -35,9 +35,10 @@
                                v
                                (symbol "lazytest.reporters" (name v)))]
                   (update-vec args k output)))]
-   [nil "--md FILE" "Run doctests for given file. Can be given multiple times."
+   [nil "--md FILE" "Run doctests for given markdown file. Can be given multiple times."
     :parse-fn io/file
     :assoc-fn update-vec]
+   [nil "--doctests" "Run doctests for vars and markdown files."]
    [nil "--watch" "Run under Watch mode. Uses clj-reload to reload changed and dependent namespaces, then reruns test suite."]
    [nil "--delay NUM" "(Watch mode) How many milliseconds to wait before checking for changes. (Defaults to 500.)"
     :parse-fn parse-long]

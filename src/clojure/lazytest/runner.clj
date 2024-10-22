@@ -11,7 +11,14 @@
 
 (set! *warn-on-reflection* true)
 
-(defn dispatch [m _config] (:type m))
+(defn dispatch
+  "A simple wrapper around :type.
+
+  ```clojure
+  (dispatch {:type :foo} nil)
+  => :foo
+  ```"
+  [m _config] (:type m))
 
 (defmulti run-tree {:arglists '([m config])} #'dispatch)
 (defmethod run-tree :default [m _config]
@@ -77,24 +84,20 @@
     (run-afters suite)
     results))
 
-(defn prep-test-case [tc]
-  (with-meta (:body tc) tc))
-
 (defmethod run-tree :lazytest/test-case
   run-suite--lazytest-test-case
   [tc config]
   (let [start (System/nanoTime)]
     (report config (assoc tc :type :begin-test-case))
     (run-befores tc)
-    (let [f (prep-test-case tc)
-          results (if-let [around-fn (combine-arounds tc)]
+    (let [results (if-let [around-fn (combine-arounds tc)]
                     (let [ret (volatile! nil)]
                       (run-before-eachs tc)
-                      (around-fn (fn [] (vreset! ret (try-test-case f))))
+                      (around-fn (fn [] (vreset! ret (try-test-case tc))))
                       (run-after-eachs tc)
                       @ret)
                     (do (run-before-eachs tc)
-                        (let [ret (try-test-case f)]
+                        (let [ret (try-test-case tc)]
                           (run-after-eachs tc)
                           ret)))
           duration (double (- (System/nanoTime) start))

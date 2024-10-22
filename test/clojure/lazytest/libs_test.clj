@@ -10,7 +10,7 @@
    [lazytest.results :refer [summarize]]
    [lazytest.runner :as lr]))
 
-(defdescribe honeysql-test
+(defdescribe ^:integration honeysql-test
   (let [honeysql (delay (gl/procure "https://github.com/seancorfield/honeysql.git" 'com.github.seancorfield/honeysql "v2.6.1196"))
         readme (delay (io/file @honeysql "README.md"))
         readme-str (delay (-> (slurp @readme)

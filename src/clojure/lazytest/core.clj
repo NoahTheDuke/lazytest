@@ -124,10 +124,7 @@
                 (expect-fn expr msg-gensym)
                 (expect-any expr msg-gensym))
              (catch ExpectationFailed ex#
-               (let [data# (-> (ex-data ex#)
-                               (update :message #(or % ~msg-gensym))
-                               (assoc :line ~(:line (meta &form)))
-                               (assoc :column ~(:column (meta &form))))]
+               (let [data# (update (ex-data ex#) :message #(or % ~msg-gensym))]
                  (throw (->ex-failed nil data#))))
              (catch Throwable t#
                (throw (->ex-failed ~&form ~expr {:message ~msg-gensym
@@ -372,11 +369,23 @@
   "Calls f with no arguments; catches exceptions of class c. If the message of the caught exception does not match re (with re-find), throws ExpectationFailed. Any other exception not of class c will be re-thrown. Returns false if f throws no exceptions.
 
   Useful in [[expect]] or [[expect-it]]."
-  [c re f]
+  [^Class c re f]
   (try (f) false
        (catch Throwable t
-         (if (instance? c t)
-           (re-find re (ex-message t))
+         (cond
+           (and (instance? c t)
+                (re-find re (ex-message t))) true
+           (instance? c t)
+           (throw (let [msg (format "%s found but not with expected message"
+                                    (.getName c))]
+                    (ExpectationFailed.
+                     msg
+                     {:message msg
+                      :file *file*
+                      :ns (ns-name *ns*)
+                      :expected (list 're-find re (ex-message t))
+                      :actual (ex-message t)})))
+           :else
            (throw t)))))
 
 (defn ^:no-doc cause-seq
@@ -401,17 +410,30 @@
   "Calls f with no arguments; catches exceptions with an instance of class c in their cause chain. If the message of the causing exception does not match re (with re-find), throws ExpectationFailed. Any non-matching exception will be re-thrown. Returns false if f throws no exceptions.
 
   Useful in [[expect]] or [[expect-it]]."
-  [c re f]
+  [^Class c re f]
   (try (f) false
        (catch Throwable t
-         (if (some (fn causes-with-msg?-wrapper [cause]
+         (let [causes (cause-seq t)]
+           (cond
+             (some (fn causes-with-msg?-wrapper [cause]
                      (when
                        (and (instance? c cause)
                             (re-find re (ex-message cause)))
                        c))
-                   (cause-seq t))
-           true
-           (throw t)))))
+                   causes) true
+             (some #(instance? c %) causes)
+             (let [found (some #(when (instance? c %) %) causes)
+                   msg (format "%s found but not with expected message"
+                               (.getName c))]
+               (throw (ExpectationFailed.
+                       msg
+                       {:message msg
+                        :file *file*
+                        :ns (ns-name *ns*)
+                        :expected (list 're-find re (ex-message found))
+                        :actual (ex-message found)})))
+             :else
+             (throw t))))))
 
 (defn ok?
   "Calls f with no arguments and discards its return value. Returns true if f does not throw any exceptions. Use when checking an expression that returns a logical false value.

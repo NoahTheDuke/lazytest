@@ -242,18 +242,13 @@ Watch out for side-effecting actions:
        (binding [*headers* (conj headers section)]
          (build-single-test (:level section) sections))))))
 
-(defn build-tests
-  [file-str]
+(defn build-tests-for-file
+  [[file file-str]]
   (let [parsed-file (parse-md file-str)
         parsed-file (if (= 1 (:level (first parsed-file)))
                       (next parsed-file)
                       parsed-file)
-        tests (build-single-test parsed-file)]
-    (not-empty tests)))
-
-(defn build-tests-for-file
-  [[file file-str]]
-  (let [tests (build-tests file-str)
+        tests (build-single-test parsed-file)
         new-ns (slugify (str file))
         test-file (str (format "(ns %s\n  (:require [lazytest.core]))" new-ns)
                        "\n\n"
@@ -273,27 +268,3 @@ Watch out for side-effecting actions:
   (build-tests-for-file ["README.md" (slurp "docs/core.md")])
   (do (lazytest.runner/run-tests [(the-ns 'readme-md)])
       nil))
-
-(defn build-tests-for-var
-  "```clojure
-  (+ 1 1)
-  => 2
-  ```"
-  [the-var]
-  (binding [*headers* (conj *headers* {:title (name (symbol the-var))})]
-    (when-let [tests (build-tests (str (:doc (meta the-var)) "\n"))]
-      (let [test-file (str (format "(in-ns '%s)" 
-                                   (namespace (symbol the-var)))
-                           "\n\n"
-                           "(require '[lazytest.core])"
-                           "\n\n"
-                           (str/join "\n\n" tests))]
-        (try (Compiler/load (java.io.StringReader. test-file) (str the-var) (str the-var))
-             (catch clojure.lang.Compiler$CompilerException ex
-               (throw (ex-info (str "Failed to load doc test for " the-var)
-                               {:var the-var
-                                :test-file test-file}
-                               ex))))))))
-
-(comment
-  (build-tests-for-var #'build-tests-for-var))

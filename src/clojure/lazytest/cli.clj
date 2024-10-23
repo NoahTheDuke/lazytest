@@ -12,7 +12,7 @@
   (update m k #(conj (or % #{}) v)))
 
 (def cli-options
-  [["-d" "--dir DIR" "Directory containing tests. (Defaults to \"test\".)"
+  [["-d" "--dir DIR" "Directory containing tests."
     :assoc-fn update-vec]
    ["-n" "--namespace SYMBOL" "Run only the specified test namespaces. Can be given multiple times."
     :id :ns-filter
@@ -38,7 +38,7 @@
    [nil "--md FILE" "Run doctests for given markdown file. Can be given multiple times."
     :parse-fn io/file
     :assoc-fn update-vec]
-   [nil "--doctests" "Run doctests for vars and markdown files."]
+   [nil "--doctests" "Run doctests for vars and markdown files found in paths."]
    [nil "--watch" "Run under Watch mode. Uses clj-reload to reload changed and dependent namespaces, then reruns test suite."]
    [nil "--delay NUM" "(Watch mode) How many milliseconds to wait before checking for changes. (Defaults to 500.)"
     :parse-fn parse-long]
@@ -51,9 +51,12 @@
                ""
                "Usage:"
                "  lazytest [options]"
+               "  lazytest [options] [path...]"
                ""
                "Options:"
                (cli/summarize specs)
+               ""
+               "If neither paths nor `--dir` are provided, lazytest will search `test/`."
                ""]]
     {:exit-message (str/join \newline lines)
      :ok true}))
@@ -76,12 +79,13 @@
 
   :ok is false if given invalid options."
   [opts]
-  (let [{:keys [options errors summary]}
+  (let [{:keys [options errors summary arguments]}
         (cli/parse-opts opts cli-options :strict true :summary-fn identity)]
     (cond
       (:help options) (help-message summary)
       (:version options) {:exit-message "lazytest 0.0" :ok true}
       errors (print-errors errors)
       :else (-> options
+                (update :dir (comp vec concat) arguments)
                 (update :output prepare-output)
                 (update :delay #(or % 500))))))

@@ -26,7 +26,7 @@ test *args:
 [no-exit-message]
 test-all *args:
     just clojure-lsp
-    just test --md README.md {{args}}
+    @just test --doctests --md README.md --dir docs --dir test {{args}}
 
 repl arg="":
     clojure -T:prep javac

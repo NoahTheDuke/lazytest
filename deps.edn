@@ -13,7 +13,7 @@
  {:run {:main-opts ["-m" "lazytest.main"]}
   :provided {:extra-deps {nubank/matcher-combinators {:mvn/version "3.9.1"}}}
   ;; Development tools
-  :dev {:extra-paths ["dev" "corpus"]
+  :dev {:extra-paths ["dev" "corpus" "docs"]
         :extra-deps {org.clojure/spec.alpha {:mvn/version "0.5.238"}
                      criterium/criterium {:mvn/version "0.4.6"}
                      com.clojure-goes-fast/clj-java-decompiler {:mvn/version "0.3.6"}
@@ -29,15 +29,13 @@
                       "--interactive"
                       "-f" "rebel-readline.main/-main"]}
 
-  ;; Run the tests with `-M:test:run`.
+  ;; Run the tests with `-M:provided:dev:test:run`.
   :test {:extra-paths ["test/clojure"]}
 
   :ci {:main-opts ["-m" "lazytest.main"
-                   "--dir" "src"
-                   "--dir" "test"
-                   "--dir" "docs"
                    "--doctests"
-                   "--md" "README.md"]}
+                   "--md" "README.md"
+                   "test" "docs"]}
 
   :examples {:extra-paths ["."]}
 

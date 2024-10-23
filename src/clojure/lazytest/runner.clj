@@ -11,14 +11,7 @@
 
 (set! *warn-on-reflection* true)
 
-(defn dispatch
-  "A simple wrapper around :type.
-
-  ```clojure
-  (dispatch {:type :foo} nil)
-  => :foo
-  ```"
-  [m _config] (:type m))
+(defn dispatch [m _config] (:type m))
 
 (defmulti run-tree {:arglists '([m config])} #'dispatch)
 (defmethod run-tree :default [m _config]

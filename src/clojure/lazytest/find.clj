@@ -2,8 +2,7 @@
   (:require
    [lazytest.core :refer [describe it]]
    [lazytest.suite :refer [suite suite?]]
-   [lazytest.test-case :refer [test-case?]]
-   [lazytest.doctest :as dt]))
+   [lazytest.test-case :refer [test-case?]]))
 
 (defn- set-var [value this-var]
   (assoc value :type :lazytest/var :var this-var))
@@ -32,9 +31,7 @@
         (set-var (describe the-var
                    (-> (it "`:test` metadata" (test-metadata))
                        (merge (select-keys m [:line :column]))))
-                 the-var)
-        (:doc m)
-        (dt/build-tests-for-var the-var)))))
+                 the-var)))))
 
 (defn- test-suites-for-ns [this-ns]
   (->> (ns-interns this-ns)

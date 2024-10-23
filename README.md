@@ -115,11 +115,11 @@ I am not nearly familiar enough with other flavors of Clojure and don't have the
 
 ## Usage
 
-With the above `:test` alias, call `clojure -M:test [options]` to run your test suite once, or `clojure -M:test [options] --watch` to use "Watch mode" (see below) to run repeatedly as files change.
+With the above `:test` alias, call `clojure -M:test [options] [path...]` to run your test suite once, or `clojure -M:test --watch [options] [path...]` to use "Watch mode" (see below) to run repeatedly as files change. `[path...]` here means any file or directory. By default, Lazytest only runs tests found in the `test/` directory, but these can be passed in as additional arguments or with the `--dir` flag (see below):
 
 Any of the below `[options]` can also be provided:
 
-* `-d`, `--dir DIR`: Directory containing tests. Can be given multiple times. (Defaults to `test`.)
+* `-d`, `--dir DIR`: Directory containing tests. Can be given multiple times.
 * `-n`, `--namespace SYMBOL`: Run only the specified test namespaces. Can be given multiple times.
 * `-v`, `--var SYMBOL`: Run only the specified fully-qualified symbol. Can be given multiple times.
 * `-i`, `--include KEYWORD`: Run only test sequences or vars with this metadata keyword. Can be given multiple times.

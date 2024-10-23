@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Can now pass in paths as cli arguments, not just through repeated `--dir` flags: `clojure -M:dev:test test/unit test/integration` will look for tests in both `test/unit` and `test/integration`.
+
 ### Changed
 
 - Removed Malli dependency as it's no longer used.

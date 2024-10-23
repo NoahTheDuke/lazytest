@@ -29,8 +29,7 @@
 (defn add-md-tests
   [config dirs]
   (let [files (concat
-               (->> (:md config)
-                    (map io/file))
+               (map io/file (:md config))
                (when (:doctests config)
                  (mapcat #(find-sources-in-dir % {:extensions [".md"]}) dirs)))]
     (->> files

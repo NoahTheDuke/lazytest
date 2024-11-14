@@ -35,7 +35,7 @@
                  :doc (resolve 'find-tests.examples/test-fn)
                  :children
                  [{:type :fail
-                   :doc "`:test` metadata"
+                   :doc "`:lazytest/test` metadata"
                    :thrown (ex-info "Expectation failed"
                                     {:type 'lazytest.ExpectationFailed
                                      :expected '(= 0 (test-fn 1))})}]}
@@ -70,7 +70,7 @@
                   "\n"
                   ["  find-tests.examples"
                    "    #'find-tests.examples/test-fn"
-                   "      × `:test` metadata FAIL"
+                   "      × `:lazytest/test` metadata FAIL"
                    "    #'find-tests.examples/test-test-case"
                    "      × test case example FAIL"
                    "    #'find-tests.examples/test-describe"

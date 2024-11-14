@@ -18,6 +18,8 @@
 
 is rewritten as `(expect (int? (+ 1 1)))`.
 
+- Switch from `:test` metadata to `:lazytest/test` metadata. It's longer, but it no longer clashes with `clojure.test`'s internals so you can run lazytest over `clojure.test` tests without them being marked as passing tests. (See [#4](https://github.com/NoahTheDuke/lazytest/issues/4).)
+
 ## 1.3.0
 
 Released `2024-10-21`.

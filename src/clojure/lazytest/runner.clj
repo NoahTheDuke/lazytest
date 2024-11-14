@@ -121,7 +121,7 @@
    (run-tests nil config)))
 
 (defn run-test-var
-  "Run test var. Looks for a suite as the var's value or in `:test` metadata. Applies filters in config."
+  "Run test var. Looks for a suite as the var's value or in `:lazytest/test` metadata. Applies filters in config."
   ([v] (run-test-var v (->config nil)))
   ([v config]
    (assert (var? v) "Must be a var")

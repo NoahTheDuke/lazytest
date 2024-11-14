@@ -86,6 +86,6 @@
       (:version options) {:exit-message "lazytest 0.0" :ok true}
       errors (print-errors errors)
       :else (-> options
-                (update :dir (comp vec concat) arguments)
+                (update :dir (comp not-empty vec concat) arguments)
                 (update :output prepare-output)
                 (update :delay #(or % 500))))))

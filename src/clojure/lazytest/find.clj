@@ -12,7 +12,7 @@
   (when (bound? the-var)
     (let [value (var-get the-var)
           m (meta the-var)
-          test-metadata (:test m)]
+          test-metadata (:lazytest/test m)]
       (cond
         ;; (defdescribe example ...)
         (= :lazytest/var (:type m))
@@ -20,16 +20,16 @@
         ;; (def example (describe ...))
         (suite? value)
         (set-var value the-var)
-        ;; (defn example {:test (describe ...)})
-        ;; (defn example {:test (it ...)})
+        ;; (defn example {:lazytest/test (describe ...)})
+        ;; (defn example {:lazytest/test (it ...)})
         (or (suite? test-metadata)
             (test-case? test-metadata))
         (let [new-test (describe the-var)]
           (set-var (update new-test :children conj test-metadata) the-var))
-        ;; (defn example {:test #(expect ...)})
+        ;; (defn example {:lazytest/test #(expect ...)})
         (fn? test-metadata)
         (set-var (describe the-var
-                   (-> (it "`:test` metadata" (test-metadata))
+                   (-> (it "`:lazytest/test` metadata" (test-metadata))
                        (merge (select-keys m [:line :column]))))
                  the-var)))))
 

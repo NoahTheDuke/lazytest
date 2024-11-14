@@ -195,21 +195,22 @@ There are a number of experimental namespaces that define other aliases, with di
 
 ### Var Metadata
 
-In addition to finding the tests defined with `defdescribe`, Lazytest also checks all vars for `:test` metadata. If the `:test` metadata is a function, a test case, or a test suite, it's treated as a top-level `defdescribe` for the associated var and executed just like other tests. `:test` functions are given the doc string ``"`:test` metadata"``.
+In addition to finding the tests defined with `defdescribe`, Lazytest also checks all vars for `:lazytest/test` metadata. If the `:lazytest/test` metadata is a function, a test case, or a test suite, it's treated as a top-level `defdescribe` for the associated var and executed just like other tests. `:lazytest/test` functions are given the doc string ``"`:lazytest/test` metadata"``.
 
 How to write them:
 
 ```clojure
 (defn fn-example
-  {:test #(expect (= 1 1))}
+  {:lazytest/test #(expect (= 1 1))}
   [])
 (defn test-case-example
-  {:test (it "test case example docstring" (expect (= 1 1)))}
+  {:lazytest/test (it "test case example docstring" (expect (= 1 1)))}
   [])
 (defn describe-example
-  {:test (describe "top level docstring"
-           (it "first test case" (expect (= 1 1)))
-           (it "second test case" (expect (= 1 1))))}
+  {:lazytest/test
+    (describe "top level docstring"
+      (it "first test case" (expect (= 1 1)))
+      (it "second test case" (expect (= 1 1))))}
   [])
 ```
 
@@ -218,7 +219,7 @@ How they're printed:
 ```
   lazytest.readme-test
     #'lazytest.readme-test/fn-example
-      √ `:test` metadata
+      √ `:lazytest/test` metadata
     #'lazytest.readme-test/test-case-example
       √ test case example docstring
     #'lazytest.readme-test/describe-example
@@ -233,12 +234,16 @@ These can get unweildy if multiple test cases are included before a given implem
 (defn post-attr-example
   ([a b]
    (+ a b))
-  {:test (describe "Should be simple addition"
-           (it "handles ints"
-             (expect (= 2 (post-attr-example 1 1))))
-           (it "handles floats"
-             (expect (= 2.0 (post-attr-example 1.0 1.0)))))})
+  {:lazytest/test
+   (describe "Should be simple addition"
+     (it "handles ints"
+       (expect (= 2 (post-attr-example 1 1))))
+     (it "handles floats"
+       (expect (= 2.0 (post-attr-example 1.0 1.0)))))})
 ```
+
+> [!NOTE]
+> Lazytest previously used `:test` metadata, but because `clojure.test` relies on that, it impeded having both `clojure.test` and Lazytest tests in a given codebase.
 
 ## Partitioning Individual Tests and Suites
 
@@ -515,8 +520,8 @@ This is inspired by [Mocha](https://mochajs.org)'s excellent documentation.
 5. Lazytest gathers all test vars from the required namespaces. It checks each var in each namespace against the following list of questions.
     1. Is the var defined with `defdescribe`? Call the `defdescribe`-constructed function and use it.
     2. Does the var point to a `suite`? Use it.
-    3. Does the var have `:test` metadata that is either a suite (`describe`) or a test case (`it`)? Create a new suite with `describe` and set the `:test` metadata as a child.
-    4. Does the var have `:test` metadata that is a function? Create a new suite with `describe`, create a new test case with `it`, and then set the docstring for the test case to `:test metadata`, and the body to calling the `:test` metadata function.
+    3. Does the var have `:lazytest/test` metadata that is either a suite (`describe`) or a test case (`it`)? Create a new suite with `describe` and set the `:lazytest/test` metadata as a child.
+    4. Does the var have `:lazytest/test` metadata that is a function? Create a new suite with `describe`, create a new test case with `it`, and then set the docstring for the test case to `:lazytest/test metadata`, and the body to calling the `:lazytest/test` metadata function.
 6. Lazytest groups each namespace into a `:lazytest/ns` suite, and then groups all of the namespace suites into a `:lazytest/run` suite.
 7. Lazytest does a depth-first walk of the run suite, filtering nses by `--namespace`, vars by `--var`, and all suites and test cases by `--include` or `--exclude` (with `:focus` being automatically included). These are prioritized as such:
     1. `--namespace` narrows all namespaces to those that exactly match. The namespaces of `--var` vars are included as well. If `--namespace` is not provided, all namespaces are selected.

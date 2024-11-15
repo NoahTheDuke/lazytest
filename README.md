@@ -322,7 +322,7 @@ Context functions of the same kind are run in the order they're defined. When ex
 
 To set context functions for an entire namespace, use `set-ns-context!`. There is currently no way to define run-wide context functions.
 
-`(clojure.test/use-fixtures :each ...)` will set the provided fixtures to wrap each test var. To achieve the same in Lazytest, define a var of the target hook and add it to the `defdescribe`'s `:context` block of each var in the namespace. This is necessarily more tedious than `use-fixtures`, but it is also more explicit and gracefully handles special cases (define multiple functions to handle subtle differences, use whichever is situationally helpful).
+In `clojure.test`, `(use-fixtures :each ...)` will set the provided fixtures to wrap each test var. To achieve the same in Lazytest, define a var of the target hook and add it to the `defdescribe`'s `:context` block of each var in the namespace. This is necessarily more tedious than `use-fixtures`, but it is also more explicit and gracefully handles special cases (define multiple functions to handle subtle differences, use whichever is situationally helpful).
 
 ```clojure lazytest/skip=true
 (defonce ^:dynamic *db-connection* nil)

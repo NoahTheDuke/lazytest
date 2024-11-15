@@ -5,6 +5,8 @@
 ### Added
 
 - Can now pass in paths as cli arguments, not just through repeated `--dir` flags: `clojure -M:dev:test test/unit test/integration` will look for tests in both `test/unit` and `test/integration`.
+- Documentation in `docs/core.md` and in the `lazytest.core` docstring.
+- Exclude `lazytest.core/defdescribe` from `:clojure-lsp/unused-public-var` linter.
 
 ### Changed
 
@@ -19,6 +21,10 @@
 is rewritten as `(expect (int? (+ 1 1)))`.
 
 - Switch from `:test` metadata to `:lazytest/test` metadata. It's longer, but it no longer clashes with `clojure.test`'s internals so you can run lazytest over `clojure.test` tests without them being marked as passing tests. (See [#4](https://github.com/NoahTheDuke/lazytest/issues/4).)
+
+### Fixed
+
+- cljdoc links in README.md. (See [#1](https://github.com/NoahTheDuke/lazytest/issues/1).)
 
 ## 1.3.0
 

@@ -1,5 +1,6 @@
 {:lint-as {lazytest.core/given clojure.core/let
            lazytest.core/around clojure.core/fn
+           lazytest.core/defdescribe clojure.core/def
            ;; clojure.test interface
            lazytest.experimental.interfaces.clojure-test/deftest clojure.test/deftest
            lazytest.experimental.interfaces.clojure-test/testing clojure.test/testing
@@ -8,6 +9,7 @@
            ;; xunit interface
            lazytest.experimental.interfaces.xunit/defsuite clojure.core/def
            }
- :hooks {:analyze-call {lazytest.core/defdescribe hooks.lazytest-core/defdescribe
-                        lazytest.core/defcontext hooks.lazytest-core/defdescribe
-                        lazytest.core/defsuite hooks.lazytest-core/defdescribe}}}
+ :linters {:clojure-lsp/unused-public-var
+           {:exclude-when-defined-by #{lazytest.core/defdescribe
+                                       lazytest.experimental.interfaces.xunit/defsuite
+                                       lazytest.experimental.interfaces.clojure-test/deftest}}}}

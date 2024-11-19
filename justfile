@@ -13,7 +13,6 @@ current_version := `cat resources/LAZYTEST_VERSION | xargs`
 
 @gen-docs:
     markdown-toc -i --maxdepth 2 README.md
-    # clojure -M:gen-docs
 
 clojure-lsp:
     clojure-lsp diagnostics
@@ -42,6 +41,7 @@ repl arg="":
     echo 'Setting new version {{version}}'
     just set-version {{version}}
     echo 'Commit and tag'
+    just gen-docs
     git commit -a -m 'Bump version for release'
     git tag v{{version}}
     echo 'Pushing to github'

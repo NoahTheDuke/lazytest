@@ -17,24 +17,26 @@
 (defn resolve-reporter
   [reporter]
   (cond
+    (sequential? reporter) (->> (flatten reporter)
+                                (map resolve-reporter)
+                                (distinct)
+                                (apply combine-reporters))
     (qualified-symbol? reporter)
     (if-let [r (requiring-resolve reporter)]
       (resolve-reporter (var-get r))
       (throw (ex-info (str "Cannot find reporter: " reporter)
                       {:reporter reporter})))
-    (symbol? reporter) (throw (ex-info (str "Cannot find reporter: " reporter)
-                                       {:reporter reporter}))
-    (sequential? reporter) (->> (flatten reporter)
-                                (map resolve-reporter)
-                                (apply combine-reporters))
+    (symbol? reporter) (resolve-reporter (symbol "lazytest.reporters" (name reporter)))
     :else reporter))
 
 (defn ->config [config]
   (if (:lazytest.runner/depth config)
     config
-    (let [reporter (resolve-reporter
-                    (or (:reporter config) 'lazytest.reporters/nested))]
+    (let [output (or (:output config) 'lazytest.reporters/nested)
+          output (if (sequential? output) (distinct output) [output])
+          reporter (resolve-reporter output)]
       (-> config
           (assoc :lazytest.runner/depth 1)
           (assoc :lazytest.runner/suite-history [])
+          (assoc :output output)
           (assoc :reporter reporter)))))

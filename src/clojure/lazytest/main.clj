@@ -3,7 +3,6 @@
   (:gen-class)
   (:require
    [clojure.java.io :as io]
-   [clojure.set :as set]
    [clojure.tools.namespace.file :refer [read-file-ns-decl]]
    [clojure.tools.namespace.find :refer [find-sources-in-dir]]
    [lazytest.cli :refer [validate-opts]]
@@ -13,18 +12,12 @@
    [lazytest.runner :refer [run-tests]]
    [lazytest.watch :as watch]))
 
-(defn find-ns-decls [config dirs]
-  (let [var-filter-nses (->> (:var-filter config)
-                             (map (comp symbol namespace))
-                             (into #{}))
-        ns-filter (or (not-empty (set/union (:ns-filter config) var-filter-nses))
-                      any?)]
-    (into []
-          (comp (mapcat find-sources-in-dir)
-                (keep read-file-ns-decl)
-                (keep second)
-                (filter ns-filter))
-          dirs)))
+(defn find-ns-decls [dirs]
+  (into []
+        (comp (mapcat find-sources-in-dir)
+              (keep read-file-ns-decl)
+              (keep second))
+        dirs))
 
 (defn add-md-tests
   [config dirs]
@@ -39,16 +32,15 @@
 (defn require-dirs [config dir]
   (let [dirs (map io/file (or dir #{"test"}))
         md-nses (add-md-tests config dirs)
-        nses (into (find-ns-decls config dirs)
+        nses (into (find-ns-decls dirs)
                    md-nses)]
     (when (empty? nses)
       (throw (ex-info "No namespaces to run" {:dir dir})))
     (apply require nses)
     nses))
 
-(defn run-impl [{:keys [dir output] :as config}]
-  (let [output (or (not-empty output) ['lazytest.reporters/nested])
-        config (->config (assoc config :output output :reporter output))
+(defn run-impl [{:keys [dir] :as config}]
+  (let [config (->config config)
         nses (require-dirs config dir)]
     (run-tests nses config)))
 

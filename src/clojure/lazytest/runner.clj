@@ -5,7 +5,7 @@
                              run-afters run-before-eachs run-befores]]
    [lazytest.filter :refer [filter-tree]]
    [lazytest.find :refer [find-suite find-var-test-value]]
-   [lazytest.reporters :as r :refer [nested report]]
+   [lazytest.reporters :as r :refer [report]]
    [lazytest.suite :as s :refer [suite suite-result suite?]]
    [lazytest.test-case :refer [try-test-case]]))
 
@@ -109,7 +109,7 @@
 
 (defn run-tests
   "Runs tests defined in the given namespaces. Applies filters in config."
-  ([namespaces] (run-tests namespaces (->config {:reporter nested})))
+  ([namespaces] (run-tests namespaces (->config nil)))
   ([namespaces config]
    (-> (apply find-suite namespaces)
        (filter-and-run config))))

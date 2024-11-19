@@ -29,12 +29,8 @@
     :parse-fn #(keyword (if (str/starts-with? % ":") (subs % 1) %))
     :assoc-fn update-set]
    [nil "--output SYMBOL" "Output format. Can be given multiple times. (Defaults to \"nested\".)"
-    :parse-fn read-string
-    :assoc-fn (fn [args k v]
-                (let [output (if (qualified-symbol? v)
-                               v
-                               (symbol "lazytest.reporters" (name v)))]
-                  (update-vec args k output)))]
+    :parse-fn symbol
+    :assoc-fn update-vec]
    [nil "--md FILE" "Run doctests for given markdown file. Can be given multiple times."
     :parse-fn io/file
     :assoc-fn update-vec]
@@ -66,11 +62,6 @@
   {:exit-message (str/join \newline (cons "lazytest errors:" errors))
    :ok false})
 
-(defn prepare-output [output]
-  (->> output
-       (distinct)
-       (vec)))
-
 (defn validate-opts
   "Parse and validate opts.
 
@@ -87,5 +78,4 @@
       errors (print-errors errors)
       :else (-> options
                 (update :dir (comp not-empty vec concat) arguments)
-                (update :output prepare-output)
                 (update :delay #(or % 500))))))

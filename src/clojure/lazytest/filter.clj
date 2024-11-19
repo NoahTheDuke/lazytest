@@ -87,10 +87,10 @@
   [ns-suite config]
   (let [var-filter (map (comp symbol namespace) (:var-filter config))
         ns-filter (not-empty (into #{} (concat var-filter (:ns-filter config))))]
-    (when (and ns-filter
-               (ns-filter (:doc ns-suite)))
-      (filter-suite ns-suite config))
-    (filter-suite ns-suite config)))
+    (if ns-filter
+      (when (ns-filter (:doc ns-suite))
+        (filter-suite ns-suite config))
+      (filter-suite ns-suite config))))
 
 (defmethod filter-tree :lazytest/run
   filter-tree--lazytest-run

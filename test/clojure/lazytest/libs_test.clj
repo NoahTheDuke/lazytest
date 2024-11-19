@@ -29,4 +29,4 @@
           (match? {:total 80 :pass 80 :fail 0}
                   (summarize
                    (lr/run-tests [(the-ns honeysql-ns)]
-                                 (->config {:reporter ['lazytest.reporters/quiet]})))))))))
+                                 (->config {:output ['lazytest.reporters/quiet]})))))))))

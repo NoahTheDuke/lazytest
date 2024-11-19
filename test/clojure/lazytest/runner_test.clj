@@ -20,7 +20,7 @@
                             ""
                             ""])
                  (-> (sut/run-test-suite test-suite
-                       (->config {:reporter reporters/nested*}))
+                       (->config {:output reporters/nested*}))
                      (with-out-str-no-color)))))))
 
 (defdescribe run-test-var-test
@@ -32,5 +32,5 @@
                     ""
                     ""])
          (-> (sut/run-test-var #'run-test-suite-test
-               (->config {:reporter reporters/nested*}))
+               (->config {:output reporters/nested*}))
              (with-out-str-no-color))))))

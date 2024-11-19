@@ -47,8 +47,7 @@
     nses))
 
 (defn run-impl [{:keys [dir output] :as config}]
-  (let [output (or (not-empty output) ['lazytest.reporters/nested])
-        config (->config (assoc config :output output :reporter output))
+  (let [config (->config (assoc config :output (not-empty output)))
         nses (require-dirs config dir)]
     (run-tests nses config)))
 

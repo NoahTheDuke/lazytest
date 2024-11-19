@@ -35,7 +35,7 @@
 (defn ->passing [& {:as extra}]
   (-> (tc/test-case {:doc "example test-case"
                      :body (fn [] true)})
-      (runner/run-tree (->config {:reporter [(constantly nil)]}))
+      (runner/run-tree (->config {:output [(constantly nil)]}))
       (merge extra)))
 
 (defn ->failing [& {:as extra}]
@@ -43,7 +43,7 @@
                      :body (fn [] (expect (= 1 2) (if (contains? extra :message)
                                                     (:message extra)
                                                     "failing")))})
-      (runner/run-tree (->config {:reporter [(constantly nil)]}))
+      (runner/run-tree (->config {:output [(constantly nil)]}))
       (assoc :file "example.clj")
       (assoc :line 1)
       (merge (dissoc extra :message))))
@@ -55,7 +55,7 @@
                          :line 1})]
     (-> (tc/test-case {:doc "example test-case"
                        :body (fn [] (throw thrown))})
-        (runner/run-tree (->config {:reporter [(constantly nil)]})))))
+        (runner/run-tree (->config {:output [(constantly nil)]})))))
 
 (defn stub-stack-trace
   [_ex]
@@ -348,7 +348,7 @@
                     (suite {:type :lazytest/ns
                             :nses [*ns*]
                             :children [test-suite]})
-                    (->config {:reporter (constantly nil)}))
+                    (->config {:output (constantly nil)}))
           suite-results (assoc test-suite :type :end-test-run :results results)]
       (expect (match? (re-compile "Top 1 slowest test namespaces.*Top 1 slowest test vars" :dotall)
                       (-> (sut/profile nil suite-results)
@@ -361,10 +361,10 @@
   (it "uses the var if given no doc string"
     (expect (= "  defdescribe-no-doc\n    √ works\n\n"
                (-> (runner/run-test-var #'defdescribe-no-doc
-                                        (->config {:reporter sut/nested*}))
+                                        (->config {:output sut/nested*}))
                    (with-out-str-no-color)))))
   (it "uses the doc string when available"
     (expect (= "  cool docs\n    √ works\n\n"
                (-> (runner/run-test-var #'defdescribe-with-doc
-                                        (->config {:reporter sut/nested*}))
+                                        (->config {:output sut/nested*}))
                    (with-out-str-no-color))))))

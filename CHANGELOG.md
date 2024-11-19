@@ -20,7 +20,10 @@
 
 is rewritten as `(expect (int? (+ 1 1)))`.
 
+- Give `lazytest.core/throws-with-msg?` and `lazytest.core/causes-with-msg?` better errors when the class matches but the regex doesn't.
 - Switch from `:test` metadata to `:lazytest/test` metadata. It's longer, but it no longer clashes with `clojure.test`'s internals so you can run lazytest over `clojure.test` tests without them being marked as passing tests. (See [#4](https://github.com/NoahTheDuke/lazytest/issues/4).)
+- Clarify `:output` and `:reporter`: `:output` is from the CLI or from a caller of the `lazytest.repl` functions, and `:reporter` is the function created/referenced from `:output`.
+- Move namespace filtering to `lazytest.filter/filter-tree` and out of `lazytest.main`.
 
 ### Fixed
 

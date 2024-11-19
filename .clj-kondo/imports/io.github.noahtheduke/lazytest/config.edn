@@ -10,4 +10,6 @@
            lazytest.experimental.interfaces.xunit/defsuite clojure.core/def
            }
  :linters {:clojure-lsp/unused-public-var
-           {:exclude-when-defined-by #{lazytest.core/defdescribe}}}}
+           {:exclude-when-defined-by #{lazytest.core/defdescribe
+                                       lazytest.experimental.interfaces.xunit/defsuite
+                                       lazytest.experimental.interfaces.clojure-test/deftest}}}}

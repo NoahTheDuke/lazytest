@@ -31,7 +31,7 @@ Add it to your deps.edn or project.clj:
 
 ```clojure lazytest/skip=true
 {:aliases
- {:test {:extra-deps {io.github.noahtheduke/lazytest {:mvn/version "1.3.0"}}
+ {:test {:extra-deps {io.github.noahtheduke/lazytest {:mvn/version "1.4.0"}}
          :extra-paths ["test"]
          :main-opts ["-m" "lazytest.main"]}}}
 ```

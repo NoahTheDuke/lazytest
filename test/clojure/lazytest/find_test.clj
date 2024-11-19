@@ -16,8 +16,7 @@
                   (vreset! output (with-out-str-data-map
                                     (main/run ["--dir" "corpus/find_tests"
                                                "--output" "nested*"]))))
-                 (after (remove-ns 'find-tests.examples)
-                        (vreset! output nil))]}
+                 (after (vreset! output nil))]}
       (it "runs all suites"
         (expect
           (match?

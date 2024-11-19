@@ -62,11 +62,6 @@
   {:exit-message (str/join \newline (cons "lazytest errors:" errors))
    :ok false})
 
-(defn prepare-output [output]
-  (->> output
-       (distinct)
-       (vec)))
-
 (defn validate-opts
   "Parse and validate opts.
 
@@ -83,5 +78,4 @@
       errors (print-errors errors)
       :else (-> options
                 (update :dir (comp not-empty vec concat) arguments)
-                (update :output prepare-output)
                 (update :delay #(or % 500))))))

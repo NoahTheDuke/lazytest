@@ -46,8 +46,8 @@
     (apply require nses)
     nses))
 
-(defn run-impl [{:keys [dir output] :as config}]
-  (let [config (->config (assoc config :output (not-empty output)))
+(defn run-impl [{:keys [dir] :as config}]
+  (let [config (->config (update config :output not-empty))
         nses (require-dirs config dir)]
     (run-tests nses config)))
 

@@ -63,8 +63,7 @@
 ;;; Public API
 
 (defmacro ->ex-failed
-  "Useful for all expectations. Sets the base
-  properties on the ExpectationFailed."
+  "Useful for all expectations. Sets the base properties on the ExpectationFailed."
   {:arglists '([expr data]
                [&form expr {:keys [message evaluated actual]}])}
   ([expr data] `(->ex-failed nil ~expr ~data))
@@ -175,14 +174,13 @@
        {:after after-fn#})))
 
 (defmacro around
-  "Builds a function for the `around` context.
+  "Builds a function for the `around` context. Works like an anonymous function:
 
-  Usage:
-  (describe some-func
-    {:context [(around [f]
-                 (binding [*foo* 100]
-                   (f)))]}
-    ...)"
+  ```clojure
+  (around [f]
+    (binding [*foo* 100]
+      (f)))
+  ```"
   [param & body]
   (assert (and (vector? param)
                (= 1 (count param))
@@ -196,9 +194,9 @@
 (defn set-ns-context!
   "Add hooks to the namespace suite, instead of to a var or test suite.
 
-  `context` must be a sequence of context maps."
-  [context]
-  (alter-meta! *ns* assoc :context (ctx/merge-context context)))
+  `contexts` is a sequence of context maps."
+  [contexts]
+  (alter-meta! *ns* assoc :context (ctx/merge-context contexts)))
 
 (def ^:dynamic *context* nil)
 

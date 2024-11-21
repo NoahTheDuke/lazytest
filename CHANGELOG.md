@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.4.1
+
+Released `2024-11-21`.
+
 ### Fixed
 
 - `around` context macro is now called once for all children. (See [#12](https://github.com/NoahTheDuke/lazytest/issues/12).)

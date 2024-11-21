@@ -1,12 +1,24 @@
 {
-  "doc/*.md": {"type": "doc"},
-  "README.md": {"type": "doc"},
-  "src/clojure/*.clj": {
-      "type": "source",
-      "alternate": "test/clojure/{}_test.clj"
-  },
-  "test/clojure/*_test.clj": {
-      "type": "test",
-      "alternate": "src/clojure/{}.clj"
-  }
+    "doc/*.md": {
+        "type": "doc"
+    },
+    "README.md": {
+        "type": "doc"
+    },
+    "src/clojure/*.clj": {
+        "type": "source",
+        "alternate": "test/clojure/{}_test.clj"
+    },
+    "src/clojure/*.cljc": {
+        "type": "source",
+        "alternate": "test/clojure/{}_test.cljc"
+    },
+    "test/clojure/*_test.clj": {
+        "type": "test",
+        "alternate": "src/clojure/{}.clj"
+    },
+    "test/clojure/*_test.cljc": {
+        "type": "test",
+        "alternate": "src/clojure/{}.cljc"
+    }
 }

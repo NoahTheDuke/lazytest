@@ -5,6 +5,7 @@
 ### Fixed
 
 - `around` context macro is now called once for all children. (See [#12](https://github.com/NoahTheDuke/lazytest/issues/12).)
+- Update Expectations v2 port to allow for easier updating in the future and support all non-test definition functions/macros. (See [#10](https://github.com/NoahTheDuke/lazytest/issues/10) and [#11](https://github.com/NoahTheDuke/lazytest/issues/11).)
 
 ### Misc
 

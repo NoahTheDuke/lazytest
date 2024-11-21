@@ -1,3 +1,4 @@
 {:config-paths ["../resources/clj-kondo.exports/io.github.noahtheduke/lazytest"]
+ :cljc {:features [:clj]}
  :linters {:clojure-lsp/unused-public-var {:level :off}
            :unused-binding {:exclude-patterns ["^this"]}}}

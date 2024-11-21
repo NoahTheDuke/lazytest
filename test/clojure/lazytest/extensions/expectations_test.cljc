@@ -26,7 +26,6 @@
               #"did not satisfy"
               #(sut/expect even? (+ 1 1 1) "It's uneven!")))))
 
-#_{:clj-kondo/ignore [:unresolved-symbol]}
 (defdescribe expectations-examples-test
   (it "handles the fancy stuff too"
     (sut/expect (more-> ArithmeticException type #"Divide by zero" ex-message) (/ 12 0))

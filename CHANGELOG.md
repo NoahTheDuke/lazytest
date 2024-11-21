@@ -6,6 +6,10 @@
 
 - `around` context macro is now called once for all children. (See [#12](https://github.com/NoahTheDuke/lazytest/issues/12).)
 
+### Misc
+
+- Added .editorconfig
+
 ## 1.4.0
 
 Released `2024-11-19`.

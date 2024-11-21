@@ -24,14 +24,15 @@
         config (-> config
                    (update ::depth #(if id (inc %) %))
                    (update ::suite-history conj suite))
-        f (if-let [around-fn (combine-arounds suite)]
-            #(let [ret (volatile! nil)
-                   tests (propagate-eachs suite %)]
-               (around-fn (fn [] (vreset! ret (run-tree tests config))))
-               @ret)
-            #(let [child (propagate-eachs suite %)]
-               (run-tree child config)))
-        results (vec (keep f (:children suite)))
+        around-fn (if-let [around-fn (combine-arounds suite)]
+                    (fn with-around [f]
+                      (let [ret (volatile! nil)]
+                        (around-fn (fn [] (vreset! ret (f))))
+                        @ret))
+                    (fn [f] (f)))
+        f #(let [child (propagate-eachs suite %)]
+             (run-tree child config))
+        results (around-fn #(vec (keep f (:children suite))))
         duration (double (- (System/nanoTime) start))]
     (-> (suite-result suite results)
         (assoc ::source-type source-type)

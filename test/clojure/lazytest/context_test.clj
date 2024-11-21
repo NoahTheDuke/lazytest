@@ -1,8 +1,11 @@
 (ns lazytest.context-test
   (:require
+   [context-tests.use-fixture :refer [use-fixture-state]]
    [lazytest.context :refer [propagate-eachs]]
    [lazytest.core :refer [after after-each around before before-each
-                          defdescribe describe expect expect-it it]]))
+                          defdescribe describe expect expect-it it]]
+   [lazytest.main :as main]
+   [lazytest.runner :as-alias lr]))
 
 (defn vconj! [volatile value]
   (vswap! volatile conj value))
@@ -196,3 +199,10 @@
           :after-each-middle-2
           :after-each-top
           :after-each-top-2] @state))))
+
+(defdescribe set-ns-context-test
+  (it "works like clojure.test/use-fixtures"
+    (vreset! use-fixture-state [])
+    (main/run ["--output" "quiet"
+               "--dir" "corpus/context_tests"])
+    (expect (= [:around-before :around-after] @use-fixture-state))))

@@ -8,34 +8,8 @@
    [clojure.data :as data]
    [clojure.string :as str]
    #?(:cljs [planck.core])
-   ; #?(:clj  [clojure.test :as t]
-   ;          :cljs [cljs.test :include-macros true :as t])
-   #?(:clj  [clojure.spec.alpha :as s])
-   #?(:cljs [cljs.spec.alpha :as s])
-   #?@(:cljs [pjstadig.humane-test-output
-              pjstadig.print
-              pjstadig.util])))
-
-(def humane-test-output?
-  "If Humane Test Output is available, activate it, and enable compatibility
-  of our `=?` with it.
-
-  This Var will be `true` if Humane Test Output is available and activated,
-  otherwise it will be `nil`."
-  #?(:clj (try (require 'pjstadig.humane-test-output)
-               ((resolve 'pjstadig.humane-test-output/activate!))
-               true
-               (catch Exception _))
-     :cljs (do
-             (defmethod cljs.test/report [:cljs.test/default :fail]
-               [event]
-               (#'pjstadig.util/report-
-                 (if (:diffs event)
-                   event
-                   (pjstadig.print/convert-event event))))
-             ; This should be true for normal operation, false for testing
-             ; this framework and running the :negative tests.
-             true)))
+   #?(:clj  [clojure.spec.alpha :as s]
+      :cljs [cljs.spec.alpha :as s])))
 
 (defn ^:no-doc illegal-argument [s]
   (#?(:clj IllegalArgumentException. :cljs js/Error.) s))
@@ -43,11 +17,6 @@
 ;; stub functions for :refer compatibility:
 (defn- bad-usage [s]
   `(throw (illegal-argument (str ~s " should only be used inside expect"))))
-
-#_(defmacro =?
-  "Internal fuzzy-equality test (clojure.test/assert-expr)."
-  [expected actual & [form]]
-  (bad-usage "=?"))
 
 (defmacro in
   "`(expect expected (in actual))` -- expect a subset of a collection.
@@ -154,6 +123,47 @@
                                      (clojure.string/replace b in-both ""))
        "\n"))
 
+(defn =?-impl
+  [{:keys [e e# a a# conform?]}]
+  (cond conform?
+        [(s/valid? e# a#)
+         (s/explain-str e# a#)
+         (list 's/valid? e a)
+         (list s/valid? e# a#)]
+        (fn? e#)
+        [(e# a#)
+         (str a " did not satisfy " e "\n")
+         (list e a)
+         (list e# a#)]
+        (isa? (type e#)
+              #?(:clj java.util.regex.Pattern
+                 :cljs (type #"regex")))
+        [(some? (re-find e# a#))
+         (str (pr-str a#) " did not match " (pr-str e#) "\n")
+         (list 're-find e a)
+         (list re-find e# a#)]
+        #?(:clj (and (class? e#) (class? a#))
+           :cljs false) ; maybe figure this out later
+        [(isa? a# e#) ; (expect parent child)
+         (str a# " is not derived from " e# "\n")
+         (list 'isa? a e)
+         (list isa? e# a#)]
+        #?(:clj (class? e#)
+           :cljs false) ; maybe figure this out later
+        [(instance? e# a#) ; (expect klazz object)
+         (str a#
+              #?(:clj (str " (" (class a#) ")"))
+              " is not an instance of " e# "\n")
+         (list 'instance? e a)
+         #?(:clj (list instance? e# (class a#)))]
+        :else
+        [(= e# a#)
+         (when (and (string? e#) (string? a#) (not= e# a#))
+           (let [[_# _# in-both#] (str-diff e# a#)]
+             (str-msg e# a# in-both#)))
+         (list '= e a)
+         (list = e# a#)]))
+
 ;; smart equality extension to clojure.test assertion -- if the expected form
 ;; is a predicate (function) then the assertion is equivalent to (is (e a))
 ;; rather than (is (= e a)) and we need the type check done at runtime, not
@@ -165,70 +175,16 @@
     `(let [e# ~e
            a# ~a
            f# ~form'
-           valid?# (when ~conform? s/valid?)
-           explain-str?# (when ~conform? s/explain-str)
-           [r# m# ef# af#]
-           (cond ~conform?
-                 [(valid?# e# a#)
-                  (explain-str?# e# a#)
-                  (list '~'s/valid? '~e '~a)
-                  (list '~'not (list '~'s/valid? '~e a#))]
-                 (fn? e#)
-                 [(e# a#)
-                  (str '~a " did not satisfy " '~e)
-                  (list '~e '~a)
-                  (list '~'not (list '~e a#))]
-                 (isa? (type e#)
-                       #?(:clj java.util.regex.Pattern
-                          :cljs (type #"regex")))
-                 [(some? (re-find e# a#))
-                  (str (pr-str a#) " did not match " (pr-str e#) "\n")
-                  (list '~'re-find '~e '~a)
-                  (list '~'not (list '~'re-find e# a#))]
-                 #?(:clj (and (class? e#) (class? a#))
-                    :cljs false) ; maybe figure this out later
-                 [(isa? a# e#) ; (expect parent child)
-                  (str a# " is not derived from " e# "\n")
-                  (list '~'isa? '~a '~e)
-                  (list '~'not (list '~'isa? a# e#))]
-                 #?(:clj (class? e#)
-                    :cljs false) ; maybe figure this out later
-                 [(instance? e# a#) ; (expect klazz object)
-                  (str a#
-                       #?(:clj (str " (" (class a#) ")"))
-                       " is not an instance of " e# "\n")
-                  (list '~'instance? '~e '~a)
-                  #?(:clj (class a#))]
-                 :else
-                 [(= e# a#)
-                  (when (and (string? e#) (string? a#) (not= e# a#))
-                    (let [[_# _# in-both#] (str-diff e# a#)]
-                      (str-msg e# a# in-both#)))
-                  (list '~'= '~e '~a)
-                  (list '~'not= e# a#)])
-           humane?# (and humane-test-output? (not (fn? e#)) (not ~conform?))]
+           [r# m# ef# af#] (=?-impl {:e '~e :e# e#
+                                     :a '~a :a# a#
+                                     :conform? ~conform?})]
        (or r#
            (throw (lt/->ex-failed
                    ~&form
-                   {:message (if m# (if ~msg (str ~msg "\n" m#) m#) ~msg)
-                    :diffs (if humane?#
-                             [[a# (take 2 (data/diff e# a#))]]
-                             [])
-                    :expected (cond humane?#
-                                    e#
-                                    f#
-                                    f#
-                                    ef#
-                                    ef#
-                                    :else
-                                    '~&form)
-                    :actual (cond af#
-                                  af#
-                                  humane?#
-                                  [a#]
-                                  :else
-                                  (list '~'not (list '~'=? e# a#)))})))
-       ))))
+                   {:message (if m# (if-let [msg# ~msg] (str msg# "\n" m#) m#) ~msg)
+                    :expected (or ef# f#)
+                    :evaluated af#
+                    :actual r#})))))))
 
 (comment
   (data/diff "foo" ["bar"])
@@ -245,16 +201,6 @@
                   :cljs :default)
           t#
           t#)))
-
-#_(defn ^:no-doc all-report
-  "Given an atom in which to accumulate results, return a function that
-  can be used in place of `clojure.test/do-report`, which simply remembers
-  all the reported results.
-
-  This is used to support the semantics of `expect/in`."
-  [store]
-  (fn [m]
-    (swap! store update (:type m) (fnil conj []) m)))
 
 (defmacro expect
   "Translate Expectations DSL to `lazytest.core` language.
@@ -295,17 +241,18 @@
    (let [within (if (and (sequential? e')
                          (symbol? (first e'))
                          (= "expect" (name (first e'))))
-                  `(pr-str '~e')
-                  `(pr-str (list '~'expect '~e' '~a)))
-         msg' `(str/join
-                "\n"
-                (cond-> []
-                  ~msg
-                  (conj ~msg)
-                  ~(not= e e')
-                  (conj (str "  within: " ~within))
-                  :else
-                  (conj (str (pr-str '~a) "\n"))))]
+                  (pr-str e')
+                  (pr-str (list 'expect e' a)))
+         msg' `(not-empty
+                (str/join
+                 "\n"
+                 (cond-> []
+                   ~msg
+                   (conj ~msg)
+                   ~(not= e e')
+                   (conj ~(str "  within: " within))
+                   #_#_:else
+                   (conj ~(str (pr-str a) "\n")))))]
      (cond
        (and (sequential? a)
             (symbol? (first a))
@@ -313,61 +260,37 @@
        (let [[_ bindings & body] a]
          (if (= 1 (count body))
            `(doseq ~bindings
-              (expect ~e ~(first body) ~msg ~ex? ~e))
+              ~(with-meta (list `expect e (first body) msg ex? e)
+                 (meta &form)))
            `(doseq ~bindings
-              (expect ~e (do ~@body) ~msg ~ex? ~e))))
+              ~(with-meta (list `expect e (cons 'do body) msg ex? e)
+                 (meta &form)))))
 
        (and (sequential? a)
             (symbol? (first a))
             (= "in" (name (first a))))
-       (let [form `(~'expect ~e ~a)]
-         `(let [e#     ~e
-                a#     ~(second a)
-                not-in# (str '~e " not found in " a#)
-                msg#    (if (seq ~msg') (str ~msg' "\n" not-in#) not-in#)]
-            (cond (and (set? a#) (set? e#))
-                 ;; special case of set in set -- report any elements from
-                 ;; expected set that are not in the actual set:
-                  #_(t/is (~'=? (clojure.set/difference e# a#) #{} '~form) msg#)
-                  (=? (clojure.set/difference e# a#) #{} '~form msg#)
-                  (or (sequential? a#) (set? a#))
-                  (doseq [a'# a#]
-                    (expect e# a'# msg# ~ex? ~form))
-                  #_(let [all-reports# (atom nil)
-                        one-report# (atom nil)]
-                   ;; we accumulate any and all failures and errors but we
-                   ;; only accumulate passes if each sequential expectation
-                   ;; fully passes (i.e., no failures or errors)
-                    (with-redefs [t/do-report (all-report one-report#)]
-                      (doseq [a'# a#]
-                        (expect e# a'# msg# ~ex? ~form)
-                        (if (or (contains? @one-report# :error)
-                                (contains? @one-report# :fail))
-                          (do
-                            (when (contains? @one-report# :fail)
-                              (swap! all-reports#
-                                     update :fail into (:fail @one-report#)))
-                            (when (contains? @one-report# :error)
-                              (swap! all-reports#
-                                     update :error into (:error @one-report#))))
-                          (when (contains? @one-report# :pass)
-                            (swap! all-reports#
-                                   update :pass into (:pass @one-report#))))
-                        (reset! one-report# nil)))
-
-                    (if (contains? @all-reports# :pass)
-                     ;; report all the passes (and no failures or errors)
-                      (doseq [r# (:pass @all-reports#)] (t/do-report r#))
-                      (do
-                        (when-let [r# (first (:error @all-reports#))]
-                          (t/do-report r#))
-                        (when-let [r# (first (:fail @all-reports#))]
-                          (t/do-report r#)))))
-                  (map? a#)
-                  (if (map? e#)
-                    (let [submap# (select-keys a# (keys e#))]
-                      #_(t/is (~'=? e# submap# '~form) ~msg')
-                      (=? e# submap# '~form ~msg'))
+       (let [form (with-meta `(~'expect ~e ~a) (meta &form))
+             e_ (gensym "e_")
+             a_ (gensym "a_")
+             a'_ (gensym "a'_")
+             not-in_ (gensym "not-in_")
+             msg_ (gensym "msg_")
+             submap_ (gensym "submap_")]
+         `(let [~e_     ~e
+                ~a_     ~(second a)
+                ~not-in_ (str '~e " not found in " ~a_)
+                ~msg_    (if (seq ~msg') (str ~msg' "\n" ~not-in_) ~not-in_)]
+            (cond (and (set? ~a_) (set? ~e_))
+                  (=? (clojure.set/difference ~e_ ~a_) #{} '~form ~msg_)
+                  (or (sequential? ~a_) (set? ~a_))
+                  (doseq [~a'_ ~a_]
+                    ~(with-meta (list `expect e_ a'_ msg_ ex? (list 'quote form))
+                       (meta &form)))
+                  (map? ~a_)
+                  (if (map? ~e_)
+                    (let [~submap_ (select-keys ~a_ (keys ~e_))]
+                      ~(with-meta (list `=? e_ submap_ (list 'quote form) msg')
+                         (meta &form)))
                     (throw (illegal-argument "'in' requires map or sequence")))
                   :else
                   (throw (illegal-argument "'in' requires map or sequence")))))
@@ -376,7 +299,9 @@
             (symbol? (first e))
             (= "more" (name (first e))))
        (let [sa (gensym)
-             es (mapv (fn [e] `(expect ~e ~sa ~msg ~ex? ~e')) (rest e))]
+             es (mapv (fn [e] (with-meta `(expect ~e ~sa ~msg ~ex? ~e')
+                                (meta &form)))
+                      (rest e))]
          `(let [~sa (? ~a)] ~@es))
 
        (and (sequential? e)
@@ -384,20 +309,22 @@
             (= "more->" (name (first e))))
        (let [sa (gensym)
              es (mapv (fn [[e a->]]
-                        (if (and (sequential? a->)
-                                 (symbol? (first a->))
-                                 (let [s (name (first a->))]
-                                   (or (str/ends-with? s "->")
-                                       (str/ends-with? s "->>"))))
-                          `(expect ~e (~(first a->) ~sa ~@(rest a->)) ~msg false ~e')
-                          `(expect ~e (-> ~sa ~a->) ~msg false ~e')))
+                        (with-meta
+                          (if (and (sequential? a->)
+                                   (symbol? (first a->))
+                                   (let [s (name (first a->))]
+                                     (or (str/ends-with? s "->")
+                                         (str/ends-with? s "->>"))))
+                            `(expect ~e (~(first a->) ~sa ~@(rest a->)) ~msg false ~e')
+                            `(expect ~e (-> ~sa ~a->) ~msg false ~e'))
+                          (meta &form)))
                       (partition 2 (rest e)))]
          `(let [~sa (? ~a)] ~@es))
 
        (and (sequential? e)
             (symbol? (first e))
             (= "more-of" (name (first e))))
-       (let [es (mapv (fn [[e a]] `(expect ~e ~a ~msg ~ex? ~e'))
+       (let [es (mapv (fn [[e a]] (with-meta `(expect ~e ~a ~msg ~ex? ~e') (meta &form)))
                       (partition 2 (rest (rest e))))]
          `(let [~(second e) ~a] ~@es))
 
@@ -410,25 +337,24 @@
                          (and (fn? (deref (planck.core/find-var e)))
                               (not= (pr-str (deref (planck.core/find-var e)))
                                     "#object[Function]")))))
-       #?(:clj (if (isa? (resolve e) Throwable)
-                 #_`(t/is (~'thrown? ~e ~a) ~msg')
-                 `(lt/expect (lt/throws? ~e #(do ~a)) ~msg')
-                 #_`(t/is (~'=? ~e ~a) ~msg')
-                 `(=? ~e ~a ~msg'))
+       #?(:clj (with-meta
+                 (if (isa? (resolve e) Throwable)
+                   `(lt/expect (lt/throws? ~e (fn [] ~a)) ~msg')
+                   `(=? ~e ~a ~msg'))
+                 (meta &form))
           :cljs (if (= 'js/Error e)
                   `(t/is (~'thrown? ~e ~a) ~msg')
                   `(t/is (~'instance? ~e ~a) ~msg')))
 
        :else
-       #_`(t/is (~'=? ~e ~a) ~msg')
-       `(=? ~e ~a ~msg')))))
+       (with-meta `(=? ~e ~a ~msg') (meta &form))))))
 
 (comment
   (macroexpand '(expect (more-> 1 :a 2 :b 3 (-> :c :d)) {:a 1 :b 2 :c {:d 4}}))
   (macroexpand '(expect (more-of a 2 a) 4))
   (macroexpand '(expect (more-of {:keys [a b c]} 1 a 2 b 3 c) {:a 1 :b 2 :c 3})))
 
-#_(defn- contains-expect?
+(defn- contains-expect?
   "Given a form, return `true` if it contains any calls to the 'expect' macro.
 
   As of #28, we also recognize qualified 'expect' calls."
@@ -438,25 +364,27 @@
              (str/starts-with? (name (first e)) "expect"))
         (some contains-expect? e))))
 
-#_(defmacro defexpect
+(defmacro defexpect
   "Given a name (a symbol that may include metadata) and a test body,
-  produce a standard `clojure.test` test var (using `deftest`).
+  produce a standard `lazytest.core` test var (using `defdescribe`).
 
   `(defexpect name expected actual)` is a special case shorthand for
   `(defexpect name (expect expected actual))` provided as an easy way to migrate
-  legacy Expectation tests to the 'clojure.test' compatibility version."
+  legacy Expectation tests to the 'lazytest.core' compatibility version."
   [n & body]
-  (if (and (= (count body) 2)
-           (not (some contains-expect? body)))
+  (with-meta
+    (if (and (= (count body) 2)
+             (not (some contains-expect? body)))
       ;; treat (defexpect my-name pred (expr)) as a special case
-      `(t/deftest ~n (expect ~@body))
-    ;; #13 match deftest behavior starting in 2.0.0
-    `(t/deftest ~n ~@body)))
+      `(lt/defdescribe ~n (expect ~@body))
+      ;; #13 match deftest behavior starting in 2.0.0
+      `(lt/defdescribe ~n ~@body))
+    (meta &form)))
 
-#_(defmacro expecting
-  "The Expectations version of `clojure.test/testing`."
+(defmacro expecting
+  "The Expectations version of `lazytest.core/describe`."
   [string & body]
-  `(t/testing ~string ~@body))
+  (with-meta `(lt/describe ~string ~@body) (meta &form)))
 
 (defmacro side-effects
   "Given a vector of functions to track calls to, execute the body.
@@ -524,66 +452,3 @@
      (let [e-val (expected-fn x)
            a-val (actual-fn x)]
        (lt/expect (= e-val a-val) (difference-fn e-val a-val))))))
-
-; #?(:clj (defn use-fixtures
-;          "Wrap test runs in a fixture function to perform setup and
-;   teardown. Using a fixture-type of `:each` wraps every test
-;   individually, while `:once` wraps the whole run in a single function.
-;
-;   Like `cljs.test/use-fixtures`, also accepts hash maps with `:before`
-;   and/or `:after` keys that specify 0-arity functions to invoke
-;   before/after the test/run."
-;          [fixture-type & fs]
-;          (apply t/use-fixtures fixture-type
-;                 (map (fn [f]
-;                        (if (map? f)
-;                          (fn [t]
-;                            (when-let [before (:before f)]
-;                              (before))
-;                            (t)
-;                            (when-let [after (:after f)]
-;                              (after)))
-;                          f))
-;                      fs))))
-;
-; #?(:cljs (defmacro use-fixtures
-;           "Wrap test runs in a fixture function to perform setup and
-;   teardown. Using a fixture-type of `:each` wraps every test
-;   individually, while `:once` wraps the whole run in a single function.
-;
-;   Hands off to `cljs.test/use-fixtures`, also accepts hash maps with `:before`
-;   and/or `:after` keys that specify 0-arity functions to invoke
-;   before/after the test/run."
-;           [fixture-type & fs]
-;           `(cljs.test/use-fixtures ~fixture-type ~@fs)))
-;
-; (defn from-clojure-test
-;   "Intern the specified symbol from `clojure.test` as a symbol in
-;   `expectations.clojure.test` with the same value and metadata."
-;   [f]
-;   (try
-;     (let [tf (symbol #?(:clj "clojure.test"
-;                         :cljs "cljs.test")
-;                      (name f))
-;           v (#?(:clj resolve
-;                 :cljs planck.core/find-var)
-;              tf)
-;           m (meta v)]
-;       (#?(:clj intern
-;           :cljs planck.core/intern)
-;        'expectations.clojure.test
-;        (with-meta f
-;          (update m
-;                  :doc
-;                  str
-;                  (str #?(:clj "\n\nImported from clojure.test."
-;                          :cljs "\n\nImported from cljs.test"))))
-;        (deref v)))
-;     (catch #?(:clj Throwable
-;               :cljs :default) _)))
-;
-;
-; ;; bring over other useful clojure.test functions:
-; (doseq [f '[#?@(:clj [run-all-tests run-tests run-test-var test-all-vars test-ns with-test])
-;             run-test test-var test-vars]]
-;   (from-clojure-test f))

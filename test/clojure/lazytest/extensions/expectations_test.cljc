@@ -11,14 +11,13 @@
 (s/def ::pos pos?)
 
 (defdescribe expectations-test
-  (it "should work"
-    (sut/expect true)
-    (sut/expect 1 1)
-    (sut/expect pos? 1)
-    (sut/expect #"hello" "hello world")
-    (sut/expect String "hello world")
-    (sut/expect ExceptionInfo (throw (ex-info "aw shucks" {})))
-    (sut/expect ::pos 1)))
+  (it "value" (sut/expect true))
+  (it "=" (sut/expect 1 1))
+  (it "fn?" (let [i 1] (sut/expect pos? i)))
+  (it "regex" (sut/expect #"hello" "hello world"))
+  (it "instance?" (sut/expect String "hello world"))
+  (it "catch" (sut/expect ExceptionInfo (throw (ex-info "aw shucks" {}))))
+  (it "spec" (sut/expect ::pos 1)))
 
 (defdescribe expectations
   (it "prints correctly"
@@ -54,3 +53,30 @@
       (sut/expect (more-> even? identity even? identity even? identity pos? identity)
                   (swap! counter inc))
       (expect (= 2 @counter)))))
+
+(defdescribe more-of-test
+  (it "lazytest issue 13: can handle big more-ofs"
+    (sut/expect
+     (more-of [_ url site kw nationality {:keys [country state city]} locale]
+              "/"          url
+              {}           site
+              {}           kw
+              "greek"      nationality
+              "US"         country
+              "California" state
+              vector?      city
+              3            (count city)
+              "Castro Valley" (first city)
+              number?      (second city)
+              number?      (last city)
+              "en_US"      locale)
+     (from-each [call [[nil
+                        "/"
+                        {}
+                        {}
+                        "greek"
+                        {:country "US"
+                         :state "California"
+                         :city ["Castro Valley" 1 2]}
+                        "en_US"]]]
+       call))))

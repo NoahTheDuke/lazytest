@@ -1,16 +1,25 @@
 (ns lazytest.extensions.expectations-test
   (:require
-   [lazytest.core :refer [defdescribe it throws? expect throws-with-msg?]]
-   [lazytest.extensions.expectations :as sut :refer [in more-> more-of more from-each]]
    [clojure.spec.alpha :as s]
-   [clojure.string :as str]) 
+   [clojure.string :as str]
+   [lazytest.core :refer [expect it throws-with-msg? throws?]]
+   [lazytest.extensions.expectations :as sut :refer [from-each in more more->
+                                                     more-of]]) 
   (:import
    (clojure.lang ExceptionInfo)
    (lazytest ExpectationFailed)))
 
 (s/def ::pos pos?)
 
-(defdescribe expectations-test
+(sut/defexpect simple-test 1 1)
+
+(sut/defexpect simple-call-test (+ 1 2) (+ 1 1 1))
+
+(sut/defexpect either-expect-works
+  (it "handles lazytest" (expect (= 1 1)))
+  (it "handles expectations" (sut/expect (= 2 2))))
+
+(sut/defexpect expectations-test
   (it "value" (sut/expect true))
   (it "=" (sut/expect 1 1))
   (it "fn?" (let [i 1] (sut/expect pos? i)))
@@ -19,13 +28,13 @@
   (it "catch" (sut/expect ExceptionInfo (throw (ex-info "aw shucks" {}))))
   (it "spec" (sut/expect ::pos 1)))
 
-(defdescribe expectations
+(sut/defexpect expectations
   (it "prints correctly"
     (expect (throws-with-msg? ExpectationFailed
               #"did not satisfy"
               #(sut/expect even? (+ 1 1 1) "It's uneven!")))))
 
-(defdescribe expectations-examples-test
+(sut/defexpect expectations-examples-test
   (it "handles the fancy stuff too"
     (sut/expect (more-> ArithmeticException type #"Divide by zero" ex-message) (/ 12 0))
     (sut/expect {:foo 1} (in {:foo 1 :cat 4}))
@@ -54,7 +63,7 @@
                   (swap! counter inc))
       (expect (= 2 @counter)))))
 
-(defdescribe more-of-test
+(sut/defexpect more-of-test
   (it "lazytest issue 13: can handle big more-ofs"
     (sut/expect
      (more-of [_ url site kw nationality {:keys [country state city]} locale]

@@ -250,9 +250,7 @@
                    ~msg
                    (conj ~msg)
                    ~(not= e e')
-                   (conj ~(str "  within: " within))
-                   #_#_:else
-                   (conj ~(str (pr-str a) "\n")))))]
+                   (conj ~(str "  within: " within)))))]
      (cond
        (and (sequential? a)
             (symbol? (first a))
@@ -281,7 +279,8 @@
                 ~not-in_ (str '~e " not found in " ~a_)
                 ~msg_    (if (seq ~msg') (str ~msg' "\n" ~not-in_) ~not-in_)]
             (cond (and (set? ~a_) (set? ~e_))
-                  (=? (clojure.set/difference ~e_ ~a_) #{} '~form ~msg_)
+                  ~(with-meta (list `=? (list 'clojure.set/difference e_ a_) #{} (list 'quote form) msg_)
+                    (meta &form))
                   (or (sequential? ~a_) (set? ~a_))
                   (doseq [~a'_ ~a_]
                     ~(with-meta (list `expect e_ a'_ msg_ ex? (list 'quote form))
@@ -299,8 +298,10 @@
             (symbol? (first e))
             (= "more" (name (first e))))
        (let [sa (gensym)
-             es (mapv (fn [e] (with-meta `(expect ~e ~sa ~msg ~ex? ~e')
-                                (meta &form)))
+             es (mapv (fn [expected]
+                        (with-meta `(expect ~expected ~sa ~msg ~ex? ~e')
+                          ;; use more line
+                          (meta e)))
                       (rest e))]
          `(let [~sa (? ~a)] ~@es))
 
@@ -308,23 +309,27 @@
             (symbol? (first e))
             (= "more->" (name (first e))))
        (let [sa (gensym)
-             es (mapv (fn [[e a->]]
+             es (mapv (fn [[expected a->]]
                         (with-meta
                           (if (and (sequential? a->)
                                    (symbol? (first a->))
                                    (let [s (name (first a->))]
                                      (or (str/ends-with? s "->")
                                          (str/ends-with? s "->>"))))
-                            `(expect ~e (~(first a->) ~sa ~@(rest a->)) ~msg false ~e')
-                            `(expect ~e (-> ~sa ~a->) ~msg false ~e'))
-                          (meta &form)))
+                            `(expect ~expected (~(first a->) ~sa ~@(rest a->)) ~msg false ~e')
+                            `(expect ~expected (-> ~sa ~a->) ~msg false ~e'))
+                          ;; use more-> line
+                          (meta e)))
                       (partition 2 (rest e)))]
          `(let [~sa (? ~a)] ~@es))
 
        (and (sequential? e)
             (symbol? (first e))
             (= "more-of" (name (first e))))
-       (let [es (mapv (fn [[e a]] (with-meta `(expect ~e ~a ~msg ~ex? ~e') (meta &form)))
+       (let [es (mapv (fn [[expected actual]]
+                        (with-meta `(expect ~expected ~actual ~msg ~ex? ~e')
+                          ;; use more-of line
+                          (meta e)))
                       (partition 2 (rest (rest e))))]
          `(let [~(second e) ~a] ~@es))
 

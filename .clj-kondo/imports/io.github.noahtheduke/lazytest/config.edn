@@ -9,6 +9,7 @@
            ;; xunit interface
            lazytest.experimental.interfaces.xunit/defsuite clojure.core/def
            ;; Expectations v2
+           lazytest.extensions.expectations/defexpect clojure.core/def
            lazytest.extensions.expectations/from-each clojure.core/for
            lazytest.extensions.expectations/=? clojure.core/=
            }

@@ -13,7 +13,7 @@
 
 (sut/defexpect simple-test 1 1)
 
-(sut/defexpect simple-call-test (+ 1 2) (+ 1 1 1))
+(sut/defexpect simple-call-test (+ 2 4) (+ 2 2 2))
 
 (sut/defexpect either-expect-works
   (it "handles lazytest" (expect (= 1 1)))

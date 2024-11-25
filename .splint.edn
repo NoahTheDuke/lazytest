@@ -1,0 +1,42 @@
+;; Splint configuration auto-generated on 2024-11-25.
+;; All failing rules have been disabled and can be enabled as time allows.
+
+{
+ ;; Diagnostics count: 2
+ ;; Using unquote-splicing on a body in a macro can lead to subtly broken code that's hard to debug.
+ lint/body-unquote-splicing {:enabled false}
+
+ ;; Diagnostics count: 48
+ ;; Specify a function name for defmethod bodies.
+ lint/defmethod-names {:enabled false}
+
+ ;; Diagnostics count: 2
+ ;; Prefer `vec` or `set` to `(into [] ...)`.
+ lint/into-literal {:enabled false}
+
+ ;; Diagnostics count: 50
+ ;; Prefer `(y x)` to `(-> x y)`.
+ ;; :supported-styles [:inline :avoid-collections]
+ lint/thread-macro-one-arg {:enabled false}
+
+ ;; Diagnostics count: 40
+ ;; Always set *warn-on-reflection* to avoid reflection in interop.
+ lint/warn-on-reflection {:enabled false}
+
+ ;; Diagnostics count: 22
+ ;; Avoid functions longer than 10 lines of code (default).
+ ;; :supported-styles [:body :defn]
+ metrics/fn-length {:enabled false}
+
+ ;; Diagnostics count: 14
+ ;; Avoid calling assoc with multiple pairs.
+ performance/assoc-many {:enabled false}
+
+ ;; Diagnostics count: 28
+ ;; Rely on `.equals` when comparing against string literals.
+ performance/dot-equals {:enabled false}
+
+ ;; Diagnostics count: 1
+ ;; Prefer `condp` to `cond` when testing same base case.
+ style/prefer-condp {:enabled false}
+}

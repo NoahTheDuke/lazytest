@@ -1,4 +1,6 @@
-(ns lazytest.color)
+(ns lazytest.color 
+  (:require
+    [clojure.string :as str]))
 
 (def ^:dynamic *color*
   (contains? #{"yes" "true"} (System/getProperty "lazytest.colorize" "true")))
@@ -34,7 +36,7 @@
   "Return ANSI color codes for the given sequence of colors, which are
   keywords in color-table."
   [& colors]
-  (apply str (map (fn [c] (str (char 27) (color-table c))) colors)))
+  (str/join (map (fn [c] (str (char 27) (color-table c))) colors)))
 
 (defn colorize
   "Wrap string s in ANSI colors if colorize? is true."

@@ -379,7 +379,7 @@
   [n & body]
   (with-meta
     (if (and (= (count body) 2)
-             (not (some contains-expect? body)))
+             (not-any? contains-expect? body))
       ;; treat (defexpect my-name pred (expr)) as a special case
       `(lt/defdescribe ~n (lt/it "" (expect ~@body)))
       ;; #13 match deftest behavior starting in 2.0.0

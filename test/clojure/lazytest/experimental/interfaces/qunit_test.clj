@@ -11,15 +11,15 @@
 (prep-ns-suite!)
 
 (test! "initial"
-  (assert! (= false (pos? 0))))
+  (assert! (false? (pos? 0))))
 
 (module! "Group A")
 
 (test! "foo"
-  (assert! (= true (pos? 1))))
+  (assert! (true? (pos? 1))))
 
 (test! "bar"
-  (assert! (= true (pos? 1))))
+  (assert! (true? (pos? 1))))
 
 (in-ns 'lazytest.experimental.interfaces.qunit-test)
 

@@ -14,8 +14,8 @@
     (is (= 7 (+ 3 4)) "is works"))
   (testing "are works"
     (are [x y] (= x y)
-      2 (+ 1 1)
-      4 (* 2 2))))
+      4 (+ 2 2)
+      8 (* 2 4))))
 
 (in-ns 'lazytest.experimental.interfaces.clojure-test-test)
 

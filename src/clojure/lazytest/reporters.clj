@@ -18,7 +18,7 @@
 (defn reporter-dispatch [_config m] (:type m))
 
 (defn- indent [n]
-  (print (apply str (repeat n "  "))))
+  (print (str/join (repeat n "  "))))
 
 ;; FOCUSED
 ;; Prints a message when tests are focused.

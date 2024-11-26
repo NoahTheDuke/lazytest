@@ -6,7 +6,7 @@
 
 ;; manually writing test cases (instead of using `it`)
 (defn common-test-cases [x]
-  [(when (zero? 0)
+  [(when (zero? x)
      (test-case {:doc (str x " equals zero")
                  :body #(expect (= x 1))}))
    (when (= x 1)

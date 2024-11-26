@@ -37,7 +37,7 @@
                    :doc "`:lazytest/test` metadata"
                    :thrown (ex-info "Expectation failed"
                                     {:type 'lazytest.ExpectationFailed
-                                     :expected '(= 0 (test-fn 1))})}]}
+                                     :expected '(zero? (test-fn 1))})}]}
                 {::lr/source-type :lazytest/var
                  :doc (resolve 'find-tests.examples/test-test-case)
                  :children
@@ -61,7 +61,7 @@
                      :doc "test-describe example two"
                      :thrown (ex-info "Expectation failed"
                                       {:type 'lazytest.ExpectationFailed
-                                       :expected '(= 0 (test-describe 1))})}]}]}]}]}}
+                                       :expected '(zero? (test-describe 1))})}]}]}]}]}}
            (:result @output))))
       (it "prints as expected"
         (expect (=

@@ -32,7 +32,7 @@
   ;; Run the tests with `-M:provided:dev:test:run`.
   :test {:extra-paths ["test/clojure"]}
 
-  :splint {:extra-deps {io.github.noahtheduke/splint {:mvn/version "1.18.0"}}
+  :splint {:extra-deps {io.github.noahtheduke/splint {:mvn/version "1.19.0"}}
            :main-opts ["-m" "noahtheduke.splint"]}
 
   :ci {:main-opts ["-m" "lazytest.main"

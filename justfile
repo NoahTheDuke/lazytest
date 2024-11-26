@@ -17,6 +17,9 @@ current_version := `cat resources/LAZYTEST_VERSION | xargs`
 clojure-lsp:
     clojure-lsp diagnostics
 
+splint:
+    clojure -M:provided:dev:test:splint
+
 [no-exit-message]
 test *args:
     clojure -T:prep javac
@@ -24,7 +27,8 @@ test *args:
 
 [no-exit-message]
 test-all *args:
-    just clojure-lsp
+    @just clojure-lsp
+    @just splint
     @just test --doctests --md README.md --dir docs --dir test {{args}}
 
 repl arg="":

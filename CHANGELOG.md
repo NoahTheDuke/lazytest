@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Misc
+
+- Add `splint` to CI.
+
 ## 1.4.1
 
 Released `2024-11-21`.

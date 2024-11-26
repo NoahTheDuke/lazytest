@@ -4,12 +4,12 @@
 
 (defdescribe b-1-test
   (it "works"
-    (expect (+ 1 1))))
+    (expect (+ 10 20))))
 
 (defdescribe b-2-test
   (it "works"
-    (expect (+ 1 1))))
+    (expect (+ 10 20))))
 
 (defdescribe b-3-test
   (it "works"
-    (expect (+ 1 1))))
+    (expect (+ 10 20))))

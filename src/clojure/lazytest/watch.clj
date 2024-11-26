@@ -13,6 +13,7 @@
 (defn get-local-classpath []
   (-> (System/getProperty "java.class.path")
       (str/split (re-pattern File/pathSeparator))
+      #_{:splint/disable [lint/into-literal]}
       (->> (into []
                  (comp (map io/file)
                        (remove #(File/.isAbsolute ^File %)))))))

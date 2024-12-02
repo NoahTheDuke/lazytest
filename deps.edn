@@ -43,7 +43,7 @@
   :examples {:extra-paths ["."]}
 
   ;; Build a jar or uberjar with `-M:clein jar/uberjar`
-  :clein {:deps {io.github.noahtheduke/clein {:mvn/version "0.2.2"}}
+  :clein {:deps {io.github.noahtheduke/clein {:mvn/version "0.3.0"}}
           :main-opts ["-m" "noahtheduke.clein"]}
   :clein/build
   {:lib io.github.noahtheduke/lazytest
@@ -52,6 +52,8 @@
    :version "./resources/LAZYTEST_VERSION"
    :license {:name "EPL-1.0"
              :url "https://www.eclipse.org/legal/epl-v10.html"}
+   :src-dirs ["src/clojure"]
+   :resource-dirs ["resources"]
    :java-src-dirs ["src/java"]
    :javac-opts ["--release" "11"]}
 

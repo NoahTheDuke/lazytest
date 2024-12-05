@@ -43,7 +43,7 @@
   :examples {:extra-paths ["."]}
 
   ;; Build a jar or uberjar with `-M:clein jar/uberjar`
-  :clein {:deps {io.github.noahtheduke/clein {:mvn/version "0.3.0"}}
+  :clein {:deps {io.github.noahtheduke/clein {:mvn/version "0.3.1"}}
           :main-opts ["-m" "noahtheduke.clein"]}
   :clein/build
   {:lib io.github.noahtheduke/lazytest

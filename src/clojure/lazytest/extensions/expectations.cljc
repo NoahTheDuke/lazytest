@@ -1,4 +1,5 @@
 ;; copyright (c) 2018-2024 sean corfield, all rights reserved
+;; Additions by Noah Bogart
 
 (ns lazytest.extensions.expectations
   "Adapts Expectations v2 (https://github.com/clojure-expectations/clojure-test) to Lazytest."
@@ -187,8 +188,7 @@
                     :actual r#})))))))
 
 (comment
-  (data/diff "foo" ["bar"])
-  )
+  (data/diff "foo" ["bar"]))
 
 (defmacro ^:no-doc ?
   "Wrapper for forms that might throw an exception so exception class names
@@ -359,32 +359,11 @@
   (macroexpand '(expect (more-of a 2 a) 4))
   (macroexpand '(expect (more-of {:keys [a b c]} 1 a 2 b 3 c) {:a 1 :b 2 :c 3})))
 
-(defn- contains-expect?
-  "Given a form, return `true` if it contains any calls to the 'expect' macro.
-
-  As of #28, we also recognize qualified 'expect' calls."
-  [e]
-  (when (and (coll? e) (not (vector? e)))
-    (or (and (symbol? (first e))
-             (str/starts-with? (name (first e)) "expect"))
-        (some contains-expect? e))))
-
 (defmacro defexpect
   "Given a name (a symbol that may include metadata) and a test body,
-  produce a standard `lazytest.core` test var (using `defdescribe`).
-
-  `(defexpect name expected actual)` is a special case shorthand for
-  `(defexpect name (expect expected actual))` provided as an easy way to migrate
-  legacy Expectation tests to the 'lazytest.core' compatibility version."
+  produce a standard `lazytest.core` test var (using `defdescribe`)."
   [n & body]
-  (with-meta
-    (if (and (= (count body) 2)
-             (not-any? contains-expect? body))
-      ;; treat (defexpect my-name pred (expr)) as a special case
-      `(lt/defdescribe ~n (lt/it "" (expect ~@body)))
-      ;; #13 match deftest behavior starting in 2.0.0
-      `(lt/defdescribe ~n ~@body))
-    (meta &form)))
+  (with-meta `(lt/defdescribe ~n ~@body) (meta &form)))
 
 (defmacro expecting
   "The Expectations version of `lazytest.core/describe`."

@@ -387,7 +387,7 @@
 (defmethod profile :end-test-run [_config {:keys [results]}]
   (let [types (-> (group-by (comp :type :source) (result-seq results))
                   (select-keys [:lazytest/ns :lazytest/var])
-                  (update-vals #(filterv :lazytest.runner/duration %)))
+                  (->> (reduce-kv (fn [m k v] (assoc m k (filterv :lazytest.runner/duration v))) {})))
         total-duration (->> (mapcat identity (vals types))
                             (map :lazytest.runner/duration)
                             (reduce + 0))

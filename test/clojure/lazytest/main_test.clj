@@ -3,7 +3,7 @@
    [lazytest.core :refer [defdescribe describe expect it]]
    [lazytest.extensions.matcher-combinators :refer [match?]]
    [lazytest.main :as sut]
-   [lazytest.runner :as-alias lr]))
+   [lazytest.runner :as lr]))
 
 (defdescribe filter-ns-test
   (describe "--namespace"

@@ -37,7 +37,7 @@
    [nil "--doctests" "Run doctests for vars and markdown files found in paths."]
    [nil "--watch" "Run under Watch mode. Uses clj-reload to reload changed and dependent namespaces, then reruns test suite."]
    [nil "--delay NUM" "(Watch mode) How many milliseconds to wait before checking for changes. (Defaults to 500.)"
-    :parse-fn parse-long]
+    :parse-fn #(Long/parseLong %)]
    [nil "--help" "Print help information."]
    [nil "--version" "Print version information."]])
 

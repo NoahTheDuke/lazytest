@@ -1,5 +1,5 @@
 {:paths ["src/clojure" "resources" "target/classes"]
- :deps {org.clojure/clojure {:mvn/version "1.11.4"}
+ :deps {org.clojure/clojure {:mvn/version "1.10.3"}
         org.clojure/tools.cli {:mvn/version "1.1.230"}
         org.clojure/tools.namespace {:mvn/version "1.5.0"}
         io.github.tonsky/clj-reload {:mvn/version "0.7.0"}

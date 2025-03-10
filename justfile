@@ -52,6 +52,6 @@ repl arg="":
     git push
     git push --tags
     echo 'Building uber'
-    clojure -T:buid uberjar
+    clojure -T:build uberjar
     echo 'Deploying to clojars'
     just clojars

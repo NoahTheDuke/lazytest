@@ -2,7 +2,21 @@
 
 ## Unreleased
 
-- Support Clojure 1.10. ([#17](https://github.com/NoahTheDuke/lazytest/pulls/17) by [@seancorfield](https://github.com/seancorfield))
+## 1.6.0
+
+Released `2025-03-10`.
+
+### Added
+
+- Add `thrown?` and `thrown-with-msg?` to `lazytest.experimental.interfaces.clojure-test`. (See [#18](https://github.com/NoahTheDuke/lazytest/issues/18))
+
+### Fixed
+
+- Support Clojure 1.10. (See [#17](https://github.com/NoahTheDuke/lazytest/pulls/17) by [@seancorfield](https://github.com/seancorfield))
+
+### Misc
+
+- Remove `splint` from CI until Splint supports Clojure 1.10.
 
 ## 1.5.0
 

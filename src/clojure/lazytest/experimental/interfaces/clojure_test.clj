@@ -1,13 +1,15 @@
 (ns lazytest.experimental.interfaces.clojure-test
   "EXPERIMENTAL. COULD BE CHANGED AT ANY TIME. Please share usage reports at https://github.com/noahtheduke/lazytest/issues
 
-  An adaption of the built-in `clojure.test` framework. [[testing]] works the same way as `clojure.test/testing`, so it does not support metadata selection like [[lazytest.core/describe]].
+  An adaption of the built-in `clojure.test` framework. [[testing]] works the same way as `clojure.test/testing`, so it does not support metadata selection like [[lazytest.core/describe]]. [[thrown?]] and [[thrown-with-msg?]] must be required to be used as [[is]] does not support `clojure.test/assert-expr`.
 
   Supported `clojure.test` vars:
   * [[deftest]]
   * [[testing]]
   * [[is]]
   * [[are]]
+  * [[thrown?]]
+  * [[thrown-with-msg?]]
 
   Example:
   ```clojure
@@ -28,7 +30,7 @@
   (:require
    [clojure.string :as str]
    [clojure.template :as temp]
-   [lazytest.core :refer [defdescribe expect it]]))
+   [lazytest.core :refer [defdescribe expect it throws? throws-with-msg?]]))
 
 (def ^:dynamic ^:no-doc *testing-strs*
   "Adapted from `clojure.test/*testing-contexts*`."
@@ -43,6 +45,16 @@
 (defn ^:no-doc testing-str []
   (when (seq *testing-strs*)
     (str/join " " (reverse *testing-strs*))))
+
+(defmacro thrown?
+  "Adapted from `clojure.test/thrown?`."
+  [c expr]
+  `(throws? ~c (fn [] (~expr))))
+
+(defmacro thrown-with-msg?
+  "Adapted from `clojure.test/thrown-with-msg?`."
+  [c re expr]
+  `(throws-with-msg? ~c ~re (fn [] (~expr))))
 
 (defmacro is
   "Adapted from `clojure.test/is`."

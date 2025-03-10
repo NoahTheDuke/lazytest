@@ -28,7 +28,7 @@ test *args:
 [no-exit-message]
 test-all *args:
     @just clojure-lsp
-    @just splint
+    # @just splint
     @just test --doctests --md README.md --dir docs --dir test {{args}}
 
 repl arg="":

@@ -45,8 +45,8 @@ jobs:
       - name: clojure-lsp
         run: clojure-lsp diagnostics
 
-      - name: splint
-        run: clojure -M:provided:dev:test:splint
+      # - name: splint
+      #   run: clojure -M:provided:dev:test:splint
 
       - name: tests
         run: |

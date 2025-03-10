@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Support Clojure 1.10. ([#17](https://github.com/NoahTheDuke/lazytest/pulls/17) by [@seancorfield](https://github.com/seancorfield))
+
 ## 1.5.0
 
 Released `2024-11-26`.

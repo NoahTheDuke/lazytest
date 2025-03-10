@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Correct deployment issues, switch to raw tools.build for the moment.
+
 ## 1.6.0
 
 Released `2025-03-10`.

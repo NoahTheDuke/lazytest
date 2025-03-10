@@ -43,7 +43,7 @@
   :examples {:extra-paths ["."]}
 
   ;; Build a jar or uberjar with `-M:clein jar/uberjar`
-  :clein {:deps {io.github.noahtheduke/clein {:mvn/version "0.3.1"}}
+  :clein {:deps {io.github.noahtheduke/clein {:local/root "../clein"}}
           :main-opts ["-m" "noahtheduke.clein"]}
   :clein/build
   {:lib io.github.noahtheduke/lazytest
@@ -56,6 +56,11 @@
    :resource-dirs ["resources"]
    :java-src-dirs ["src/java"]
    :javac-opts ["--release" "11"]}
+
+  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.6"}
+                 io.github.noahtheduke/clein {:local/root "../clein"}
+                 slipset/deps-deploy {:mvn/version "0.2.1"}}
+          :ns-default build}
 
   ;; Update dependencies
   :antq {:deps {com.github.liquidz/antq {:mvn/version "2.8.1206"}}

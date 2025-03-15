@@ -363,7 +363,7 @@
   "Given a name (a symbol that may include metadata) and a test body,
   produce a standard `lazytest.core` test var (using `defdescribe`)."
   [n & body]
-  (with-meta `(lt/defdescribe ~n ~@body) (meta &form)))
+  (with-meta `(lt/defdescribe ~n (lt/it ~(str n) ~@body)) (meta &form)))
 
 (defmacro expecting
   "The Expectations version of `lazytest.core/describe`."

@@ -202,6 +202,20 @@
           t#
           t#)))
 
+(def ^:dynamic ^:no-doc *expecting-strs*
+  "Adapted from `clojure.test/*testing-contexts*`."
+  (list))
+
+(defmacro expecting
+  "Adapted from `clojure.test/testing`."
+  [doc & body]
+  `(binding [*expecting-strs* (cons ~doc *expecting-strs*)]
+     ~@body))
+
+(defn ^:no-doc expecting-str []
+  (when (seq *expecting-strs*)
+    (str/join " " (reverse *expecting-strs*))))
+
 (defmacro expect
   "Translate Expectations DSL to `lazytest.core` language.
 
@@ -247,6 +261,8 @@
                 (str/join
                  "\n"
                  (cond-> []
+                   (seq *expecting-strs*)
+                   (conj (expecting-str))
                    ~msg
                    (conj ~msg)
                    ~(not= e e')
@@ -364,11 +380,6 @@
   produce a standard `lazytest.core` test var (using `defdescribe`)."
   [n & body]
   (with-meta `(lt/defdescribe ~n (lt/it ~(str n) ~@body)) (meta &form)))
-
-(defmacro expecting
-  "The Expectations version of `lazytest.core/describe`."
-  [string & body]
-  (with-meta `(lt/describe ~string ~@body) (meta &form)))
 
 (defmacro side-effects
   "Given a vector of functions to track calls to, execute the body.

@@ -17,7 +17,7 @@
     (assoc opts
       :lib lib
       :version version
-      :scm {:url "https://github.com/noahtheduke/lazytest", :tag "v1.6.0"}
+      :scm {:url "https://github.com/noahtheduke/lazytest" :tag (str "v" version)}
       :main 'lazytest.main
       :basis (b/create-basis {:project "deps.edn"})
       :provided (b/create-basis {:project "deps.edn"

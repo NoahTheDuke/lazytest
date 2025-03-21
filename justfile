@@ -9,6 +9,7 @@ current_version := `cat resources/LAZYTEST_VERSION | xargs`
     echo '{{version}}' > resources/LAZYTEST_VERSION
     fd '.(clj|edn|md)' . -x sd '<<next>>' '{{version}}' {}
     sd '{{current_version}}' '{{version}}' README.md
+    sd '{{current_version}}' '{{version}}' build.clj
     sd '## Unreleased' '## Unreleased\n\n## {{version}}\n\nReleased `{{today}}`.' CHANGELOG.md
 
 @gen-docs:

@@ -11,6 +11,10 @@
 
 - Deprecate all "interface" vars from `lazytest.extensions.expectations`: `defexpect`, `expecting`, `side-effects`, `approximately`, `between`, `between'`, and `functionally`.
 
+### Misc
+
+- Add `splint` back to CI now that it supports Clojure 1.10.
+
 ## 1.6.1
 
 Released `2025-03-10`.

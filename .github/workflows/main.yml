@@ -45,10 +45,12 @@ jobs:
       - name: clojure-lsp
         run: clojure-lsp diagnostics
 
-      # - name: splint
-      #   run: clojure -M:provided:dev:test:splint
+      - name: splint
+        run: clojure -M:provided:dev:test:splint
 
       - name: tests
         run: |
           clojure -T:prep javac
-          clojure -M:provided:dev:test:ci
+          clojure -M:v1.10:provided:dev:test:ci
+          clojure -M:v1.11:provided:dev:test:ci
+          clojure -M:v1.12:provided:dev:test:ci

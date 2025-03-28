@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- Add a new "interface" for [Expectations v2](https://github.com/clojure-expectations/clojure-test), under `lazytest.experimental.interfaces.expectations`, adapting `defexpect`, `expecting`, `expect`, and the helper stubs `in`, `from-each`, `more`, `more-of`, and `more->`.
+- Correct Expectations reporting by prepending any `testing` strings to the assertion message. (See [#22](https://github.com/NoahTheDuke/lazytest/issues/22) by [@seancorfield](https://github.com/seancorfield).)
+
+### Changed
+
+- Deprecate all "interface" vars from `lazytest.extensions.expectations`: `defexpect`, `expecting`, `side-effects`, `approximately`, `between`, `between'`, and `functionally`.
+
 ## 1.6.1
 
 Released `2025-03-10`.

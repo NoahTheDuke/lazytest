@@ -2,22 +2,28 @@
 ;; Additions by Noah Bogart
 
 (ns lazytest.extensions.expectations
-  "Adapts Expectations v2 (https://github.com/clojure-expectations/clojure-test) to Lazytest."
+  "Adapts the `expect` assertion from [Expectations v2](https://github.com/clojure-expectations/clojure-test).
+
+  > [!NOTE]
+  > As of Lazytest <<next>>, the interface vars mentioned below have been marked as deprecated and _will_ be removed in a future version. Please require them from [[lazytest.experimental.interfaces.expectations]] if you wish to continue to use them.
+
+  The Expectations v2 interface vars (`defexpect`, `expecting`, etc) have also been adapted. Due to the differences in Lazytest and `clojure.test`, test cases must be defined with `lazytest.core/it`, as [[expect]] is merely an assertion.
+
+  ```clojure
+  (defexpect example-test
+    (expecting \"many ways to work\"
+      (it \"is a cool assertion DSL\"
+        (expect 2 2))))
+  ```"
   {:clj-kondo/ignore [:unused-binding]}
   (:require
    [lazytest.core :as lt]
    [clojure.data :as data]
    [clojure.string :as str]
-   #?(:cljs [planck.core])
-   #?(:clj  [clojure.spec.alpha :as s]
-      :cljs [cljs.spec.alpha :as s])))
+   [clojure.spec.alpha :as s]))
 
-(defn ^:no-doc illegal-argument [s]
-  (#?(:clj IllegalArgumentException. :cljs js/Error.) s))
-
-;; stub functions for :refer compatibility:
 (defn- bad-usage [s]
-  `(throw (illegal-argument (str ~s " should only be used inside expect"))))
+  `(throw (IllegalArgumentException. (str ~s " should only be used inside expect"))))
 
 (defmacro in
   "`(expect expected (in actual))` -- expect a subset of a collection.
@@ -136,27 +142,22 @@
          (str a " did not satisfy " e "\n")
          (list e a)
          (list e# a#)]
-        (isa? (type e#)
-              #?(:clj java.util.regex.Pattern
-                 :cljs (type #"regex")))
+        (isa? (type e#) java.util.regex.Pattern)
         [(some? (re-find e# a#))
          (str (pr-str a#) " did not match " (pr-str e#) "\n")
          (list 're-find e a)
          (list re-find e# a#)]
-        #?(:clj (and (class? e#) (class? a#))
-           :cljs false) ; maybe figure this out later
+        (and (class? e#) (class? a#)) ; maybe figure this out later
         [(isa? a# e#) ; (expect parent child)
          (str a# " is not derived from " e# "\n")
          (list 'isa? a e)
          (list isa? e# a#)]
-        #?(:clj (class? e#)
-           :cljs false) ; maybe figure this out later
+        (class? e#) ; maybe figure this out later
         [(instance? e# a#) ; (expect klazz object)
-         (str a#
-              #?(:clj (str " (" (class a#) ")"))
+         (str a# " (" (class a#) ")"
               " is not an instance of " e# "\n")
          (list 'instance? e a)
-         #?(:clj (list instance? e# (class a#)))]
+         (list instance? e# (class a#))]
         :else
         [(= e# a#)
          (when (and (string? e#) (string? a#) (not= e# a#))
@@ -197,9 +198,7 @@
   used with various expect predicates."
   [form]
   `(try ~form
-        (catch #?(:clj Throwable
-                  :cljs :default)
-          t#
+        (catch Throwable t#
           t#)))
 
 (defmacro expect
@@ -290,9 +289,9 @@
                     (let [~submap_ (select-keys ~a_ (keys ~e_))]
                       ~(with-meta (list `=? e_ submap_ (list 'quote form) msg')
                          (meta &form)))
-                    (throw (illegal-argument "'in' requires map or sequence")))
+                    (throw (IllegalArgumentException. "'in' requires map or sequence")))
                   :else
-                  (throw (illegal-argument "'in' requires map or sequence")))))
+                  (throw (IllegalArgumentException. "'in' requires map or sequence")))))
 
        (and (sequential? e)
             (symbol? (first e))
@@ -333,23 +332,12 @@
                       (partition 2 (rest (rest e))))]
          `(let [~(second e) ~a] ~@es))
 
-       #?(:clj (and ex? (symbol? e) (resolve e) (class? (resolve e)))
-          :cljs (and ex?
-                     (symbol? e)
-                     (planck.core/find-var e)
-                     (or (= 'js/Error e)
-                        ; is it a symbol which is not a predicate?
-                         (and (fn? (deref (planck.core/find-var e)))
-                              (not= (pr-str (deref (planck.core/find-var e)))
-                                    "#object[Function]")))))
-       #?(:clj (with-meta
-                 (if (isa? (resolve e) Throwable)
-                   `(lt/expect (lt/throws? ~e (fn [] ~a)) ~msg')
-                   `(=? ~e ~a ~msg'))
-                 (meta &form))
-          :cljs (if (= 'js/Error e)
-                  `(t/is (~'thrown? ~e ~a) ~msg')
-                  `(t/is (~'instance? ~e ~a) ~msg')))
+       (and ex? (symbol? e) (resolve e) (class? (resolve e)))
+       (with-meta
+         (if (isa? (resolve e) Throwable)
+           `(lt/expect (lt/throws? ~e (fn [] ~a)) ~msg')
+           `(=? ~e ~a ~msg'))
+         (meta &form))
 
        :else
        (with-meta `(=? ~e ~a ~msg') (meta &form))))))
@@ -362,26 +350,22 @@
 (defmacro defexpect
   "Given a name (a symbol that may include metadata) and a test body,
   produce a standard `lazytest.core` test var (using `defdescribe`)."
+  {:deprecated "<<next>>"}
   [n & body]
   (with-meta `(lt/defdescribe ~n ~@body) (meta &form)))
 
 (defmacro expecting
   "The Expectations version of `lazytest.core/describe`."
+  {:deprecated "<<next>>"}
   [string & body]
   (with-meta `(lt/describe ~string ~@body) (meta &form)))
 
 (defmacro side-effects
-  "Given a vector of functions to track calls to, execute the body.
-
-  Returns a vector of each set of arguments used in calls to those
-  functions. The specified functions will not actually be called:
-  only their arguments will be tracked. If you need the call to return
-  a specific value, the function can be given as a pair of its name
-  and the value you want its call(s) to return. Functions given just
-  by name will return `nil`."
+  "Copied from Expectations v2."
+  {:deprecated "<<next>>"}
   [fn-vec & forms]
   (when-not (vector? fn-vec)
-    (throw (illegal-argument "side-effects requires a vector as its first argument")))
+    (throw (IllegalArgumentException. "side-effects requires a vector as its first argument")))
   (let [mocks (reduce (fn [m f-spec]
                         (if (vector? f-spec)
                           (assoc m (first f-spec) (second f-spec))
@@ -402,33 +386,27 @@
        @~called-args)))
 
 (defn approximately
-  "Given a value and an optional delta (default 0.001), return a predicate
-  that expects its argument to be within that delta of the given value."
+  "Copied from Expectations v2."
+  {:deprecated "<<next>>"}
   ([^double v] (approximately v 0.001))
   ([^double v ^double d]
    (fn [x] (<= (- v (Math/abs d)) x (+ v (Math/abs d))))))
 
 (defn between
-  "Given a pair of (numeric) values, return a predicate that expects its
-  argument to be be those values or between them -- inclusively."
+  "Copied from Expectations v2."
+  {:deprecated "<<next>>"}
   [a b]
   (fn [x] (<= a x b)))
 
 (defn between'
-  "Given a pair of (numeric) values, return a predicate that expects its
-  argument to be (strictly) between those values -- exclusively."
+  "Copied from Expectations v2."
+  {:deprecated "<<next>>"}
   [a b]
   (fn [x] (< a x b)))
 
 (defn functionally
-  "Given a pair of functions, return a custom predicate that checks that they
-  return the same result when applied to a value. May optionally accept a
-  'difference' function that should accept the result of each function and
-  return a string explaininhg how they actually differ.
-  For explaining strings, you could use expectations/strings-difference.
-  (only when I port it across!)
-
-  Right now this produces pretty awful failure messages. FIXME!"
+  "Copied from Expectations v2."
+  {:deprecated "<<next>>"}
   ([expected-fn actual-fn]
    (functionally expected-fn actual-fn (constantly "not functionally equivalent")))
   ([expected-fn actual-fn difference-fn]

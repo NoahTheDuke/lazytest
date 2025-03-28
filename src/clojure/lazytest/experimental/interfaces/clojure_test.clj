@@ -1,7 +1,7 @@
 (ns lazytest.experimental.interfaces.clojure-test
   "EXPERIMENTAL. COULD BE CHANGED AT ANY TIME. Please share usage reports at https://github.com/noahtheduke/lazytest/issues
 
-  An adaption of the built-in `clojure.test` framework. [[testing]] works the same way as `clojure.test/testing`, so it does not support metadata selection like [[lazytest.core/describe]]. [[thrown?]] and [[thrown-with-msg?]] must be required to be used as [[is]] does not support `clojure.test/assert-expr`.
+  An adaption of the built-in `clojure.test` framework. To mirror `clojure.test`, [[deftest]] wraps the entire test in a single test-case. [[testing]] works the same way as `clojure.test/testing`, so it does not support metadata selection like [[lazytest.core/describe]]. [[thrown?]] and [[thrown-with-msg?]] must be required to be used as [[is]] does not support `clojure.test/assert-expr`.
 
   Supported `clojure.test` vars:
   * [[deftest]]

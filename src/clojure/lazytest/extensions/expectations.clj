@@ -2,10 +2,10 @@
 ;; Additions by Noah Bogart
 
 (ns lazytest.extensions.expectations
-  "Adapts the `expect` assertion from [Expectations v2](https://github.com/clojure-expectations/clojure-test).
+  "Adapts the `expect` assertion and utility functions from [Expectations v2](https://github.com/clojure-expectations/clojure-test).
 
   > [!NOTE]
-  > As of Lazytest <<next>>, the interface vars mentioned below have been marked as deprecated and _will_ be removed in a future version. Please require them from [[lazytest.experimental.interfaces.expectations]] if you wish to continue to use them.
+  > As of Lazytest <<next>>, the interface vars [[defexpect]] and [[expecting]] have been marked as deprecated and _will_ be removed in a future version. Please require them from [[lazytest.experimental.interfaces.expectations]] if you wish to continue to use them, tho take care with them being implemented to match their original behavior.
 
   The Expectations v2 interface vars (`defexpect`, `expecting`, etc) have also been adapted. Due to the differences in Lazytest and `clojure.test`, test cases must be defined with `lazytest.core/it`, as [[expect]] is merely an assertion.
 
@@ -361,8 +361,14 @@
   (with-meta `(lt/describe ~string ~@body) (meta &form)))
 
 (defmacro side-effects
-  "Copied from Expectations v2."
-  {:deprecated "<<next>>"}
+  "Given a vector of functions to track calls to, execute the body.
+
+  Returns a vector of each set of arguments used in calls to those
+  functions. The specified functions will not actually be called:
+  only their arguments will be tracked. If you need the call to return
+  a specific value, the function can be given as a pair of its name
+  and the value you want its call(s) to return. Functions given just
+  by name will return `nil`."
   [fn-vec & forms]
   (when-not (vector? fn-vec)
     (throw (IllegalArgumentException. "side-effects requires a vector as its first argument")))
@@ -386,27 +392,33 @@
        @~called-args)))
 
 (defn approximately
-  "Copied from Expectations v2."
-  {:deprecated "<<next>>"}
+  "Given a value and an optional delta (default 0.001), return a predicate
+  that expects its argument to be within that delta of the given value."
   ([^double v] (approximately v 0.001))
   ([^double v ^double d]
    (fn [x] (<= (- v (Math/abs d)) x (+ v (Math/abs d))))))
 
 (defn between
-  "Copied from Expectations v2."
-  {:deprecated "<<next>>"}
+  "Given a pair of (numeric) values, return a predicate that expects its
+  argument to be be those values or between them -- inclusively."
   [a b]
   (fn [x] (<= a x b)))
 
 (defn between'
-  "Copied from Expectations v2."
-  {:deprecated "<<next>>"}
+  "Given a pair of (numeric) values, return a predicate that expects its
+  argument to be (strictly) between those values -- exclusively."
   [a b]
   (fn [x] (< a x b)))
 
 (defn functionally
-  "Copied from Expectations v2."
-  {:deprecated "<<next>>"}
+  "Given a pair of functions, return a custom predicate that checks that they
+  return the same result when applied to a value. May optionally accept a
+  'difference' function that should accept the result of each function and
+  return a string explaininhg how they actually differ.
+  For explaining strings, you could use expectations/strings-difference.
+  (only when I port it across!)
+
+  Right now this produces pretty awful failure messages. FIXME!"
   ([expected-fn actual-fn]
    (functionally expected-fn actual-fn (constantly "not functionally equivalent")))
   ([expected-fn actual-fn difference-fn]

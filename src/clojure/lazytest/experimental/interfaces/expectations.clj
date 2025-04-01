@@ -1,9 +1,9 @@
 (ns lazytest.experimental.interfaces.expectations
   "EXPERIMENTAL. COULD BE CHANGED AT ANY TIME. Please share usage reports at https://github.com/noahtheduke/lazytest/issues
 
-  An adaption of the Clojure library [Expectations v2](https://github.com/clojure-expectations/clojure-test). To mirror how it's built for `clojure.test`, [[defexpect]] wraps the entire test in a single test-case. [[expecting]] works the same way as `clojure.test/testing`, so it does not support metadata selection like [[lazytest.core/describe]]. [[expect]] is implemented in [[lazytest.extensions.expectations/expect]].
+  An adaption of the Clojure library [Expectations v2](https://github.com/clojure-expectations/clojure-test). To mirror how it's built for `clojure.test`, [[defexpect]] wraps the entire test in a single test-case. [[expecting]] works the same way as `clojure.test/testing`, so it does not support metadata selection like [[lazytest.core/describe]]. [[expect]] is implemented in [[lazytest.extensions.expectations/expect]]. None of the utility functions from Expectations v2 are adapted here. They can be found in [[lazytest.extensions.expectations]].
 
-  To use just the `expect` DSL from Expectations v2, please see [[lazytest.extensions.expectations/expect]].
+  To use just the `expect` assertion from Expectations v2, please see [[lazytest.extensions.expectations/expect]].
 
   Supported Expectations vars:
   * [[defexpect]]

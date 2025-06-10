@@ -31,7 +31,7 @@ Add it to your deps.edn or project.clj:
 
 ```clojure lazytest/skip=true
 {:aliases
- {:test {:extra-deps {io.github.noahtheduke/lazytest {:mvn/version "1.6.1"}}
+ {:test {:extra-deps {io.github.noahtheduke/lazytest {:mvn/version "1.7.0"}}
          :extra-paths ["test"]
          :main-opts ["-m" "lazytest.main"]}}}
 ```
@@ -300,10 +300,10 @@ To handle set up and tear down of stateful architecture, Lazytest provides the h
                    (vswap! state conj :around-before)
                    (f)
                    (vswap! state conj :around-after))]}
-      (expect-it "can do side effects" true))
+      (expect-it "can do side effects" (vswap! state conj :expect)))
     (describe "results"
       (expect-it "correctly ran the whole thing"
-        (= [:around-before :around-after] @state)))))
+        (= [:around-before :expect :around-after] @state)))))
 
 (defdescribe each-test
   (let [state (volatile! [])]
@@ -336,6 +336,25 @@ In `clojure.test`, `(use-fixtures :each ...)` will set the provided fixtures to 
   (it "has the right connection"
     (expect (= 1 (count (sql/query *db-connection* "SELECT * FROM users;"))))))
 ```
+
+> [!IMPORTANT]
+> Because `describe` blocks are eagerly evaluated (returning a test suite map) whereas `it` blocks wrap the body in a no-arg function that is called by the runner, binding forms such as `let` will happen before any context calls are evaluated. This can lead to unintuitive results and hard-to-understand errors.
+>
+> For example, if we change the above code example to bind the `*db-connection*` dynamic variable to a local variable outside of an `it` block, the binding will happen immediately (setting `db-conn` to `nil`). When the runner actually runs `needs-a-db-test`, the `around` context function will set `*db-connection*` but the test will have closed over `db-conn` in its existing state (`nil`) and thus the test will fail.
+>
+> ```clojure
+> (defonce ^:dynamic *db-connection* nil)
+> (def prep-db
+>   (around [f]
+>     (binding [*db-connection* (get-db-connection ...)]
+>       (f))))
+> 
+> (defdescribe needs-a-db-test
+>   {:context [prep-db]}
+>   (let [db-conn *db-connection*]
+>     (it "has the right connection"
+>       (expect (= 1 (count (sql/query db-conn "SELECT * FROM users;")))))))
+> ```
 
 ## Output
 

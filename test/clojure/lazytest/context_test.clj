@@ -1,11 +1,13 @@
 (ns lazytest.context-test
   (:require
+   [clojure.string :as str]
    [context-tests.use-fixture :refer [use-fixture-state]]
    [lazytest.context :refer [propagate-eachs]]
    [lazytest.core :refer [after after-each around before before-each
                           defdescribe describe expect expect-it it]]
    [lazytest.main :as main]
-   [lazytest.runner :as-alias lr]))
+   [lazytest.runner :as lr]
+   [lazytest.test-utils :refer [with-out-str-no-color]]))
 
 (defn vconj! [volatile value]
   (vswap! volatile conj value))
@@ -206,3 +208,55 @@
     (main/run ["--output" "quiet"
                "--dir" "corpus/context_tests"])
     (expect (= [:around-before :around-after] @use-fixture-state))))
+
+(def ^:dynamic *issue-24-one* nil)
+(def ^:dynamic *issue-24-two* nil)
+
+(defn issue-24-suite []
+  (describe "issue 24"
+    {:context [(around [t]
+                 (println "around 1 before")
+                 (binding [*issue-24-one* 1] (t))
+                 (println "around 1 after"))]}
+    (println "in issue-24-suite")
+    (it "test 1"
+      (println "in test 1" *issue-24-one* *issue-24-two* "*one* *two*")
+      (expect (zero? (- 1 1))))
+    (describe "nested 1"
+      {:context [(around [t]
+                   (println "around 2 before")
+                         (binding [*issue-24-two* 2] (t))
+                         (println "around 2 after"))]}
+      (println "in nested")
+      (it "test 2"
+        (println "in test 2" *issue-24-one* "*one*")
+        (expect (= 1 (* 1 1))))
+      (it "test 3"
+        (println "in test 3" *issue-24-two* "*two*")
+        (expect (= 2 (+ 1 1)))))
+    (it "test 4"
+      (println "in test 4" *issue-24-one* *issue-24-two* "*one* *two*")
+      (expect (= 3 (+ 1 1 1))))))
+
+(defdescribe issue-24-test
+  (expect-it "demonstrates the issue"
+    (= "in issue-24-suite
+in nested
+  issue 24
+around 1 before
+in test 1 1 nil *one* *two*
+    √ test 1
+    nested 1
+around 2 before
+in test 2 1 *one*
+      √ test 2
+in test 3 2 *two*
+      √ test 3
+around 2 after
+in test 4 1 nil *one* *two*
+    √ test 4
+around 1 after"
+       (str/trim
+        (with-out-str-no-color
+          (lr/run-test-suite (issue-24-suite)
+            {:output ['lazytest.reporters/nested*]}))))))

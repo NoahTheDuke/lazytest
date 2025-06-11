@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 1.7.0
+
+Released `2025-06-10`.
+
+## 1.7.0
+
+Released `2025-06-10`.
+
 ### Added
 
 - Add a new "interface" for [Expectations v2](https://github.com/clojure-expectations/clojure-test), under `lazytest.experimental.interfaces.expectations`, adapting `defexpect` and `expecting`, and re-exporting the vars `expect`, `in`, `from-each`, `more`, `more-of`, and `more->` from `lazytest.extensions.expectations`.
@@ -14,6 +22,7 @@
 ### Misc
 
 - Add `splint` back to CI now that it supports Clojure 1.10.
+- Add test demonstrating intended output of nested contexts and `around` calls. (See [#24](https://github.com/NoahTheDuke/lazytest/issues/24).)
 
 ## 1.6.1
 

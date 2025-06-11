@@ -5,7 +5,7 @@
   "Adapts the `expect` assertion and utility functions from [Expectations v2](https://github.com/clojure-expectations/clojure-test).
 
   > [!NOTE]
-  > As of Lazytest <<next>>, the interface vars [[defexpect]] and [[expecting]] have been marked as deprecated and _will_ be removed in a future version. Please require them from [[lazytest.experimental.interfaces.expectations]] if you wish to continue to use them, tho take care with them being implemented to match their original behavior.
+  > As of Lazytest 1.7.0, the interface vars [[defexpect]] and [[expecting]] have been marked as deprecated and _will_ be removed in a future version. Please require them from [[lazytest.experimental.interfaces.expectations]] if you wish to continue to use them, tho take care with them being implemented to match their original behavior.
 
   The Expectations v2 interface vars (`defexpect`, `expecting`, etc) have also been adapted. Due to the differences in Lazytest and `clojure.test`, test cases must be defined with `lazytest.core/it`, as [[expect]] is merely an assertion.
 
@@ -350,13 +350,13 @@
 (defmacro defexpect
   "Given a name (a symbol that may include metadata) and a test body,
   produce a standard `lazytest.core` test var (using `defdescribe`)."
-  {:deprecated "<<next>>"}
+  {:deprecated "1.7.0"}
   [n & body]
   (with-meta `(lt/defdescribe ~n ~@body) (meta &form)))
 
 (defmacro expecting
   "The Expectations version of `lazytest.core/describe`."
-  {:deprecated "<<next>>"}
+  {:deprecated "1.7.0"}
   [string & body]
   (with-meta `(lt/describe ~string ~@body) (meta &form)))
 

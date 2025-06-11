@@ -340,7 +340,7 @@ In `clojure.test`, `(use-fixtures :each ...)` will set the provided fixtures to 
 > [!IMPORTANT]
 > Because `describe` blocks are eagerly evaluated (returning a test suite map) whereas `it` blocks wrap the body in a no-arg function that is called by the runner, binding forms such as `let` will happen before any context calls are evaluated. This can lead to unintuitive results and hard-to-understand errors.
 >
-> For example, if we change the above code example to bind the `*db-connection*` dynamic variable to a local variable outside of an `it` block, the binding will happen immediately (setting `db-conn` to `nil`). When the runner actually runs `needs-a-db-test`, the `around` context function will set `*db-connection*` but the test will have closed over `db-conn` in its existing state (`nil`) and thus the test will fail.
+> For example, if we change the above code example to bind the `*db-connection*` dynamic variable to a local variable outside of an `it` block, the binding will happen immediately (setting `db-conn` to `nil`). When the runner actually runs `needs-a-db-test`, the `around` context function will set `*db-connection*` but the test will have already closed over `db-conn` in its existing state (`nil`) and thus the test will fail.
 >
 > ```clojure
 > (defonce ^:dynamic *db-connection* nil)
@@ -532,13 +532,15 @@ Results: Print results to REPL output
 
 This is inspired by [Mocha](https://mochajs.org)'s excellent documentation.
 
+### From the CLI
+
 1. A user runs Lazytest, either through leiningen or Clojure CLI.
 2. Lazytest parses the command line arguments to determine the relevant configuration.
 3. Lazytest finds test files. If the user provides `--dir`, then every file in the file trees of all given directories are checked. Otherwise, all files within the `test` directorie are checked.
 4. Lazytest loads all test files. Using `tools.namespace`, the namespace of each `.clj` is extracted and `require`d, which creates the necessary vars.
 5. Lazytest gathers all test vars from the required namespaces. It checks each var in each namespace against the following list of questions.
-    1. Is the var defined with `defdescribe`? Call the `defdescribe`-constructed function and use it.
-    2. Does the var point to a `suite`? Use it.
+    1. Is the var defined with `defdescribe`? Call the `defdescribe`-constructed function and use the result.
+    2. Does the var point to a `suite`? Resolve the var and use the result.
     3. Does the var have `:lazytest/test` metadata that is either a suite (`describe`) or a test case (`it`)? Create a new suite with `describe` and set the `:lazytest/test` metadata as a child.
     4. Does the var have `:lazytest/test` metadata that is a function? Create a new suite with `describe`, create a new test case with `it`, and then set the docstring for the test case to `:lazytest/test metadata`, and the body to calling the `:lazytest/test` metadata function.
 6. Lazytest groups each namespace into a `:lazytest/ns` suite, and then groups all of the namespace suites into a `:lazytest/run` suite.
@@ -549,14 +551,27 @@ This is inspired by [Mocha](https://mochajs.org)'s excellent documentation.
 8. Lazytest calls the runner on the filtered run suite.
     * For suites:
         1. Run each `before` hook.
-        2. For each child in `:children`, restart from step 1 of the appropriate sequence.
-        3. Run each `after` hook.
+        2. If there are any `around` hooks, combine them with `clojure.test/join-fixtures`, and then execute the next step in a thunk wrapped in the combined `around` function.
+        3. For each child in `:children`, restart from step 1 of the appropriate sequence.
+        4. Run each `after` hook.
     * For test cases:
-        1. Run each `before-each` hook (including from all parents), outmost first, in definition order.
+        1. Run each `before-each` hook (including from all parents), outermost first, in definition order.
         2. Execute the test function, get the `test-case-result`.
         3. Run each `after-each` hook (including from all parents), innermost first, in definition order.
 9. Depending on the chosen reporter, Lazytest prints the results of each suite and test case immediately or at another point.
 10. The run is ended with `System/exit`, and the exit value is either `0` for no failures or `1` for any number of failures.
+
+### Programmatically
+
+The process is roughly the same as from the CLI, but with CLI-specific steps skipped.
+
+1. Build a suite.
+    * If using `lazytest.repl/run-tests`, the specified namespace used as the required namespace.
+    * If using `lazytest.repl/run-all-tests`, all currently loaded are used (found with `clojure.core/all-ns`).
+    * If using `lazytest.repl/run-test-var`, the single var is used as the suite.
+2. If not given a var, step 5 is executed as described above to produce a suite.
+3. Steps 7-9 are executed as described above on the suite, with the note that only `:focus` is considered when filtering.
+4. The results from the run are summarized and returned to the caller.
 
 ## Lazytest Internals
 
@@ -572,7 +587,7 @@ Tests cases are organized into *suites* (see `lazytest.suite/suite`). A suite ha
 
 A test suite body SHOULD NOT have side effects; it is only used to generate test cases and/or other test suites.
 
-The test *runnner* is responsible for gathering suites (see `lazytest.find/find-suite` and `lazytest.filter/filter-tree`) and running test cases (see `lazytest.test-case/try-test-case`). It may also provide feedback on the success of tests as they run.
+The test *runner* is responsible for gathering suites (see `lazytest.find/find-suite` and `lazytest.filter/filter-tree`) and running test cases (see `lazytest.test-case/try-test-case`). It may also provide feedback on the success of tests as they run.
 
 The test runner also returns a sequence of *results*, which are either *suite results* (see `lazytest.suite/suite-result`) or *test case results* (see `lazytest.test-case/test-case-result`). That sequence of results is passed to a *reporter*, which formats results for display to the user. Multiple reporters are provided, see the namespace `lazytest.reporters`.
 

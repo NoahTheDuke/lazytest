@@ -221,7 +221,7 @@
     (println "in issue-24-suite")
     (it "test 1"
       (println "in test 1" *issue-24-one* *issue-24-two* "*one* *two*")
-      (expect (zero? (- 1 1))))
+      (expect true))
     (describe "nested 1"
       {:context [(around [t]
                    (println "around 2 before")
@@ -230,15 +230,16 @@
       (println "in nested")
       (it "test 2"
         (println "in test 2" *issue-24-one* "*one*")
-        (expect (= 1 (* 1 1))))
+        (expect true))
       (it "test 3"
         (println "in test 3" *issue-24-two* "*two*")
-        (expect (= 2 (+ 1 1)))))
+        (expect true)))
     (it "test 4"
       (println "in test 4" *issue-24-one* *issue-24-two* "*one* *two*")
-      (expect (= 3 (+ 1 1 1))))))
+      (expect true))))
 
 (defdescribe issue-24-test
+  "Issue 24 asks about order of evaluation in describe blocks vs around calls"
   (expect-it "demonstrates the issue"
     (= "in issue-24-suite
 in nested
@@ -256,7 +257,7 @@ around 2 after
 in test 4 1 nil *one* *two*
     √ test 4
 around 1 after"
-       (str/trim
-        (with-out-str-no-color
-          (lr/run-test-suite (issue-24-suite)
-            {:output ['lazytest.reporters/nested*]}))))))
+       (->> (lr/run-test-suite (issue-24-suite)
+              {:output ['lazytest.reporters/nested*]})
+            (with-out-str-no-color)
+            (str/trim)))))

@@ -5,11 +5,10 @@
    [clojure.stacktrace :as stack]
    [clojure.string :as str]
    [lazytest.color :refer [colorize]]
+   [lazytest.expectation-failed :refer [ex-failed?]]
    [lazytest.results :refer [result-seq summarize]]
    [lazytest.suite :as s :refer [suite-result?]]
-   [lazytest.test-case :as tc])
-  (:import
-   lazytest.ExpectationFailed))
+   [lazytest.test-case :as tc]))
 
 (defn report [config m]
   (when-let [reporter (:reporter config)]
@@ -123,7 +122,8 @@
 (defn print-stack-trace
   "Adapted from clojure.stacktrace/print-stack-trace"
   [^Throwable t n]
-  (let [st (.getStackTrace t)]
+  (let [st (when-not (ex-failed? t)
+             (.getStackTrace t))]
     (when-let [e (first st)]
       (stack/print-trace-element e)
       (newline)
@@ -137,7 +137,7 @@
 
 (defmethod results-builder :fail [_config result]
   (print-docs (conj (:docs result) (tc/identifier result)))
-  (let [message (str (when-not (instance? ExpectationFailed (:thrown result))
+  (let [message (str (when-not (ex-failed? (:thrown result))
                        (str (.getName (class (:thrown result))) ": "))
                      (:message result))]
     (newline)
@@ -289,7 +289,7 @@
   (flush))
 
 (defmethod clojure-test :fail [config result]
-  (if (instance? ExpectationFailed (:thrown result))
+  (if (ex-failed? (:thrown result))
     (clojure-test-fail config result)
     (clojure-test-error config result)))
 

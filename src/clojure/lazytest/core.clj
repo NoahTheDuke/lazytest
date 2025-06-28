@@ -34,10 +34,9 @@
   "
   (:require
    [lazytest.context :as ctx]
+   [lazytest.expectation-failed :refer [->ExpectationFailed ex-failed?]]
    [lazytest.suite :as suite]
-   [lazytest.test-case :as test-case])
-  (:import
-   (lazytest ExpectationFailed)))
+   [lazytest.test-case :as test-case]))
 
 ;;; Utilities
 
@@ -69,7 +68,7 @@
   ([expr data] `(->ex-failed nil ~expr ~data))
   ([_&form expr data]
    `(let [data# ~data]
-      (ExpectationFailed.
+      (->ExpectationFailed
         (:message data#)
         (merge ~(meta _&form)
                ~(meta expr)
@@ -122,12 +121,12 @@
         (try ~(if (function-call? expr)
                 (expect-fn expr msg-gensym)
                 (expect-any expr msg-gensym))
-             (catch ExpectationFailed ex#
-               (let [data# (update (ex-data ex#) :message #(or % ~msg-gensym))]
-                 (throw (->ex-failed nil data#))))
-             (catch Throwable t#
-               (throw (->ex-failed ~&form ~expr {:message ~msg-gensym
-                                                 :caught t#}))))))))
+             (catch Throwable ex#
+               (if (ex-failed? ex#)
+                 (let [data# (update (ex-data ex#) :message #(or % ~msg-gensym))]
+                   (throw (->ex-failed nil data#)))
+                 (throw (->ex-failed ~&form ~expr {:message ~msg-gensym
+                                                   :caught ex#})))))))))
 
 (defmacro before
   "Runs `body` (presumably for side effects) once before all nested suites and test cases. Wraps `body` in a function, calls and discards the result during test runs.
@@ -376,7 +375,7 @@
            (instance? c t)
            (throw (let [msg (format "%s found but not with expected message"
                                     (.getName c))]
-                    (ExpectationFailed.
+                    (->ExpectationFailed
                      msg
                      {:message msg
                       :file *file*
@@ -423,7 +422,7 @@
              (let [found (some #(when (instance? c %) %) causes)
                    msg (format "%s found but not with expected message"
                                (.getName c))]
-               (throw (ExpectationFailed.
+               (throw (->ExpectationFailed
                        msg
                        {:message msg
                         :file *file*

@@ -7,7 +7,8 @@
                                                      more-of]]) 
   (:import
    (clojure.lang ExceptionInfo)
-   (lazytest ExpectationFailed)))
+   #?@(:bb []
+       :clj [[lazytest ExpectationFailed]])))
 
 (s/def ::pos pos?)
 
@@ -20,7 +21,7 @@
   (it "catch" (sut/expect ExceptionInfo (throw (ex-info "aw shucks" {}))))
   (it "spec" (sut/expect ::pos 1))
   (it "prints correctly"
-    (expect (throws-with-msg? ExpectationFailed
+    (expect (throws-with-msg? #?(:bb ExceptionInfo :clj ExpectationFailed)
               #"did not satisfy"
               #(sut/expect even? (+ 1 1 1) "It's uneven!")))))
 
@@ -29,9 +30,9 @@
     (it in
       (sut/expect {:foo 1} (in {:foo 1 :cat 4}))
       (sut/expect #{1 2} (in #{0 1 2 3}))
-      (expect (throws? ExpectationFailed
+      (expect (throws? #?(:bb ExceptionInfo :clj ExpectationFailed)
                        #(sut/expect :foo (in #{:foo :bar}))))
-      (expect (throws? ExpectationFailed
+      (expect (throws? #?(:bb ExceptionInfo :clj ExpectationFailed)
                        #(sut/expect :foo (in [:bar :foo])))))
     (it from-each
       (sut/expect #"foo"

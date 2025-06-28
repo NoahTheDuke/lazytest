@@ -4,7 +4,7 @@
    [clojure.string :as str]
    [lazytest.clojure-ext.core :refer [re-compile]]
    [lazytest.config :refer [->config]]
-   [lazytest.core :refer [defdescribe describe expect expect-it it]]
+   [lazytest.core :refer [defdescribe describe expect expect-it it around]]
    [lazytest.extensions.matcher-combinators :refer [match?]]
    [lazytest.reporters :as sut]
    [lazytest.runner :as runner]
@@ -100,6 +100,9 @@
               (with-out-str-no-color)))))
 
 (defdescribe results-test
+  {:context [(around [f]
+              (with-redefs [stack/print-trace-element stub-stack-trace]
+                (f)))]}
   (it "no tests"
     (expect
       (nil?
@@ -161,79 +164,76 @@
                (with-out-str-no-color))))))
   (describe "errors"
     (it "prints the given message"
-      (with-redefs [stack/print-trace-element stub-stack-trace]
-        (expect
-          (= (str/join \newline ["example suite"
-                                 "  example test-case:"
-                                 ""
-                                 "clojure.lang.ExceptionInfo: deliberate error"
-                                 "Expected: nil"
-                                 "Actual: nil"
-                                 ""
-                                 "<stack-trace>"
-                                 ""
-                                 "in example.clj:1"
-                                 ""
-                                 ""])
-             (-> (sut/results nil {:type :end-test-run
-                                   :results (make-suite (->erroring))})
-                 (with-out-str-no-color))))))
-    (it "defaults if given no message"
-      (with-redefs [stack/print-trace-element stub-stack-trace]
-        (expect
-          (= (str/join \newline ["example suite"
-                                 "  example test-case:"
-                                 ""
-                                 "clojure.lang.ExceptionInfo: deliberate error"
-                                 "Expected: nil"
-                                 "Actual: nil"
-                                 ""
-                                 "<stack-trace>"
-                                 ""
-                                 "in example.clj:1"
-                                 ""
-                                 ""])
-             (-> (sut/results nil {:type :end-test-run
-                                   :results (make-suite (->erroring :message nil))})
-                 (with-out-str-no-color)))))))
-  (it "combinations"
-    (with-redefs [stack/print-trace-element stub-stack-trace]
       (expect
-        (= (str/join \newline
-                     ["example suite"
-                      "  example test-case:"
-                      ""
-                      "failing"
-                      "Expected: (= 1 2)"
-                      "Actual: false"
-                      "Evaluated arguments:"
-                      " * 1"
-                      " * 2"
-                      "Only in first argument:"
-                      "1"
-                      "Only in second argument:"
-                      "2"
-                      ""
-                      "in example.clj:1"
-                      ""
-                      "example suite"
-                      "  example test-case:"
-                      ""
-                      "clojure.lang.ExceptionInfo: deliberate error"
-                      "Expected: nil"
-                      "Actual: nil"
-                      ""
-                      "<stack-trace>"
-                      ""
-                      "in example.clj:1"
-                      ""
-                      ""])
+        (= (str/join \newline ["example suite"
+                               "  example test-case:"
+                               ""
+                               "clojure.lang.ExceptionInfo: deliberate error"
+                               "Expected: nil"
+                               "Actual: nil"
+                               ""
+                               "<stack-trace>"
+                               ""
+                               "in example.clj:1"
+                               ""
+                               ""])
            (-> (sut/results nil {:type :end-test-run
-                                 :results (make-suite
-                                            (->passing)
-                                            (->failing)
-                                            (->erroring))})
+                                 :results (make-suite (->erroring))})
+               (with-out-str-no-color)))))
+    (it "defaults if given no message"
+      (expect
+        (= (str/join \newline ["example suite"
+                               "  example test-case:"
+                               ""
+                               "clojure.lang.ExceptionInfo: deliberate error"
+                               "Expected: nil"
+                               "Actual: nil"
+                               ""
+                               "<stack-trace>"
+                               ""
+                               "in example.clj:1"
+                               ""
+                               ""])
+           (-> (sut/results nil {:type :end-test-run
+                                 :results (make-suite (->erroring :message nil))})
                (with-out-str-no-color))))))
+  (it "combinations"
+    (expect
+      (= (str/join \newline
+                   ["example suite"
+                    "  example test-case:"
+                    ""
+                    "failing"
+                    "Expected: (= 1 2)"
+                    "Actual: false"
+                    "Evaluated arguments:"
+                    " * 1"
+                    " * 2"
+                    "Only in first argument:"
+                    "1"
+                    "Only in second argument:"
+                    "2"
+                    ""
+                    "in example.clj:1"
+                    ""
+                    "example suite"
+                    "  example test-case:"
+                    ""
+                    "clojure.lang.ExceptionInfo: deliberate error"
+                    "Expected: nil"
+                    "Actual: nil"
+                    ""
+                    "<stack-trace>"
+                    ""
+                    "in example.clj:1"
+                    ""
+                    ""])
+         (-> (sut/results nil {:type :end-test-run
+                               :results (make-suite
+                                          (->passing)
+                                          (->failing)
+                                          (->erroring))})
+             (with-out-str-no-color)))))
   (expect-it "handles defaults"
     (nil? (-> (sut/results nil {:type :anything-else})
               (with-out-str-no-color)))))

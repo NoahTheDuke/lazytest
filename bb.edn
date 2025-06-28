@@ -1,0 +1,7 @@
+{:deps {io.github.noahtheduke/lazytest {:local/root "."}}
+ :tasks {lazytest {:task lazytest.main/-main
+                   :extra-paths ["test/clojure" "corpus" "dev"]
+                   :extra-deps {nubank/matcher-combinators {:mvn/version "3.9.1"}
+                                org.clojure/spec.alpha {:mvn/version "0.5.238"}
+                                com.github.seancorfield/honeysql {:mvn/version "2.6.1196"}
+                                org.clojure/tools.gitlibs {:mvn/version "2.5.197"}}}}}

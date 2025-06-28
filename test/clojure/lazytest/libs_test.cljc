@@ -25,8 +25,10 @@
       (let [honeysql-ns (let [s (java.io.StringWriter.)]
                           (binding [*err* s]
                             (build-tests-for-file [@readme @readme-str])))]
-        (expect
-          (match? {:total 80 :pass 80 :fail 0}
-                  (summarize
-                   (lr/run-tests [(the-ns honeysql-ns)]
-                                 (->config {:output ['lazytest.reporters/quiet]})))))))))
+        #?(:bb nil
+           :clj (expect
+                  (match? {:total 80 :pass 80 :fail 0}
+                          (summarize
+                           (lr/run-tests
+                            [(the-ns honeysql-ns)]
+                            (->config {:output ['lazytest.reporters/quiet]}))))))))))

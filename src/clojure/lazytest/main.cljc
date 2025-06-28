@@ -9,8 +9,7 @@
    [lazytest.config :refer [->config]]
    [lazytest.doctest :as dt]
    [lazytest.results :refer [summarize summary-exit-value]]
-   [lazytest.runner :refer [run-tests]]
-   [lazytest.watch :as watch]))
+   [lazytest.runner :refer [run-tests]]))
 
 (defn find-ns-decls [dirs]
   (into []
@@ -50,8 +49,10 @@
       exit-message
       (do (println exit-message)
           {:exit (if ok 0 1)})
-      (:watch opts)
-      (assoc opts :watcher (watch/watch run-impl opts))
+      #?@(:bb []
+          :clj [(:watch opts)
+                (do (require 'lazytest.watch)
+                    (assoc opts :watcher ((resolve 'lazytest.watch/watch) run-impl opts)))])
       :else
       (let [results (run-impl opts)
             summary (summarize results)]

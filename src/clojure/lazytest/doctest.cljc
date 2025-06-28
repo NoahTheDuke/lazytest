@@ -141,8 +141,9 @@ Watch out for side-effecting actions:
   ([string sep]
    (if-not (string? string) ""
      (as-> string $
-       (java.text.Normalizer/normalize $ java.text.Normalizer$Form/NFD)
-       (str/replace $ #"[^\x00-\x7F'`\"]+" "")
+       #?@(:bb []
+           :clj [(java.text.Normalizer/normalize $ java.text.Normalizer$Form/NFD)
+                 (str/replace $ #"[^\x00-\x7F'`\"]+" "")])
        (str/lower-case $)
        (str/trim $)
        (str/split $ #"[ \t\n\x0B\f\r!\"#$%&'()*+,-./:;<=>?@\\\[\]^_`{|}~]+")
@@ -254,13 +255,14 @@ Watch out for side-effecting actions:
                        "\n\n"
                        (str/join "\n\n" tests))]
     #_(println test-file)
-    (try (Compiler/load (java.io.StringReader. test-file) (str file) (str file))
-         (catch clojure.lang.Compiler$CompilerException ex
-           (throw (ex-info (str "Failed to load doc test for " file)
-                           {:file file
-                            :test-file test-file}
-                           ex))))
-    (symbol new-ns)))
+    #?(:bb nil
+       :clj (try (Compiler/load (java.io.StringReader. test-file) (str file) (str file))
+                 (symbol new-ns)
+                 (catch clojure.lang.Compiler$CompilerException ex
+                   (throw (ex-info (str "Failed to load doc test for " file)
+                                   {:file file
+                                    :test-file test-file}
+                                   ex)))))))
 
 (comment
   (require '[lazytest.runner :as runner])

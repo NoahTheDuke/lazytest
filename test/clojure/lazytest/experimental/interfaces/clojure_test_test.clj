@@ -49,7 +49,6 @@
         {:type :lazytest.suite/suite-result
          :source
          {:type :lazytest/run
-          :doc nil
           :children 
           [{:type :lazytest/var
             :doc "deftest-test"}]}

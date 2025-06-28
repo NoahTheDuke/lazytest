@@ -3,10 +3,10 @@
    [lazytest.core :refer [cause-seq causes-with-msg? causes? context
                           defdescribe describe expect expect-it it ok? should
                           specify throws-with-msg? throws?]]
-   [lazytest.extensions.matcher-combinators :refer [match?]])
+   [lazytest.extensions.matcher-combinators :refer [match?]]
+   [lazytest.expectation-failed :refer [ex-failed?]])
   (:import
    clojure.lang.ExceptionInfo
-   lazytest.ExpectationFailed
    [java.util.regex Pattern]))
 
 (defdescribe it-test
@@ -15,8 +15,10 @@
       ((:body (it "when given multiple expressions"
                 (expect (= 1 2))
                 (throw (ex-info "never reached" {})))))
-      (catch ExpectationFailed e
-        (expect (= '(= 1 2) (:expected (ex-data e)))))))
+      (catch Throwable e
+        (if (ex-failed? e)
+          (expect (= '(= 1 2) (:expected (ex-data e))))
+          (throw e)))))
   (let [state (atom 0)]
     (it "arbitrary code"
       (expect (= 4 (+ 2 2)))
@@ -46,8 +48,10 @@
     (it "wraps other throwables"
       (try
         (expect (throws? ExceptionInfo #(assert false)))
-        (catch ExpectationFailed ef
-          (expect (instance? AssertionError (:caught (ex-data ef))))))))
+        (catch Throwable ef
+          (if (ex-failed? ef)
+            (expect (instance? AssertionError (:caught (ex-data ef))))
+            (throw ef))))))
   (describe throws-with-msg?
     (it "checks the thrown message"
       (expect (throws-with-msg? Exception #"foo message"
@@ -55,15 +59,17 @@
       (try (throws-with-msg? Exception #"bar message"
                 #(do (throw (Exception. "the foo message for this exception"))))
            (expect nil "Should have failed")
-           (catch ExpectationFailed ex
-             (expect
-               (match? {:message "java.lang.Exception found but not with expected message"
-                        :expected
-                        (list 're-find
-                          #(instance? Pattern %)
-                          "the foo message for this exception")
-                        :actual "the foo message for this exception"}
-                       (ex-data ex)))))))
+           (catch Throwable ex
+             (if (ex-failed? ex)
+               (expect
+                 (match? {:message "java.lang.Exception found but not with expected message"
+                          :expected
+                          (list 're-find
+                                #(instance? Pattern %)
+                                "the foo message for this exception")
+                          :actual "the foo message for this exception"}
+                         (ex-data ex)))
+               (throw ex))))))
   (describe causes?
     (expect-it "checks the base throwable"
       (causes? IllegalArgumentException
@@ -91,41 +97,47 @@
                           (ex-info "foo message" {:extra :data}
                                    (ex-info "worser message" {:foo :bar})))))
            (expect nil "Should have failed")
-           (catch ExpectationFailed ex
-             (expect
-               (match? {:message "clojure.lang.ExceptionInfo found but not with expected message"
-                        :expected
-                        (list 're-find
-                          #(instance? Pattern %)
-                          "foo message")
-                        :actual "foo message"}
-                       (ex-data ex)))))))
+           (catch Throwable ex
+             (if (ex-failed? ex)
+               (expect
+                 (match? {:message "clojure.lang.ExceptionInfo found but not with expected message"
+                          :expected
+                          (list 're-find
+                                #(instance? Pattern %)
+                                "foo message")
+                          :actual "foo message"}
+                         (ex-data ex)))
+               (throw ex))))))
   (describe ok?
     (it "returns true"
       (expect (true? (expect (ok? (constantly false))))))
     (it "doesn't catch thrown exceptions"
       (try (expect (ok? #(throw (ex-info "ok?" {:foo :bar}))))
-           (catch ExpectationFailed ex
-             (let [caught (-> ex ex-data :caught)]
-               (expect (instance? clojure.lang.ExceptionInfo caught))
-               (expect (= "ok?" (ex-message caught)))
-               (expect (= {:foo :bar} (ex-data caught)))))))))
+           (catch Throwable ex
+             (if (ex-failed? ex)
+               (let [caught (-> ex ex-data :caught)]
+                 (expect (instance? clojure.lang.ExceptionInfo caught))
+                 (expect (= "ok?" (ex-message caught)))
+                 (expect (= {:foo :bar} (ex-data caught))))
+               (throw ex)))))))
 
 (defdescribe expect-data-test
-  (let [e1 (try (expect (= 1 (inc 2)))
-               false
-               (catch ExpectationFailed err err))
+  (it "is correctly formed"
+    (let [e1 (try (expect (= 1 (inc 2)))
+                  false
+                  (catch Throwable err
+                    (if (ex-failed? err) err (throw err))))
           reason (ex-data e1)]
-    (it "is correctly formed"
       (expect (some? e1))
       (expect (= '(= 1 (inc 2)) (:expected reason)))
       (expect (= (list = 1 3) (:evaluated reason)))
       (expect (false? (:actual reason)))))
-  (let [e3 (try (expect (instance? java.lang.String (+ 40 2)))
-               false
-               (catch ExpectationFailed err err))
+  (it "is correctly formed"
+    (let [e3 (try (expect (instance? java.lang.String (+ 40 2)))
+                  false
+                  (catch Throwable err
+                    (if (ex-failed? err) err (throw err))))
           reason (ex-data e3)]
-    (it "is correctly formed"
       (expect (some? e3))
       (expect (= '(instance? java.lang.String (+ 40 2)) (:expected reason)))
       (expect (= (list instance? java.lang.String 42) (:evaluated reason)))

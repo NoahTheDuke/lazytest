@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-## 1.7.0
+### Added
 
-Released `2025-06-10`.
+- Babashka support! Currently doesn't support `:watch`, and due to lack of custom classes, `ExpectationFailed` is an `ex-info`, not a proper `ExpectationFailed`. This complicates writing `catch` clauses, as `ExpectationFailed` is an `AssertionError`, not an `ExceptionInfo`, but with the help of the new predicate function `ex-failed?`, catching `Throwable` and checking is simple enough (if a little unweildy).
 
 ## 1.7.0
 

@@ -48,9 +48,12 @@ jobs:
       - name: splint
         run: clojure -M:provided:dev:test:splint
 
+      - name: bb tests
+        run: bb lazytest --output summary
+
       - name: tests
         run: |
           clojure -T:prep javac
-          clojure -M:v1.10:provided:dev:test:ci
-          clojure -M:v1.11:provided:dev:test:ci
-          clojure -M:v1.12:provided:dev:test:ci
+          clojure -M:v1.10:provided:dev:test:ci --summary
+          clojure -M:v1.11:provided:dev:test:ci --summary
+          clojure -M:v1.12:provided:dev:test:ci --summary

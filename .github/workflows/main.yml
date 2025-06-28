@@ -52,6 +52,6 @@ jobs:
         run: |
           clojure -T:prep javac
           bb lazytest --output summary
-          clojure -M:v1.10:provided:dev:test:ci --summary
-          clojure -M:v1.11:provided:dev:test:ci --summary
-          clojure -M:v1.12:provided:dev:test:ci --summary
+          clojure -M:v1.10:provided:dev:test:ci --output summary
+          clojure -M:v1.11:provided:dev:test:ci --output summary
+          clojure -M:v1.12:provided:dev:test:ci --output summary

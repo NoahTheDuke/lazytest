@@ -1,5 +1,7 @@
 (ns lazytest.filter)
 
+(set! *warn-on-reflection* true)
+
 (defn focus-fns
   "Returns map of {:include? include-fn :exclude? exclude-fn}."
   [config]
@@ -19,7 +21,7 @@
   {:arglists '([obj config])}
   #'filter-tree-dispatch)
 
-(defmethod filter-tree nil [_obj _config] nil)
+(defmethod filter-tree nil filter-tree--nil [_obj _config] nil)
 
 (defn filter-suite
   "If any items in sequence s are focused, return them, with focus

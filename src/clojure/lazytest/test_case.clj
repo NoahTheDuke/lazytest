@@ -1,5 +1,7 @@
 (ns lazytest.test-case)
 
+(set! *warn-on-reflection* true)
+
 ^:clj-reload/keep
 (defrecord TestCase [type doc body context ns file line metadata])
 

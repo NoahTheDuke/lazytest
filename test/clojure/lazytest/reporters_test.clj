@@ -64,31 +64,31 @@
 (defdescribe summary-test
   (it "no tests"
     (expect
-      (= "Ran 0 test cases in 0.12346 seconds.\n0 failures.\n\n"
+      (= "Ran 0 test cases in 0.12346 seconds.\n0 failures.\n"
          (-> (sut/summary nil {:type :end-test-run
                                :results (make-suite)})
              (with-out-str-no-color)))))
   (it "passing"
     (expect
-      (= "Ran 1 test cases in 0.12346 seconds.\n0 failures.\n\n"
+      (= "Ran 1 test cases in 0.12346 seconds.\n0 failures.\n"
          (-> (sut/summary nil {:type :end-test-run
                                :results (make-suite (->passing))})
              (with-out-str-no-color)))))
   (it "failures"
     (expect
-      (= "Ran 1 test cases in 0.12346 seconds.\n1 failure.\n\n"
+      (= "Ran 1 test cases in 0.12346 seconds.\n1 failure.\n"
          (-> (sut/summary nil {:type :end-test-run
                                :results (make-suite (->failing))})
              (with-out-str-no-color)))))
   (it "errors"
     (expect
-      (= "Ran 1 test cases in 0.12346 seconds.\n1 failure.\n\n"
+      (= "Ran 1 test cases in 0.12346 seconds.\n1 failure.\n"
          (-> (sut/summary nil {:type :end-test-run
                                :results (make-suite (->erroring))})
              (with-out-str-no-color)))))
   (it "combinations"
     (expect
-      (= "Ran 3 test cases in 0.12346 seconds.\n2 failures.\n\n"
+      (= "Ran 3 test cases in 0.12346 seconds.\n2 failures.\n"
          (-> (sut/summary nil {:type :end-test-run
                                :results (make-suite
                                           (->passing)

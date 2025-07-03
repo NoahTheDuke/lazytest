@@ -3,6 +3,8 @@
    [clojure.java.io :as io]
    [clojure.string :as str]))
 
+(set! *warn-on-reflection* true)
+
 (def version (delay (str/trim (slurp (io/resource "LAZYTEST_VERSION")))))
 (defn lazytest-version [] (str "Lazytest v" @version))
 

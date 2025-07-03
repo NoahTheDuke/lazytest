@@ -24,6 +24,8 @@
    [lazytest.core :refer [*context* expect it]]
    [lazytest.suite :refer [suite suite?]]))
 
+(set! *warn-on-reflection* true)
+
 (defn prep-ns-suite!
   "Set the *ns* :lazytest/ns-suite to a fresh suite."
   []

@@ -9,6 +9,8 @@
    [lazytest.runner :as lr]
    [lazytest.test-utils :refer [with-out-str-no-color]]))
 
+(set! *warn-on-reflection* true)
+
 (defn vconj! [volatile value]
   (vswap! volatile conj value))
 

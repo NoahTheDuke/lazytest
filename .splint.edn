@@ -1,23 +1,20 @@
-;; Splint configuration auto-generated on 2024-11-25.
+;; Splint configuration auto-generated on 2025-07-03.
 ;; All failing rules have been disabled and can be enabled as time allows.
 
 {
- ;; Diagnostics count: 2
- ;; Using unquote-splicing on a body in a macro can lead to subtly broken code that's hard to debug.
- lint/body-unquote-splicing {:enabled false}
+ global {:excludes ["corpus/"]}
 
- ;; Diagnostics count: 50
- ;; Prefer `(y x)` to `(-> x y)`.
- ;; :supported-styles [:inline :avoid-collections]
+ lint {:enabled true}
+ metrics {:enabled true}
+ naming {:enabled true}
+ performance {:enabled true
+              :excludes ["test/"]}
+ style {:enabled true}
+
+ lint/catch-throwable {:enabled false}
+ lint/prefer-method-values {:enabled false}
  lint/thread-macro-one-arg {:enabled false}
-
- ;; Diagnostics count: 40
- ;; Always set *warn-on-reflection* to avoid reflection in interop.
- lint/warn-on-reflection {:enabled false}
-
- style/def-fn {:enabled false}
-
- ;; Diagnostics count: 1
- ;; Prefer `condp` to `cond` when testing same base case.
+ metrics/fn-length {:enabled false}
  style/prefer-condp {:enabled false}
+ style/set-literal-as-fn {:enabled false}
 }

@@ -7,6 +7,8 @@
    [lazytest.test-case :refer [test-case]]
    [lazytest.find :refer [find-ns-suite]]))
 
+(set! *warn-on-reflection* true)
+
 (def temp-var nil)
 
 (defdescribe metadata-filtering-test

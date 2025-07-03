@@ -10,6 +10,8 @@
    [lazytest.suite :as s :refer [suite-result?]]
    [lazytest.test-case :as tc]))
 
+(set! *warn-on-reflection* true)
+
 (defn report [config m]
   (when-let [reporter (:reporter config)]
     (reporter config m)))
@@ -27,8 +29,8 @@
 ;; === FOCUSED TESTS ONLY ===
 
 (defmulti focused {:arglists '([config m])} #'reporter-dispatch)
-(defmethod focused :default [_ _])
-(defmethod focused :begin-test-run [_ m]
+(defmethod focused :default focused--default [_ _])
+(defmethod focused :begin-test-run focused--begin-test-run [_ m]
   (when (-> m :metadata :focus)
     (println "=== FOCUSED TESTS ONLY ===")
     (newline))
@@ -43,8 +45,8 @@
 ;; 0 failures.
 
 (defmulti summary {:arglists '([config m])} #'reporter-dispatch)
-(defmethod summary :default [_ _])
-(defmethod summary :end-test-run [_ m]
+(defmethod summary :default summary--default [_ _])
+(defmethod summary :end-test-run summary--end-test-run [_ m]
   (let [{:keys [total fail]} (summarize (:results m))
         duration (double (/ (-> m :results (:lazytest.runner/duration 0.0)) 1e9))
         count-msg (format "Ran %s test cases in %.5f seconds." total duration)]
@@ -53,7 +55,6 @@
                count-msg))
     (println (colorize (str fail " failure" (when (not= 1 fail) "s") ".")
                        (if (zero? fail) :green :red)))
-    (newline)
     (flush)))
 
 ;; RESULTS
@@ -81,6 +82,7 @@
 (defmulti ^:private results-builder {:arglists '([config m])} #'reporter-dispatch)
 
 (defmethod results-builder ::s/suite-result
+  results-builder--suite-result
   [config {:keys [children] :as results}]
   (doseq [child children
           :let [docs (conj (:docs results []) (s/identifier results))
@@ -117,7 +119,7 @@
       (println (colorize "The same in both:" :cyan))
       (pp/pprint same))))
 
-(defmethod results-builder :pass [_ _])
+(defmethod results-builder :pass results-builder--pass [_ _])
 
 (defn print-stack-trace
   "Adapted from clojure.stacktrace/print-stack-trace"
@@ -135,7 +137,7 @@
         (newline))
       (newline))))
 
-(defmethod results-builder :fail [_config result]
+(defmethod results-builder :fail results-builder--fail [_config result]
   (print-docs (conj (:docs result) (tc/identifier result)))
   (let [message (str (when-not (ex-failed? (:thrown result))
                        (str (.getName (class (:thrown result))) ": "))
@@ -157,8 +159,8 @@
   (flush))
 
 (defmulti results {:arglists '([config m])} #'reporter-dispatch)
-(defmethod results :default [_ _])
-(defmethod results :end-test-run [config m]
+(defmethod results :default results--default [_ _])
+(defmethod results :end-test-run results--end-test-run [config m]
   (results-builder config (:results m)))
 
 ;; DOTS
@@ -170,12 +172,12 @@
 ;; (....)(F)(.F..)
 
 (defmulti dots* {:arglists '([config m])} #'reporter-dispatch)
-(defmethod dots* :default [_ _])
-(defmethod dots* :pass [_ _] (print (colorize "." :green)))
-(defmethod dots* :fail [_ _] (print (colorize "F" :red)))
-(defmethod dots* :begin-test-ns [_ _] (print (colorize "(" :yellow)))
-(defmethod dots* :end-test-ns [_ _] (print (colorize ")" :yellow)))
-(defmethod dots* :end-test-run [_ _] (newline))
+(defmethod dots* :default dots*--default [_ _])
+(defmethod dots* :pass dots*--pass [_ _] (print (colorize "." :green)))
+(defmethod dots* :fail dots*--fail [_ _] (print (colorize "F" :red)))
+(defmethod dots* :begin-test-ns dots*--begin-test-ns [_ _] (print (colorize "(" :yellow)))
+(defmethod dots* :end-test-ns dots*--end-test-ns [_ _] (print (colorize ")" :yellow)))
+(defmethod dots* :end-test-run dots*--end-test-run [_ _] (newline))
 
 (def dots
   [focused dots* results summary])
@@ -196,7 +198,7 @@
 ;;        √ should not be rebound
 
 (defmulti nested* {:arglists '([config m])} #'reporter-dispatch)
-(defmethod nested* :default [_ _])
+(defmethod nested* :default nested*--default [_ _])
 
 (defn print-test-seq
   [config s]
@@ -206,11 +208,11 @@
       (indent depth)
       (println id))))
 
-(defmethod nested* :begin-test-run [config s] (print-test-seq config s))
-(defmethod nested* :begin-test-ns [config s] (print-test-seq config s))
-(defmethod nested* :begin-test-var [config s] (print-test-seq config s))
-(defmethod nested* :begin-test-suite [config s] (print-test-seq config s))
-(defmethod nested* :end-test-run [_ _] (newline) (flush))
+(defmethod nested* :begin-test-run nested*--begin-test-run [config s] (print-test-seq config s))
+(defmethod nested* :begin-test-ns nested*--begin-test-ns [config s] (print-test-seq config s))
+(defmethod nested* :begin-test-var nested*--begin-test-var [config s] (print-test-seq config s))
+(defmethod nested* :begin-test-suite nested*--begin-test-suite [config s] (print-test-seq config s))
+(defmethod nested* :end-test-run nested*--end-test-run [_ _] (newline) (flush))
 
 (defn print-test-result
   [config result]
@@ -225,8 +227,8 @@
         :fail (println (colorize "×" :red) (colorize msg :red))
         #_:else nil))))
 
-(defmethod nested* :pass [config result] (print-test-result config result))
-(defmethod nested* :fail [config result] (print-test-result config result))
+(defmethod nested* :pass nested*--pass [config result] (print-test-result config result))
+(defmethod nested* :fail nested*--fail [config result] (print-test-result config result))
 
 (def nested
   [focused nested* results summary])
@@ -248,7 +250,7 @@
 ;; 1 failure, 0 errors.
 
 (defmulti clojure-test {:arglists '([config m])} #'reporter-dispatch)
-(defmethod clojure-test :default [_ _])
+(defmethod clojure-test :default clojure-test--default [_ _])
 
 (defn- clojure-test-case-str [config result]
   (format "(%s) (%s:%s)"
@@ -288,15 +290,15 @@
       (prn actual)))
   (flush))
 
-(defmethod clojure-test :fail [config result]
+(defmethod clojure-test :fail clojure-test--fail [config result]
   (if (ex-failed? (:thrown result))
     (clojure-test-fail config result)
     (clojure-test-error config result)))
 
-(defmethod clojure-test :begin-test-ns [_ result]
+(defmethod clojure-test :begin-test-ns clojure-test--begin-test-ns [_ result]
   (println "\nTesting" (ns-name (:doc result))))
 
-(defmethod clojure-test :end-test-run [_ m]
+(defmethod clojure-test :end-test-run clojure-test--end-test-run [_ m]
   (let [results (:results m)
         test-vars (count (filter #(= :lazytest/var (:type (:source %)))
                                  (result-seq results)))
@@ -318,7 +320,7 @@
 ;; Prints loudly about every step of the way. Incredibly noisy, not recommended.
 
 (defmulti debug {:arglists '([config m])} #'reporter-dispatch)
-(defmethod debug :default [_ _])
+(defmethod debug :default debug--default [_ _])
 
 (def type->name
   {
@@ -348,17 +350,17 @@
                 (when (and (:file s) (:line s))
                   (str " (" (:file s) ":" (:line s) ")")))))
 
-(defmethod debug :begin-test-run [_ _] (println "Starting test run"))
-(defmethod debug :begin-test-ns [_config s] (print-entering s))
-(defmethod debug :begin-test-var [_config s] (print-entering s))
-(defmethod debug :begin-test-suite [_config s] (print-entering s))
-(defmethod debug :begin-test-seq [_config s] (print-entering s))
+(defmethod debug :begin-test-run debug--begin-test-run [_ _] (println "Starting test run"))
+(defmethod debug :begin-test-ns debug--begin-test-ns [_config s] (print-entering s))
+(defmethod debug :begin-test-var debug--begin-test-var [_config s] (print-entering s))
+(defmethod debug :begin-test-suite debug--begin-test-suite [_config s] (print-entering s))
+(defmethod debug :begin-test-seq debug--begin-test-seq [_config s] (print-entering s))
 
-(defmethod debug :end-test-run [_ _] (println "Ending test run"))
-(defmethod debug :end-test-ns [_config s] (print-leaving s))
-(defmethod debug :end-test-var [_config s] (print-leaving s))
-(defmethod debug :end-test-suite [_config s] (print-leaving s))
-(defmethod debug :end-test-seq [_config s] (print-leaving s))
+(defmethod debug :end-test-run debug--end-test-run [_ _] (println "Ending test run"))
+(defmethod debug :end-test-ns debug--end-test-ns [_config s] (print-leaving s))
+(defmethod debug :end-test-var debug--end-test-var [_config s] (print-leaving s))
+(defmethod debug :end-test-suite debug--end-test-suite [_config s] (print-leaving s))
+(defmethod debug :end-test-seq debug--end-test-seq [_config s] (print-leaving s))
 
 (defn print-entering-tc [tc]
   (println "Running" (str (type->name (:type tc)) ":")
@@ -368,11 +370,11 @@
   (println "Done with" (str (type->name (:type tc)) ":")
            (str (tc/identifier tc) " (" (:file tc) ":" (:line tc) ")")))
 
-(defmethod debug :begin-test-case [_config tc] (print-entering-tc tc))
-(defmethod debug :end-test-case [_config tc] (print-leaving-tc tc))
+(defmethod debug :begin-test-case debug--begin-test-case [_config tc] (print-entering-tc tc))
+(defmethod debug :end-test-case debug--end-test-case [_config tc] (print-leaving-tc tc))
 
-(defmethod debug :pass [_config result] (prn result))
-(defmethod debug :fail [_config result] (prn result))
+(defmethod debug :pass debug--pass [_config result] (prn result))
+(defmethod debug :fail debug--fail [_config result] (prn result))
 
 ;; PROFILE
 ;; Print the top 5 namespaces and test vars by duration.
@@ -383,8 +385,8 @@
 ;; blah blah blah
 
 (defmulti profile {:arglists '([config m])} #'reporter-dispatch)
-(defmethod profile :default [_ _])
-(defmethod profile :end-test-run [_config {:keys [results]}]
+(defmethod profile :default profile--default [_ _])
+(defmethod profile :end-test-run profile--end-test-run [_config {:keys [results]}]
   (let [types (-> (group-by (comp :type :source) (result-seq results))
                   (select-keys [:lazytest/ns :lazytest/var])
                   (->> (reduce-kv (fn [m k v] (assoc m k (filterv :lazytest.runner/duration v))) {})))
@@ -423,4 +425,4 @@
 ;; Print nothing.
 
 (defmulti quiet {:arglists '([config m])} #'reporter-dispatch)
-(defmethod quiet :default [_ _])
+(defmethod quiet :default quiet--default [_ _])

@@ -9,6 +9,8 @@
    clojure.lang.ExceptionInfo
    [java.util.regex Pattern]))
 
+(set! *warn-on-reflection* true)
+
 (defdescribe it-test
   (it "will early exit"
     (try

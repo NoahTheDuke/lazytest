@@ -21,20 +21,30 @@ clojure-lsp:
 splint:
     clojure -M:provided:dev:test:splint
 
+prep:
+    rm -rf target/classes
+    clojure -T:prep javac
+
 test-bb *args:
+    @just prep
     bb lazytest {{args}}
 
 [no-exit-message]
-test *args:
-    clojure -T:prep javac
+test-raw *args:
     clojure -M:provided:dev:test:run {{args}}
+
+[no-exit-message]
+test *args:
+    @just prep
+    @just test-raw {{args}}
 
 [no-exit-message]
 test-all *args:
     @just clojure-lsp
     @just splint
-    @just test-bb --output summary
-    @just test --doctests --md README.md --dir docs --dir test --output summary {{args}}
+    @just prep
+    bb lazytest --output summary
+    @just test-raw --doctests --md README.md --dir docs --dir test --output summary {{args}}
 
 repl arg="":
     clojure -T:prep javac

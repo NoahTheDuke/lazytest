@@ -5,6 +5,8 @@
    [lazytest.results :refer [summarize]]
    [lazytest.runner :as runner]))
 
+(set! *warn-on-reflection* true)
+
 (def repl-config
   {:output [r/focused r/results r/summary]})
 

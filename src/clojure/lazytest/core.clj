@@ -38,6 +38,8 @@
    [lazytest.suite :as suite]
    [lazytest.test-case :as test-case]))
 
+(set! *warn-on-reflection* true)
+
 ;;; Utilities
 
 (defn ^:no-doc get-arg
@@ -310,10 +312,10 @@
         metadata (merged-data body &form doc (dissoc attr-map :context))
         context (:context attr-map)]
     `(let [test-case# (test-case/test-case
-                       (assoc ~metadata
-                              :body (fn it# [] (let [ret# (do ~@body)] ret#))
-                              :context (binding [*context* nil]
-                                         (ctx/merge-context ~context))))]
+                       (-> ~metadata
+                           (assoc :body (fn it# [] (let [ret# (do ~@body)] ret#)))
+                           (assoc :context (binding [*context* nil]
+                                             (ctx/merge-context ~context)))))]
        (update-children test-case#))))
 
 (defmacro expect-it

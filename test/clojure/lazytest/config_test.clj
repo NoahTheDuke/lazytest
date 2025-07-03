@@ -4,6 +4,8 @@
    [lazytest.core :refer [defdescribe it expect]]
    [lazytest.extensions.matcher-combinators :refer [match?]]))
 
+(set! *warn-on-reflection* true)
+
 (defn example-reporter [& _args])
 
 (defdescribe ->config-test

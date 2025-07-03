@@ -6,6 +6,15 @@
 
 - Babashka support! Currently doesn't support `:watch`, and due to lack of custom classes, `ExpectationFailed` is an `ex-info`, not a proper `ExpectationFailed`. This complicates writing `catch` clauses, as `ExpectationFailed` is an `AssertionError`, not an `ExceptionInfo`, but with the help of the new predicate function `ex-failed?`, catching `Throwable` and checking is simple enough (if a little unweildy).
 
+### Changed
+
+- Removed trailing newline from `summary` reporter. Looked weird to have an additional line after running.
+
+### Chores
+
+- Updated `splint` to latest, set configuration appropriately, and fixed all diagnostics.
+- Updated all dependencies to latest.
+
 ## 1.7.0
 
 Released `2025-06-10`.

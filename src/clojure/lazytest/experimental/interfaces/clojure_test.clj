@@ -32,6 +32,8 @@
    [clojure.template :as temp]
    [lazytest.core :refer [defdescribe expect it throws? throws-with-msg?]]))
 
+(set! *warn-on-reflection* true)
+
 (def ^:dynamic ^:no-doc *testing-strs*
   "Adapted from `clojure.test/*testing-contexts*`."
   (list))
@@ -40,7 +42,8 @@
   "Adapted from `clojure.test/testing`."
   [doc & body]
   `(binding [*testing-strs* (cons ~doc *testing-strs*)]
-     ~@body))
+     (let [ret# (do ~@body)]
+       ret#)))
 
 (defn ^:no-doc testing-str []
   (when (seq *testing-strs*)

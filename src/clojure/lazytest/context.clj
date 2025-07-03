@@ -2,6 +2,8 @@
   (:require
    [clojure.test :as c.t]))
 
+(set! *warn-on-reflection* true)
+
 (defn merge-context [context]
   (reduce
    (fn [acc cur]

@@ -14,9 +14,9 @@
 (defn dispatch [m _config] (:type m))
 
 (defmulti run-tree {:arglists '([m config])} #'dispatch)
-(defmethod run-tree :default [m _config]
+(defmethod run-tree :default run-tree--default [m _config]
   (throw (ex-info "Non-test given to run-suite." {:obj m})))
-(defmethod run-tree nil [_m _config])
+(defmethod run-tree nil run-tree--nil [_m _config])
 
 (defn ->suite-result [suite config source-type]
   (let [id (:doc suite)
@@ -44,7 +44,9 @@
   (report config (assoc suite :type :begin-test-run))
   (run-befores suite)
   (let [results (->suite-result suite config :lazytest/run)]
-    (report config (assoc suite :type :end-test-run :results results))
+    (report config (-> suite
+                       (assoc :type :end-test-run)
+                       (assoc :results results)))
     (run-afters suite)
     results))
 
@@ -54,7 +56,9 @@
   (report config (assoc suite :type :begin-test-ns))
   (run-befores suite)
   (let [results (->suite-result suite config :lazytest/ns)]
-    (report config (assoc suite :type :end-test-ns :results results))
+    (report config (-> suite
+                       (assoc :type :end-test-ns)
+                       (assoc :results results)))
     (run-afters suite)
     results))
 
@@ -64,7 +68,9 @@
   (report config (assoc suite :type :begin-test-var))
   (run-befores suite)
   (let [results (->suite-result suite config :lazytest/var)]
-    (report config (assoc suite :type :end-test-var :results results))
+    (report config (-> suite
+                       (assoc :type :end-test-var)
+                       (assoc :results results)))
     (run-afters suite)
     results))
 
@@ -74,7 +80,9 @@
   (report config (assoc suite :type :begin-test-suite))
   (run-befores suite)
   (let [results (->suite-result suite config :lazytest/suite)]
-    (report config (assoc suite :type :end-test-suite :results results))
+    (report config (-> suite
+                       (assoc :type :end-test-suite)
+                       (assoc :results results)))
     (run-afters suite)
     results))
 
@@ -97,7 +105,9 @@
           duration (double (- (System/nanoTime) start))
           results (assoc results ::duration duration)]
       (report config results)
-      (report config (assoc tc :type :end-test-case :results results))
+      (report config (-> tc
+                         (assoc :type :end-test-case)
+                         (assoc :results results)))
       (run-afters tc)
       results)))
 

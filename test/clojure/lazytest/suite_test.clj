@@ -4,6 +4,8 @@
    [lazytest.suite :refer [suite]]
    [lazytest.test-case :refer [test-case]]))
 
+(set! *warn-on-reflection* true)
+
 ;; manually writing test cases (instead of using `it`)
 (defn common-test-cases [x]
   [(when (zero? x)

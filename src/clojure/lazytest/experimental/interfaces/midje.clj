@@ -27,6 +27,8 @@
    [lazytest.core :refer [describe it]]
    [lazytest.suite :refer [suite]]))
 
+(set! *warn-on-reflection* true)
+
 (defn prep-ns-suite!
   "Set the *ns* :lazytest/ns-suite to a fresh suite."
   []

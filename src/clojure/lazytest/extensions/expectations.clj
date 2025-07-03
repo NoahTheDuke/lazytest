@@ -22,6 +22,8 @@
    [clojure.string :as str]
    [clojure.spec.alpha :as s]))
 
+(set! *warn-on-reflection* true)
+
 (defn- bad-usage [s]
   `(throw (IllegalArgumentException. (str ~s " should only be used inside expect"))))
 
@@ -239,7 +241,7 @@
   ([e a msg ex? e']
    (let [within (if (and (sequential? e')
                          (symbol? (first e'))
-                         (= "expect" (name (first e'))))
+                         (.equals "expect" (name (first e'))))
                   (pr-str e')
                   (pr-str (list 'expect e' a)))
          msg' `(not-empty
@@ -253,7 +255,7 @@
      (cond
        (and (sequential? a)
             (symbol? (first a))
-            (= "from-each" (name (first a))))
+            (.equals "from-each" (name (first a))))
        (let [[_ bindings & body] a]
          (if (= 1 (count body))
            `(doseq ~bindings
@@ -265,7 +267,7 @@
 
        (and (sequential? a)
             (symbol? (first a))
-            (= "in" (name (first a))))
+            (.equals "in" (name (first a))))
        (let [form (with-meta `(~'expect ~e ~a) (meta &form))
              e_ (gensym "e_")
              a_ (gensym "a_")
@@ -295,7 +297,7 @@
 
        (and (sequential? e)
             (symbol? (first e))
-            (= "more" (name (first e))))
+            (.equals "more" (name (first e))))
        (let [sa (gensym)
              es (mapv (fn [expected]
                         (with-meta `(expect ~expected ~sa ~msg ~ex? ~e')
@@ -306,7 +308,7 @@
 
        (and (sequential? e)
             (symbol? (first e))
-            (= "more->" (name (first e))))
+            (.equals "more->" (name (first e))))
        (let [sa (gensym)
              es (mapv (fn [[expected a->]]
                         (with-meta
@@ -324,7 +326,7 @@
 
        (and (sequential? e)
             (symbol? (first e))
-            (= "more-of" (name (first e))))
+            (.equals "more-of" (name (first e))))
        (let [es (mapv (fn [[expected actual]]
                         (with-meta `(expect ~expected ~actual ~msg ~ex? ~e')
                           ;; use more-of line
@@ -388,7 +390,7 @@
                                            ~v)))
                                 []
                                 mocks)
-         ~@forms)
+         (let [ret# (do ~@forms)] ret#))
        @~called-args)))
 
 (defn approximately

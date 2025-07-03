@@ -25,6 +25,8 @@
   (:require
    [lazytest.core :refer [defdescribe describe expect it]]))
 
+(set! *warn-on-reflection* true)
+
 (defmacro defsuite
   "Alias of [[lazytest.core/defdescribe]] for the xUnit interface."
   {:arglists '([test-name & children]

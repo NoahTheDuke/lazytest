@@ -2,6 +2,8 @@
   (:require
    [lazytest.core :refer [defdescribe describe expect it]]))
 
+(set! *warn-on-reflection* true)
+
 ;; This exists merely to test the -i and -e flags
 (defdescribe metadata-test
   "top true"

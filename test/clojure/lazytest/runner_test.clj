@@ -7,6 +7,8 @@
    [lazytest.runner :as sut]
    [lazytest.test-utils :refer [with-out-str-no-color]]))
 
+(set! *warn-on-reflection* true)
+
 (defn make-suite []
   (binding [*context* nil]
     (describe "here" (it "works" nil))))

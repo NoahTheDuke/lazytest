@@ -2,6 +2,8 @@
   (:require
    [lazytest.suite :refer [suite-result?]]))
 
+(set! *warn-on-reflection* true)
+
 (defn result-seq
   "Given a single suite result, returns a depth-first sequence of all
   nested child suite/test results."

@@ -5,6 +5,8 @@
    [matcher-combinators.model :refer [->Mismatch]]
    [matcher-combinators.result :as result]))
 
+(set! *warn-on-reflection* true)
+
 (defmacro with-out-str-no-color
   "Evaluates exprs in a context in which *out* is bound to a fresh StringWriter and lazytest.color/*color* is bound to false.  Returns the string created by any nested printing calls or nil if the string is empty."
   {:added "1.0"}

@@ -5,6 +5,8 @@
    [clojure.tools.cli :as cli]
    [lazytest.config :refer [lazytest-version]]))
 
+(set! *warn-on-reflection* true)
+
 (defn update-vec [m k v]
   (update m k #(conj (or % []) v)))
 

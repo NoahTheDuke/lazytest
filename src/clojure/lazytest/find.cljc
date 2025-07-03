@@ -5,7 +5,9 @@
    [lazytest.test-case :refer [test-case?]]))
 
 (defn- set-var [value this-var]
-  (assoc value :type :lazytest/var :var this-var))
+  (-> value
+      (assoc :type :lazytest/var)
+      (assoc :var this-var)))
 
 (defn find-var-test-value
   [the-var]

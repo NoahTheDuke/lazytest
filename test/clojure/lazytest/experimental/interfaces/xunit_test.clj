@@ -3,6 +3,8 @@
    [lazytest.core :refer [defdescribe expect it]]
    [lazytest.extensions.matcher-combinators :refer [match?]]))
 
+(set! *warn-on-reflection* true)
+
 (in-ns 'xunit-temp)
 (clojure.core/refer 'clojure.core)
 (clojure.core/require

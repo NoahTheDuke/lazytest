@@ -3,6 +3,8 @@
    [lazytest.core :refer [around before-each defdescribe expect-it
                           set-ns-context!]]))
 
+(set! *warn-on-reflection* true)
+
 (def state (volatile! ::baseline))
 
 (set-ns-context!

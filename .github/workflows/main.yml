@@ -28,10 +28,10 @@ jobs:
           clojure-lsp-version: 2024.08.05-18.16.00
 
       - name: Install clojure tools
-        uses: DeLaGuardo/setup-clojure@12.5
+        uses: DeLaGuardo/setup-clojure@13.4
         with:
-          cli: 1.11.4.1474
-          bb: 1.3.191
+          cli: 1.12.1.1550
+          bb: 1.12.204
 
       - name: Cache clojure dependencies
         uses: actions/cache@v4

@@ -47,6 +47,8 @@
    [lazytest.experimental.interfaces.clojure-test :as lt-ct]
    [lazytest.extensions.expectations :as lt-expect]))
 
+(set! *warn-on-reflection* true)
+
 (defmacro in
   "Adapted from `expectations.clojure.test/in`."
   [coll]

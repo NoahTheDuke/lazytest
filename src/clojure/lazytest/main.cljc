@@ -56,9 +56,9 @@
       :else
       (let [results (run-impl opts)
             summary (summarize results)]
-        (assoc summary
-               :results results
-               :exit (summary-exit-value summary))))))
+        (-> summary
+            (assoc :results results)
+            (assoc :exit (summary-exit-value summary)))))))
 
 (defn -main
   "Pass-through to runner which does all the work."

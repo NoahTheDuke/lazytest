@@ -2,6 +2,8 @@
   (:import
    (java.util.regex Pattern)))
 
+(set! *warn-on-reflection* true)
+
 (def pattern-flags
   {:case-insensitive Pattern/CASE_INSENSITIVE
    :multiline Pattern/MULTILINE

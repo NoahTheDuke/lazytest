@@ -5,6 +5,8 @@
    [lazytest.runner :as lr]
    [lazytest.test-utils :refer [with-out-str-data-map]]))
 
+(set! *warn-on-reflection* true)
+
 (in-ns 'clojure-test-temp)
 (clojure.core/refer 'clojure.core)
 (clojure.core/require

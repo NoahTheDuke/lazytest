@@ -22,8 +22,21 @@ splint:
     clojure -M:provided:dev:test:splint
 
 prep:
-    rm -rf target/classes
-    clojure -T:prep javac
+    clojure -X:deps prep
+
+clean:
+    clojure -T:build clean
+
+compile:
+    clojure -T:build compile-clojure :clean true
+
+jar:
+    clojure -T:build jar
+
+uberjar:
+    clojure -T:build uberjar
+
+alias uber := uberjar
 
 test-bb *args:
     @just prep
@@ -42,6 +55,7 @@ test *args:
 test-all *args:
     @just clojure-lsp
     @just splint
+    @just compile
     @just prep
     bb lazytest --output summary
     @just test-raw --doctests --md README.md --dir docs --dir test --output summary {{args}}
@@ -67,6 +81,6 @@ repl arg="":
     git push
     git push --tags
     echo 'Building uber'
-    clojure -T:build uberjar
+    @just uberjar
     echo 'Deploying to clojars'
     just clojars

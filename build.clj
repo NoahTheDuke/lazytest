@@ -50,6 +50,24 @@
             :basis (:basis opts)
             :javac-opts (:javac-opts opts)}))
 
+(defn compile-clojure [opts]
+  (let [opts (make-opts opts)]
+    (when (:clean opts)
+      (clean opts)
+      (compile-java opts))
+    (println "Compiling src/clojure")
+    (let [out (-> opts
+                  (assoc :basis (:provided opts)
+                         :binding {#'clojure.core/*warn-on-reflection* true}
+                         :out :capture
+                         :err :capture)
+                  (b/compile-clj)
+                  (update :out str)
+                  (update :err str))]
+      (when (str/includes? (:err out)
+                           "Reflection warning")
+        (throw (ex-info (:err out) out))))))
+
 (defn jar [opts]
   (let [opts (make-opts opts)]
     (clean opts)
@@ -70,7 +88,7 @@
     (copy-src opts)
     (compile-java opts)
     (write-pom opts)
-    (b/compile-clj (assoc opts :basis (:provided opts)))
+    (compile-clojure opts)
     (b/uber opts)
     (println "Created" (str (b/resolve-path (:jar-file opts))))))
 

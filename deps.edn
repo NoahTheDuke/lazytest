@@ -6,8 +6,8 @@
         cond-plus/cond-plus {:mvn/version "1.2.0"}
         rewrite-clj/rewrite-clj {:mvn/version "1.2.50"}}
  :deps/prep-lib {:ensure "target/classes"
-                 :alias :prep
-                 :fn javac}
+                 :alias :build
+                 :fn compile-java}
  :aliases
  {:run {:main-opts ["-m" "lazytest.main"]}
   :provided {:extra-deps {nubank/matcher-combinators {:mvn/version "3.9.1"}}}

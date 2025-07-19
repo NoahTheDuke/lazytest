@@ -16,7 +16,7 @@
 
 Lots of interesting stuff here
 
-```clojure
+```clojure lazytest/describe=coolstuff
 (require '[clojure.string :as str])
 
 (str/blank? \"\")
@@ -156,7 +156,7 @@ Watch out for side-effecting actions:
        (not (n/printable-only? (z/node zloc)))
        (= '=> (z/sexpr zloc))))
 
-(defn make-test-node [line actual expected]
+(defn make-test-node [block actual expected]
   (let [[a-row _col] (:position actual)
         [e-row _col] (:position expected)
         pos-diff (- e-row a-row)
@@ -164,7 +164,8 @@ Watch out for side-effecting actions:
     (n/list-node
      [(n/token-node 'lazytest.core/defdescribe)
       (n/spaces 1)
-      (n/token-node (gensym (str (slugify (join-headers "-")) "--")))
+      (n/token-node (or (some-> block :info-string (get "lazytest/describe") symbol)
+                      (gensym (str (slugify (join-headers "-")) "--"))))
       (if (zero? pos-diff) (n/spaces 1) (n/newlines 1))
       (n/list-node
        [(n/token-node 'lazytest.core/it)
@@ -180,7 +181,7 @@ Watch out for side-effecting actions:
           (n/meta-node
            (n/map-node [(n/keyword-node :line)
                         (n/spaces 1)
-                        (n/token-node (+ a-row line))])
+                        (n/token-node (+ a-row (:line block)))])
            (n/list-node
             (if (symbol? expected-sexpr)
               [(z/node expected)
@@ -212,7 +213,7 @@ Watch out for side-effecting actions:
                     (z/next)
                     (z/remove)
                     (z/next)
-                    (z/replace (make-test-node (:line block) actual expected))))
+                    (z/replace (make-test-node block actual expected))))
               :else zloc)]
         (if (z/end? zloc)
           (z/root-string zloc)

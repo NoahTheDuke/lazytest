@@ -463,6 +463,24 @@ print("Hello world!")
 ```
 ````
 
+Additionally, a custom string can be used instead of the default (headers from the markdown file) by using the info-string `lazytest/describe`:
+
+
+````markdown
+```clojure lazytest/describe=easy-adder
+(+ 5 6)
+;; => 11
+```
+````
+
+will be printed as:
+
+```markdown
+  readme-md
+    easy-adder
+      √ Doc Tests
+```
+
 ## Editor Integration
 
 The entry-points are at `lazytest.repl`: `run-all-tests`, `run-tests`, and `run-test-var`. The first runs all loaded test namespaces, the second runs the provided namespaces (either a single namespace or a collection of namespaces), and the third runs a single test var. If your editor can define custom repl functions, then it's fairly easy to set these as your test runner.

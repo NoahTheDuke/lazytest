@@ -50,7 +50,7 @@ jobs:
 
       - name: tests
         run: |
-          clojure -T:prep javac
+          clojure -T:build compile-java
           bb lazytest --output summary
           clojure -M:v1.10:provided:dev:test:ci --output summary
           clojure -M:v1.11:provided:dev:test:ci --output summary

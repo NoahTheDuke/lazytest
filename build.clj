@@ -44,11 +44,12 @@
                  :target-dir (:class-dir opts)})))
 
 (defn compile-java [opts]
-  (println "Compiling" (str/join ", " (:java-src-dirs opts)))
-  (b/javac {:src-dirs (:java-src-dirs opts)
-            :class-dir (:class-dir opts)
-            :basis (:basis opts)
-            :javac-opts (:javac-opts opts)}))
+  (let [opts (make-opts opts)]
+    (println "Compiling" (str/join ", " (:java-src-dirs opts)))
+    (b/javac {:src-dirs (:java-src-dirs opts)
+              :class-dir (:class-dir opts)
+              :basis (:basis opts)
+              :javac-opts (:javac-opts opts)})))
 
 (defn compile-clojure [opts]
   (let [opts (make-opts opts)]

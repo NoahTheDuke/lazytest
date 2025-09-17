@@ -12,7 +12,6 @@ Released `2025-09-17`.
   If you're currently using `lazytest.ExpectationFailed`, may I recommend using [sinker](https://tangled.sh/@noahbogart.com/sinker) or [ex](https://github.com/exoscale/ex) to ease catching such exceptions.
 - Make `--watch` work with doctests that set aliases (generally through `(require foo :as bar)`).
 - Bump `clj-reload` to 1.0.0 to support `--watch` in babashka.
-- Bump JVM target to 17, in anticipation of Clojure 1.13.
 
 ## 1.8.0
 

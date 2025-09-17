@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.9.0
+
+Released `2025-09-17`.
+
 - Support `lazytest/describe=foo-bar` in clojure markdown blocks for doctests. The string will be used as the `defdescribe`'s var name instead of a gensym based on the current header.
 - Support doctests in babashka.
 - BREAKING: Internally change `expect` to throw a `clojure.lang.ExceptionInfo` with `:type :lazytest/expectation-failed`. `lazytest.ExpectationFailed` will be kept in the jar forever, but it won't work as a target for `catch` anymore if you're using it. This is to make it easier to use Lazytest in `cljc` files and to support porting lazytest to other dialects in the future.

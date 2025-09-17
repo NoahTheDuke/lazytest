@@ -33,8 +33,9 @@
   * [[ok?]]: Calls given no-arg function, returns true if no exception is thrown. (Useful for ignoring logical false return values.)
   "
   (:require
+   [noahtheduke.sinker :refer [try+]]
    [lazytest.context :as ctx]
-   [lazytest.expectation-failed :refer [->ExpectationFailed ex-failed?]]
+   [lazytest.expectation-failed :refer [->ExpectationFailed]]
    [lazytest.suite :as suite]
    [lazytest.test-case :as test-case]))
 
@@ -116,19 +117,19 @@
   reason for failure. Metadata on expr and on the 'expect' form
   itself will be merged into the failure map."
   ([expr] (with-meta (list `expect expr nil)
-                     (meta &form)))
+            (meta &form)))
   ([expr msg]
    (let [msg-gensym (gensym)]
      `(let [~msg-gensym ~msg]
-        (try ~(if (function-call? expr)
-                (expect-fn expr msg-gensym)
-                (expect-any expr msg-gensym))
-             (catch Throwable ex#
-               (if (ex-failed? ex#)
-                 (let [data# (update (ex-data ex#) :message #(or % ~msg-gensym))]
-                   (throw (->ex-failed nil data#)))
-                 (throw (->ex-failed ~&form ~expr {:message ~msg-gensym
-                                                   :caught ex#})))))))))
+        (try+ ~(if (function-call? expr)
+                 (expect-fn expr msg-gensym)
+                 (expect-any expr msg-gensym))
+              (catch :lazytest/expectation-failed data#
+                (let [data# (update data# :message #(or % ~msg-gensym))]
+                  (throw (->ex-failed nil data#))))
+              (catch Throwable t#
+                (throw (->ex-failed ~&form ~expr {:message ~msg-gensym
+                                                  :caught t#}))))))))
 
 (defmacro before
   "Runs `body` (presumably for side effects) once before all nested suites and test cases. Wraps `body` in a function, calls and discards the result during test runs.

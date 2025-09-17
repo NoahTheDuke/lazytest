@@ -6,7 +6,6 @@ Hooks can be used in `:context` metadata on suites, and assertion helpers can be
 
 ```clojure
 (require '[lazytest.core :refer :all])
-(import 'lazytest.ExpectationFailed)
 ```
 
 ## `expect`
@@ -18,7 +17,7 @@ Create an assertion. Throws if expression returns logical false. The optional me
 => true
 
 (try (expect nil "What do you expect?")
-  (catch ExpectationFailed t (ex-message t)))
+  (catch clojure.lang.ExceptionInfo t (ex-message t)))
 => "What do you expect?"
 ```
 
@@ -122,7 +121,7 @@ Calls given no-arg function, returns true if it throws expected class, rethrows 
 
 ## `throws-with-msg?`
 
-Calls given function with no arguments, returns true if it throws the expected class and the message matches given regex, throws an ExpectationFailed if the class matches but the regex fails, and rethrows other throwables.
+Calls given function with no arguments, returns true if it throws the expected class and the message matches given regex, throws an ExceptionInfo if the class matches but the regex fails, and rethrows other throwables.
 
 ```clojure
 (throws-with-msg? clojure.lang.ExceptionInfo #"yikes" #(do :no-op))
@@ -133,7 +132,7 @@ Calls given function with no arguments, returns true if it throws the expected c
 => :caught
 
 (try (throws-with-msg? clojure.lang.ExceptionInfo #"foo" #(throw (ex-info "yikes" {})))
-  (catch ExpectationFailed ex :caught))
+  (catch clojure.lang.ExceptionInfo ex :caught))
 => :caught
 
 (throws-with-msg? clojure.lang.ExceptionInfo #"yikes" #(throw (ex-info "yikes" {})))

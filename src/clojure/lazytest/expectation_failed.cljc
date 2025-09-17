@@ -9,10 +9,11 @@
 (defn ->ExpectationFailed
   ([data] (->ExpectationFailed nil data))
   ([msg data]
-   #?(:bb (ex-info (or msg "Expectation failed") (assoc data ::expectation-failed true))
-      :clj (ExpectationFailed. msg data))))
+   (ex-info (or msg "Expectation failed")
+            (assoc data :type :lazytest/expectation-failed))))
 
 (defn ex-failed?
   [^Throwable ex]
-  #?(:bb (::expectation-failed (ex-data ex))
-     :clj (instance? ExpectationFailed ex)))
+  (or (= :lazytest/expectation-failed (:type (ex-data ex)))
+      #?(:bb false
+         :clj (instance? ExpectationFailed ex))))

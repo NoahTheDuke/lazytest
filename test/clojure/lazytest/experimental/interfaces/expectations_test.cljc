@@ -5,11 +5,9 @@
    [lazytest.experimental.interfaces.expectations :as sut :refer [from-each in
                                                                   more more->
                                                                   more-of]]
-   [lazytest.extensions.expectations :refer [expect]]) 
+   [lazytest.extensions.expectations :refer [expect]])
   (:import
-   (clojure.lang ExceptionInfo)
-   #?@(:bb []
-       :clj [[lazytest ExpectationFailed]])))
+   (clojure.lang ExceptionInfo)))
 
 (s/def ::pos pos?)
 
@@ -27,9 +25,9 @@
     (sut/expecting "in"
       (sut/expect {:foo 1} (in {:foo 1 :cat 4}))
       (sut/expect #{1 2} (in #{0 1 2 3}))
-      (expect #?(:bb ExceptionInfo :clj ExpectationFailed)
+      (expect ExceptionInfo
         (#(sut/expect :foo (in #{:foo :bar}))))
-      (expect #?(:bb ExceptionInfo :clj ExpectationFailed)
+      (expect ExceptionInfo
         (#(sut/expect :foo (in [:bar :foo])))))
     (sut/expecting "from-each"
       (sut/expect #"foo"

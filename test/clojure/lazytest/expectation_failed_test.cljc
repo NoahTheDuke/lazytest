@@ -6,8 +6,7 @@
 (defdescribe expectation-failed-test
   (let [ex-failed (->ExpectationFailed nil {:foo :bar})]
     (it "is an AssertionError"
-      (expect (instance? #?(:bb clojure.lang.ExceptionInfo
-                            :clj AssertionError) ex-failed)))
+      (expect (instance? clojure.lang.ExceptionInfo ex-failed)))
     (it "has a default message"
       (expect (= "Expectation failed" (ex-message ex-failed)))))
   (it "accepts a nil data map"

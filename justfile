@@ -61,7 +61,7 @@ test-all *args:
     @just splint
     @just compile
     @just prep
-    @just test-bb --output results --output summary
+    bb lazytest --doctests --md README.md --dir docs --dir test --output results --output summary {{args}}
     @just test-raw --doctests --md README.md --dir docs --dir test --output results --output summary {{args}}
 
 repl arg="":

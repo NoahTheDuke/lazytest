@@ -36,8 +36,7 @@
                  [{:type :fail
                    :doc "`:lazytest/test` metadata"
                    :thrown (ex-info "Expectation failed"
-                                    {;:type #?(:bb 'clojure.lang.ExceptionInfo
-                                     ;         :clj 'lazytest.ExpectationFailed)
+                                    {:type 'clojure.lang.ExceptionInfo
                                      :expected '(zero? (test-fn 1))})}]}
                 {::lr/source-type :lazytest/var
                  :doc (resolve 'find-tests.examples/test-test-case)
@@ -45,8 +44,7 @@
                  [{:type :fail
                    :doc "test case example"
                    :thrown (ex-info "Expectation failed"
-                                    {;:type #?(:bb 'clojure.lang.ExceptionInfo
-                                     ;         :clj 'lazytest.ExpectationFailed)
+                                    {:type 'clojure.lang.ExceptionInfo
                                      :expected '(= 1 (test-test-case 1))})}]}
                 {::lr/source-type :lazytest/var
                  :doc (resolve 'find-tests.examples/test-describe)
@@ -57,14 +55,12 @@
                    [{:type :fail
                      :doc "test-describe example"
                      :thrown (ex-info "Expectation failed"
-                                      {;:type #?(:bb 'clojure.lang.ExceptionInfo
-                                       ;         :clj 'lazytest.ExpectationFailed)
+                                      {:type 'clojure.lang.ExceptionInfo
                                        :expected '(= 1 (test-describe 1))})}
                     {:type :fail
                      :doc "test-describe example two"
                      :thrown (ex-info "Expectation failed"
-                                      {;:type #?(:bb 'clojure.lang.ExceptionInfo
-                                       ;         :clj 'lazytest.ExpectationFailed)
+                                      {:type 'clojure.lang.ExceptionInfo
                                        :expected '(zero? (test-describe 1))})}]}]}]}]}}
            (:result @output))))
       (it "prints as expected"

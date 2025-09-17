@@ -28,7 +28,7 @@
       :src-dirs ["src/clojure"]
       :resource-dirs ["resources"]
       :java-src-dirs ["src/java"]
-      :javac-opts ["--release" "11"]
+      :javac-opts ["--release" "17"]
       :pom-data [[:licenses
                   [:license
                    [:name "EPL-1.0"]

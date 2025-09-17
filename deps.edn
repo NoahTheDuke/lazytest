@@ -63,7 +63,7 @@
    :src-dirs ["src/clojure"]
    :resource-dirs ["resources"]
    :java-src-dirs ["src/java"]
-   :javac-opts ["--release" "11"]}
+   :javac-opts ["--release" "17"]}
 
   :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.10"}
                  io.github.noahtheduke/clein {:mvn/version "0.5.0"}

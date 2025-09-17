@@ -2,19 +2,12 @@
 
 ## Unreleased
 
-### Added
-
 - Support `lazytest/describe=foo-bar` in clojure markdown blocks for doctests. The string will be used as the `defdescribe`'s var name instead of a gensym based on the current header.
 - Support doctests in babashka.
-
-### Changed
-
 - BREAKING: Internally change `expect` to throw a `clojure.lang.ExceptionInfo` with `:type :lazytest/expectation-failed`. `lazytest.ExpectationFailed` will be kept in the jar forever, but it won't work as a target for `catch` anymore if you're using it. This is to make it easier to use Lazytest in `cljc` files and to support porting lazytest to other dialects in the future.
   If you're currently using `lazytest.ExpectationFailed`, may I recommend using [sinker](https://tangled.sh/@noahbogart.com/sinker) or [ex](https://github.com/exoscale/ex) to ease catching such exceptions.
-
-### Fixed
-
 - Make `--watch` work with doctests that set aliases (generally through `(require foo :as bar)`).
+- Bump `clj-reload` to 1.0.0 to support `--watch` in babashka.
 
 ## 1.8.0
 

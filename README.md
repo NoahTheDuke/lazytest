@@ -11,7 +11,7 @@ An alternative to `clojure.test`, aiming to be feature-rich and easily extensibl
 
 - [Getting Started](#getting-started)
 - [Why a new test framework?](#why-a-new-test-framework)
-- [Why no Clojurescript/other flavors?](#why-no-clojurescriptother-flavors)
+- [Supported dialects](#supported-dialects)
 - [Usage](#usage)
 - [Writing tests with Lazytest](#writing-tests-with-lazytest)
 - [Partitioning Individual Tests and Suites](#partitioning-individual-tests-and-suites)
@@ -109,9 +109,9 @@ Other alternatives such as [Midje][midje], [classic Expectations][expectations v
 
 I like the ideas put forth in Alessandra's post above about Lazytest and hope to experiment with achieving them 14 years later, while borrowing heavily from the work in both the Clojure community and test runners frameworks in other languages.
 
-## Why no Clojurescript/other flavors?
+## Supported dialects
 
-I am not nearly familiar enough with other flavors of Clojure and don't have the bandwidth to support them. If someone from the community is willing to steward that work, I'm open to adding support.
+Lazytest supports Clojure (1.10+) and Babashka (v1.12.208+). It does not support Clojurescript or other flavors at this time.
 
 ## Usage
 

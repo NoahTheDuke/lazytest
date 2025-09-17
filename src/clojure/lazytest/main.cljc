@@ -49,10 +49,9 @@
       exit-message
       (do (println exit-message)
           {:exit (if ok 0 1)})
-      #?@(:bb []
-          :clj [(:watch opts)
-                (do (require 'lazytest.watch)
-                    (assoc opts :watcher ((resolve 'lazytest.watch/watch) run-impl opts)))])
+      (:watch opts)
+      (do (require 'lazytest.watch)
+          (assoc opts :watcher ((resolve 'lazytest.watch/watch) run-impl opts)))
       :else
       (let [results (run-impl opts)
             summary (summarize results)]

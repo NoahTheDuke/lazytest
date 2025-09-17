@@ -1,22 +1,12 @@
 (ns lazytest.watch
   (:require
    [clj-reload.core :as reload]
-   [clojure.java.io :as io]
    [clojure.string :as str]
    [lazytest.color :refer [colorize]])
   (:import
-   [java.io File]
    [java.util.concurrent ScheduledThreadPoolExecutor TimeUnit]))
 
 (set! *warn-on-reflection* true)
-
-(defn get-local-classpath []
-  (-> (System/getProperty "java.class.path")
-      (str/split (re-pattern File/pathSeparator))
-      #_{:splint/disable [lint/into-literal]}
-      (->> (into []
-                 (comp (map io/file)
-                       (remove #(File/.isAbsolute ^File %)))))))
 
 (defn date->str [date]
   (let [fmt (java.text.SimpleDateFormat. "yyyy/MM/dd HH:mm:ss")]
@@ -40,8 +30,7 @@
 
 (defn watch [run-impl opts]
   (reload/init
-    {:dirs (get-local-classpath)
-     :files #".*[.](clj|cljc|md)"})
+    {:files #".*[.](clj|cljc|md)"})
   (let [opts (update opts :output #(or (not-empty %) ['lazytest.reporters/dots]))
         f (fn [] (reload-and-run run-impl opts))]
     ;; initial run

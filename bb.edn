@@ -1,4 +1,5 @@
-{:deps {io.github.noahtheduke/lazytest {:local/root "."}}
+{:min-bb-version "1.12.208"
+ :deps {io.github.noahtheduke/lazytest {:local/root "."}}
  :tasks {lazytest {:task lazytest.main/-main
                    :extra-paths ["test/clojure" "corpus" "dev"]
                    :extra-deps {nubank/matcher-combinators {:mvn/version "3.9.1"}

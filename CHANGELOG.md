@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.9.1
+
+Released `2025-09-17`.
+
 ## 1.9.0
 
 Released `2025-09-17`.

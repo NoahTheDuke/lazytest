@@ -252,18 +252,17 @@ Watch out for side-effecting actions:
                       parsed-file)
         tests (build-single-test parsed-file)
         new-ns (slugify (str file))
-        test-file (str (format "(ns %s\n  (:require [lazytest.core]))" new-ns)
+        test-file (str (format "(remove-ns '%s)" new-ns)
+                       (format "(ns %s\n  (:require [lazytest.core]))" new-ns)
                        "\n\n"
                        (str/join "\n\n" tests))]
-    #_(println test-file)
-    #?(:bb nil
-       :clj (try (Compiler/load (java.io.StringReader. test-file) (str file) (str file))
-                 (symbol new-ns)
-                 (catch clojure.lang.Compiler$CompilerException ex
-                   (throw (ex-info (str "Failed to load doc test for " file)
-                                   {:file file
-                                    :test-file test-file}
-                                   ex)))))))
+    (try (Compiler/load (java.io.StringReader. test-file) (str file) (str file))
+         (symbol new-ns)
+         (catch #?(:bb Exception :clj clojure.lang.Compiler$CompilerException) ex
+           (throw (ex-info (format "Failed to load doc test for %s\n%s" file (ex-message ex))
+                           {:file file
+                            :test-file test-file}
+                           ex))))))
 
 (comment
   (require '[lazytest.runner :as runner])

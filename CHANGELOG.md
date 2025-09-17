@@ -5,6 +5,11 @@
 ### Added
 
 - Support `lazytest/describe=foo-bar` in clojure markdown blocks for doctests. The string will be used as the `defdescribe`'s var name instead of a gensym based on the current header.
+- Support doctests in babashka.
+
+### Fixed
+
+- Make `--watch` work with doctests that set aliases (generally through `(require foo :as bar)`).
 
 ## 1.8.0
 

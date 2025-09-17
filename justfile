@@ -38,6 +38,10 @@ uberjar:
 
 alias uber := uberjar
 
+lint:
+    @just clojure-lsp
+    @just splint
+
 test-bb *args:
     @just prep
     bb lazytest {{args}}
@@ -57,11 +61,11 @@ test-all *args:
     @just splint
     @just compile
     @just prep
-    bb lazytest --output summary
-    @just test-raw --doctests --md README.md --dir docs --dir test --output summary {{args}}
+    bb lazytest --output results --output summary
+    @just test-raw --doctests --md README.md --dir docs --dir test --output results --output summary {{args}}
 
 repl arg="":
-    clojure -T:prep javac
+    @just prep
     clojure -M:provided:dev:test{{arg}}:repl
 
 @clojars:

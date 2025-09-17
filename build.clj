@@ -57,14 +57,17 @@
       (clean opts)
       (compile-java opts))
     (println "Compiling src/clojure")
-    (let [out (-> opts
-                  (assoc :basis (:provided opts)
-                         :binding {#'clojure.core/*warn-on-reflection* true}
-                         :out :capture
-                         :err :capture)
-                  (b/compile-clj)
-                  (update :out str)
-                  (update :err str))]
+    (let [out (try (-> opts
+                       (assoc :basis (:provided opts)
+                              :binding {#'clojure.core/*warn-on-reflection* true}
+                              :out :capture
+                              :err :capture)
+                       (b/compile-clj)
+                       (update :out str)
+                       (update :err str))
+                   (catch clojure.lang.ExceptionInfo ex
+                     (prn ex)
+                     ))]
       (when (str/includes? (:err out)
                            "Reflection warning")
         (throw (ex-info (:err out) out))))))

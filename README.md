@@ -154,18 +154,29 @@ Define tests with `defdescribe`, group test suites and test cases together into 
   (it "computes the sum of 1 and 2"
     (expect (= 3 (+ 1 2))))
   (it "computes the sum of 3 and 4"
-    (assert (= 7 (+ 3 4)))))
+    (assert (= 7 (+ 3 4))))
+  (describe "associative property"
+    (it "works in both directions"
+      (expect (= 3 (+ 1 2)))
+      (expect (= 3 (+ 2 1))))))
 ```
 
 The `expect` macro is like `assert` but carries more information about the failure, such as the given form, the returned value, and the location of the call. It throws an exception if the expression does not evaluate to logical true.
 
-If an `it` runs to completion without throwing an exception, the test case is considered to have passed.
+If an `it` runs to completion without throwing, the test case is considered to have passed.
+
+The `describe` macro creates a test suite, a map containing `:children` (among other things) which are nested suites or test cases (created with `it`). It can be passed to other functions or tests, it can be updated with other code, it can be removed from parent suites. Unlike `clojure.test/testing`, it is not merely setting a context string that is used to generate helpful error messages.
+
+> [!IMPORTANT]
+> This is maybe the greatest divergence from `clojure.test`, so it's important to emphasize this. Test cases (the objects created by `it`) are **not run** when a test function (`defdescribe`) is called or a test suite (`describe`) is evaluated. Each of these returns an object (a map, to be specific), and the `lazytest.runner` machinery traverses them and calls the test case function body only when appropriate. This means that you cannot write normal clojure code outside of `it` blocks, as it will work slightly differently than anticipated.
+>
+> For more details and ways to work around this, please read the section on [Setup and Teardown](#setup-and-teardown).
 
 ### Aliases
 
 To help write meaningful tests, a couple aliases have been defined for those who prefer different vocabulary:
 
-* `context` for `describe`
+* `context` for `describe` (this is discouraged because it clashes with the `:context` block, but it's retained for consistency).
 * `specify` for `it`
 * `should` for `expect`
 
@@ -338,23 +349,130 @@ In `clojure.test`, `(use-fixtures :each ...)` will set the provided fixtures to 
 ```
 
 > [!IMPORTANT]
-> Because `describe` blocks are eagerly evaluated (returning a test suite map) whereas `it` blocks wrap the body in a no-arg function that is called by the runner, binding forms such as `let` will happen before any context calls are evaluated. This can lead to unintuitive results and hard-to-understand errors.
+> To repeat myself, test cases (the objects created by `it`) are **not run** when a test function (`defdescribe`) is called or a test suite (`describe`) is evaluated. Each of these returns an object (a map, to be specific), and the `lazytest.runner` machinery traverses them and calls the test case function body only when appropriate. This means that you cannot write normal clojure code outside of `it` blocks, as it will work slightly differently than anticipated.
 >
-> For example, if we change the above code example to bind the `*db-connection*` dynamic variable to a local variable outside of an `it` block, the binding will happen immediately (setting `db-conn` to `nil`). When the runner actually runs `needs-a-db-test`, the `around` context function will set `*db-connection*` but the test will have already closed over `db-conn` in its existing state (`nil`) and thus the test will fail.
+> If you want to create data that will be used by multiple test cases or test suites, I would recommend against merely `let`-binding it as it will be bound when the test suite is created, not when the test cases are executed (unless it's a bit of literal data, aka a number, a set, etc). Any variable that relies on a function call should either be wrapped in a `delay` (to prevent execution until within the context of a test case), or set to a `volatile` or `atom` and then assigned in a `before` block.
 >
-> ```clojure
-> (defonce ^:dynamic *db-connection* nil)
-> (def prep-db
->   (around [f]
->     (binding [*db-connection* (get-db-connection ...)]
->       (f))))
-> 
-> (defdescribe needs-a-db-test
->   {:context [prep-db]}
->   (let [db-conn *db-connection*]
->     (it "has the right connection"
->       (expect (= 1 (count (sql/query db-conn "SELECT * FROM users;")))))))
-> ```
+> If you want to use something like `with-redefs` or `with-open` or `with-bindings` (macros that change a value only during the execution of a body), you _must_ put them into an `around` context block. Otherwise, the state they temporarily set will only exist during the evaluation/creation of the test suite, and will not exist when the test case is executed.
+
+### Common Patterns
+
+To make this very clear, here are some patterns I've seen in `clojure.test` test suites, and how they might look in Lazytest.
+
+#### `with-redefs` to stub a logger
+
+```clojure lazytest/skip=true
+(ns cool.example-test
+  (:require
+    [clojure.test :refer [deftest testing is]]
+    [clojure.tools.logging :as log]
+    [cool.example :as c.e]))
+
+(deftest cool-func-test
+  (with-redefs [log/log* (constantly nil)]
+    (testing "with keywords"
+      (is (c.e/cool-func :a :b :c)))
+    (testing "with strings"
+      (is (c.e/cool-func "a" "b" "c")))))
+```
+
+```clojure lazytest/skip=true
+(ns cool.example-test
+  (:require
+    [lazytest.core :refer [defdescribe describe around expect-it]]
+    [clojure.tools.logging :as log]
+    [cool.example :as c.e]))
+
+(defdescribe cool-func-test
+  (around [f]
+    (with-redefs [log/log* (constantly nil)]
+      (f))
+  (describe "with keywords"
+    (expect-it "works" (c.e/cool-func :a :b :c)))
+  (describe "with strings"
+    (expect-it "works" (c.e/cool-func "a" "b" "c")))))
+```
+
+#### `use-fixtures` to set dynamic variable for every test
+
+```clojure lazytest/skip=true
+(ns cool.example-test
+  (:require
+    [clojure.test :refer [deftest testing is use-fixtures]]
+    [clojure.tools.logging :as log]
+    [com.stuartsierra.component :as component]
+    [cool.example :as c.e]))
+
+(defn set-state-fn [f]
+  (binding [c.e/*state* (component/start (c.e/new-system))]
+    (f)))
+
+(use-fixtures :each #'set-state-fn)
+
+(deftest system-func-test
+  (testing "example 1"
+    (is (c.e/system-func *state* :foo :bar))))
+
+(deftest system-func-2-test
+  (testing "example 2"
+    (is (c.e/system-func-2 *state* :foo :bar))))
+```
+
+```clojure lazytest/skip=true
+(ns cool.example-test
+  (:require
+    [lazytest.core :refer [defdescribe describe around expect-it]]
+    [clojure.tools.logging :as log]
+    [com.stuartsierra.component :as component]
+    [cool.example :as c.e]))
+
+(def set-state-fn
+  (around [f]
+    (binding [c.e/*state* (component/start (c.e/new-system))]
+      (f))))
+
+(defdescribe system-func-test
+  {:context [set-state-fn]}
+  (describe "example 1"
+    (expect-it "works" (c.e/system-func *state* :foo :bar))))
+
+(defdescribe system-func-2-test
+  {:context [set-state-fn]}
+  (describe "example 2"
+    (expect-it "works" (c.e/system-func-2 *state* :foo :bar))))
+```
+
+#### Generating data to be used across a whole test
+
+```clojure lazytest/skip=true
+(ns cool.example-test
+  (:require
+    [clojure.test :refer [deftest testing is]]
+    [clojure.tools.logging :as log]
+    [cool.example :as c.e]))
+
+(deftest state-func-test
+  (let [state (c.e/generate-big-state)]
+    (testing "with keywords"
+      (is (c.e/state-func state :foo)))
+    (testing "with strings"
+      (is (c.e/state-func state "bar")))))
+```
+
+```clojure lazytest/skip=true
+(ns cool.example-test
+  (:require
+    [lazytest.core :refer [defdescribe describe around expect-it]]
+    [clojure.tools.logging :as log]
+    [cool.example :as c.e]))
+
+(defdescribe state-func-test
+  (let [state (delay (c.e/generate-big-state))]
+    (describe "with keywords"
+      (expect-it "works" (c.e/state-func @state :foo)))
+    (describe "with strings"
+      (expect-it "works" (c.e/state-func @state "bar")))))
+```
 
 ## Output
 

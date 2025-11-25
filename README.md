@@ -393,13 +393,12 @@ To make this very clear, here are some patterns I've seen in `clojure.test` test
     (expect-it "works" (c.e/cool-func "a" "b" "c")))))
 ```
 
-#### `use-fixtures` to set dynamic variable for every test
+#### `use-fixtures :each` to reset a dynamic variable for every test
 
 ```clojure lazytest/skip=true
 (ns cool.example-test
   (:require
     [clojure.test :refer [deftest testing is use-fixtures]]
-    [clojure.tools.logging :as log]
     [com.stuartsierra.component :as component]
     [cool.example :as c.e]))
 
@@ -422,7 +421,6 @@ To make this very clear, here are some patterns I've seen in `clojure.test` test
 (ns cool.example-test
   (:require
     [lazytest.core :refer [defdescribe describe around expect-it]]
-    [clojure.tools.logging :as log]
     [com.stuartsierra.component :as component]
     [cool.example :as c.e]))
 
@@ -440,6 +438,51 @@ To make this very clear, here are some patterns I've seen in `clojure.test` test
   {:context [set-state-fn]}
   (describe "example 2"
     (expect-it "works" (c.e/system-func-2 *state* :foo :bar))))
+```
+
+#### `use-fixtures :once` to share a database connection across all tests
+
+```clojure lazytest/skip=true
+(ns cool.example-test
+  (:require
+    [clojure.test :refer [deftest testing is use-fixtures]]
+    [next.jdbc :as jdbc]
+    [cool.example :as c.e]))
+
+(defn set-db-connection [f]
+  (with-open [c.e/*connection* (jdbc/get-connection c.e/datasource)
+    (f)))
+
+(use-fixtures :once #'set-db-connection)
+
+(deftest system-func-test
+  (testing "example 1"
+    (is (c.e/system-func c.e/*connection* :foo :bar))))
+
+(deftest system-func-2-test
+  (testing "example 2"
+    (is (c.e/system-func-2 c.e/*connection* :foo :bar))))
+```
+
+```clojure lazytest/skip=true
+(ns cool.example-test
+  (:require
+    [lazytest.core :refer [defdescribe describe around expect-it set-ns-context!]]
+    [next.jdbc :as jdbc]
+    [cool.example :as c.e]))
+
+(set-ns-context!
+ [(around [f]
+    (with-open [c.e/*connection* (jdbc/get-connection c.e/datasource)
+      (f)))])
+
+(defdescribe system-func-test
+  (describe "example 1"
+    (expect-it "works" (c.e/system-func c.e/*connection* :foo :bar))))
+
+(defdescribe system-func-2-test
+  (describe "example 2"
+    (expect-it "works" (c.e/system-func-2 c.e/*connection* :foo :bar))))
 ```
 
 #### Generating data to be used across a whole test

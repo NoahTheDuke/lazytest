@@ -66,7 +66,7 @@ test-all *args:
 
 repl arg="":
     @just prep
-    clojure -M:provided:dev:test{{arg}}:repl
+    clojure -M:provided:dev:test{{arg}}:bench:repl
 
 @clojars:
     env CLOJARS_USERNAME='noahtheduke' CLOJARS_PASSWORD=`cat ../clojars.txt` clojure -T:build deploy

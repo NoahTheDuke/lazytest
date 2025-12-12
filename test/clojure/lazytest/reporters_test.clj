@@ -2,13 +2,11 @@
   (:require
    [clojure.stacktrace :as stack]
    [clojure.string :as str]
-   [lazytest.clojure-ext.core :refer [re-compile]]
    [lazytest.config :refer [->config]]
-   [lazytest.core :refer [defdescribe describe expect expect-it it around]]
-   [lazytest.extensions.matcher-combinators :refer [match?]]
+   [lazytest.core :refer [around defdescribe describe expect expect-it it]]
    [lazytest.reporters :as sut]
    [lazytest.runner :as runner]
-   [lazytest.suite :as s :refer [suite]]
+   [lazytest.suite :as s]
    [lazytest.test-case :as tc]
    [lazytest.test-utils :refer [with-out-str-no-color]]))
 
@@ -338,21 +336,6 @@
                     (with-out-str-no-color))]
         (expect
           (= (* 2 depth) (- (count out) (count (str/triml out)))))))))
-
-(defdescribe profile-test
-  (it "prints the right times"
-    (let [test-suite (-> (describe "suite"
-                           (it "test case" (expect (= 2 1))))
-                         (assoc :type :lazytest/var :var #'profile-test))
-          results (runner/run-test-suite
-                    (suite {:type :lazytest/ns
-                            :nses [*ns*]
-                            :children [test-suite]})
-                    (->config {:output (constantly nil)}))
-          suite-results (assoc test-suite :type :end-test-run :results results)]
-      (expect (match? (re-compile "Top 1 slowest test namespaces.*Top 1 slowest test vars" :dotall)
-                      (-> (sut/profile nil suite-results)
-                          (with-out-str-no-color)))))))
 
 (defdescribe defdescribe-no-doc nil (it "works" nil))
 (defdescribe defdescribe-with-doc "cool docs" (it "works" nil))

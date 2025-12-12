@@ -3,7 +3,7 @@
 
   In short: Tests are defined with [[defdescribe]], suites (groups of nested suites and test cases) are defined with [[describe]], test cases are defined with [[it]], and assertions are defined with [[expect]] but can be any function that throws an exception on failure. When `lazytest.main/run` is called, all loaded namespaces are checked for tests, and the contained test cases are run (with suites providing context and additional documentation).
 
-  Hooks can be used in `:context` metadata on suites, and assertion helpers can be used in test cases.
+  Contexts can be used in `:context` metadata on suites, and assertion helpers can be used in test cases.
 
   For more information, please check the `README.md`.
 
@@ -19,11 +19,11 @@
   * [[specify]]: Alias for [[it]].
   * [[context]]: Alias for [[describe]].
 
-  Hook vars:
+  Context vars:
   * [[before]], [[after]]: Runs arbitrary code once before (or after) all nested suites and test cases.
   * [[before-each]], [[after-each]]: Runs arbitrary code before (or after) each nested test case.
   * [[around]]: Run a function taking a single arg, with the arg being a function executing the nested suites or test cases. Useful for `binding` (or similar) calls
-  * [[set-ns-context!]]: Add hooks to the namespace suite, instead of to a test suite.
+  * [[set-ns-context!]]: Add contexts to the namespace suite, instead of to a test suite.
 
   Assertion helper vars:
   * [[throws?]]: Calls given no-arg function, returns true if it throws expected class.
@@ -33,24 +33,16 @@
   * [[ok?]]: Calls given no-arg function, returns true if no exception is thrown. (Useful for ignoring logical false return values.)
   "
   (:require
-   [noahtheduke.sinker :refer [try+]]
+   [lazytest.clojure-ext.core :refer [get-arg]]
    [lazytest.context :as ctx]
    [lazytest.expectation-failed :refer [->ExpectationFailed]]
    [lazytest.suite :as suite]
-   [lazytest.test-case :as test-case]))
+   [lazytest.test-case :as test-case]
+   [noahtheduke.sinker :refer [try+]]))
 
 (set! *warn-on-reflection* true)
 
 ;;; Utilities
-
-(defn ^:no-doc get-arg
-  "For internal use only.
-  Pops first argument from args if (pred arg) is true.
-  Returns a vector [first-arg remaining-args] or [nil args]."
-  [pred args]
-  (if (pred (first args))
-    [(first args) (next args)]
-    [nil args]))
 
 (defn ^:no-doc merged-data
   "For internal use only."
@@ -212,7 +204,7 @@
        {:around-each around-each-fn#})))
 
 (defn set-ns-context!
-  "Add hooks to the namespace suite, instead of to a var or test suite.
+  "Add contexts to the namespace suite, instead of to a var or test suite.
 
   `contexts` is a sequence of context maps."
   [contexts]
@@ -249,7 +241,7 @@
                 (or (resolve doc)
                     doc))
               doc)
-        [attr-map children] (get-arg map? body)
+        [attr-map children] (get-arg body map?)
         data (merged-data children &form doc (dissoc attr-map :context))
         context (:context attr-map)]
     `(let [ctx-fns# (binding [*context* nil] ~context)
@@ -278,8 +270,8 @@
                [test-name doc? attr-map? & children])}
   [test-name & body]
   (assert (symbol? test-name) (str "test-name must be a symbol, given " (pr-str test-name)))
-  (let [[doc body] (get-arg string? body)
-        [attr-map body] (get-arg map? body)
+  (let [[doc body] (get-arg body string?)
+        [attr-map body] (get-arg body map?)
         test-var (list 'var (symbol (str *ns*) (str test-name)))
         attr-map (-> (meta test-name)
                      (dissoc :doc)
@@ -327,7 +319,7 @@
                 doc
                 (or (resolve doc) doc))
               doc)
-        [attr-map body] (get-arg map? body)
+        [attr-map body] (get-arg body map?)
         metadata (merged-data body &form doc (dissoc attr-map :context))
         context (:context attr-map)]
     `(let [ctx-fns# (binding [*context* nil] ~context)
@@ -358,7 +350,7 @@
                 (or (resolve doc)
                     doc))
               doc)
-        [attr-map exprs] (get-arg map? body)
+        [attr-map exprs] (get-arg body map?)
         [assertion] exprs
         metadata (merged-data body &form doc (dissoc attr-map :context))
         context (:context attr-map)]

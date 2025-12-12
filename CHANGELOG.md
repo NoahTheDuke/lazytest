@@ -4,6 +4,11 @@
 
 - Correct the order of `around` and `before-each`/`after-each` in test cases. (See [#31](https://github.com/NoahTheDuke/lazytest/issues/31).)
 - Fix `expect-it` to handle `:context` in the attr-map.
+- Add `lazytest.hooks` to support writing plugins/hooks that modify the run.
+- Write initial demonstration hook, `profiling`.
+- Change the config object to use `:reporters`, not `:reporter`.
+- Add clj-kondo hook for `lazytest.hooks/defhook`.
+- Change documentation (readme, docstrings) to use `context` instead of `hook` for `before`/`after`/etc.
 
 ## 1.9.1
 

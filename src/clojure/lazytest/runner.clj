@@ -6,6 +6,7 @@
                              run-afters run-before-eachs run-befores]]
    [lazytest.filter :refer [filter-tree]]
    [lazytest.find :refer [find-suite find-var-test-value]]
+   [lazytest.hooks :as hooks]
    [lazytest.reporters :as r :refer [report]]
    [lazytest.suite :as s :refer [suite suite-result suite?]]
    [lazytest.test-case :refer [try-test-case]]))
@@ -21,7 +22,6 @@
 
 (defn ->suite-result [suite config source-type]
   (let [id (:doc suite)
-        start (System/nanoTime)
         config (-> config
                    (update ::depth #(if id (inc %) %))
                    (update ::suite-history conj suite))
@@ -33,64 +33,70 @@
                         @ret)))
         f #(let [child (propagate-eachs suite %)]
              (run-tree child config))
-        results (around-fn #(vec (keep f (:children suite))))
-        duration (double (- (System/nanoTime) start))]
+        results (around-fn #(vec (keep f (:children suite))))]
     (-> (suite-result suite results)
-        (assoc ::source-type source-type)
-        (assoc ::duration duration))))
+        (assoc ::source-type source-type))))
 
 (defmethod run-tree :lazytest/run
   run-test--lazytest-run
   [suite config]
-  (report config (assoc suite :type :begin-test-run))
-  (run-befores suite)
-  (let [results (->suite-result suite config :lazytest/run)]
-    (report config (-> suite
-                       (assoc :type :end-test-run)
-                       (assoc :results results)))
-    (run-afters suite)
-    results))
+  (let [start (System/nanoTime)
+        suite (hooks/run-hooks config suite :pre-test-run)]
+    (report config (assoc suite :type :begin-test-run))
+    (run-befores suite)
+    (let [results (->suite-result suite config :lazytest/run)
+          duration (double (- (System/nanoTime) start))
+          results (assoc results ::duration duration)]
+      (report config (-> suite
+                         (assoc :type :end-test-run)
+                         (assoc :results results)))
+      (run-afters suite)
+      (hooks/run-hooks config (assoc suite :results results) :post-test-run)
+      results)))
 
 (defmethod run-tree :lazytest/ns
   run-test--lazytest-ns
   [suite config]
-  (report config (assoc suite :type :begin-test-ns))
-  (run-befores suite)
-  (let [results (->suite-result suite config :lazytest/ns)]
-    (report config (-> suite
+  (let [suite (hooks/run-hooks config suite :pre-test-suite)]
+    (report config (assoc suite :type :begin-test-ns))
+    (run-befores suite)
+    (let [results (->suite-result suite config :lazytest/ns)]
+      (report config (-> suite
                        (assoc :type :end-test-ns)
                        (assoc :results results)))
-    (run-afters suite)
-    results))
+      (run-afters suite)
+      (hooks/run-hooks config results :post-test-suite))))
 
 (defmethod run-tree :lazytest/var
   run-test--lazytest-var
   [suite config]
-  (report config (assoc suite :type :begin-test-var))
-  (run-befores suite)
-  (let [results (->suite-result suite config :lazytest/var)]
-    (report config (-> suite
+  (let [suite (hooks/run-hooks config suite :pre-test-suite)]
+    (report config (assoc suite :type :begin-test-var))
+    (run-befores suite)
+    (let [results (->suite-result suite config :lazytest/var)]
+      (report config (-> suite
                        (assoc :type :end-test-var)
                        (assoc :results results)))
-    (run-afters suite)
-    results))
+      (run-afters suite)
+      (hooks/run-hooks config results :post-test-suite))))
 
 (defmethod run-tree :lazytest/suite
   run-test--lazytest-suite
   [suite config]
-  (report config (assoc suite :type :begin-test-suite))
-  (run-befores suite)
-  (let [results (->suite-result suite config :lazytest/suite)]
-    (report config (-> suite
+  (let [suite (hooks/run-hooks config suite :pre-test-suite)]
+    (report config (assoc suite :type :begin-test-suite))
+    (run-befores suite)
+    (let [results (->suite-result suite config :lazytest/suite)]
+      (report config (-> suite
                        (assoc :type :end-test-suite)
                        (assoc :results results)))
-    (run-afters suite)
-    results))
+      (run-afters suite)
+      (hooks/run-hooks config results :post-test-suite))))
 
 (defmethod run-tree :lazytest/test-case
   run-suite--lazytest-test-case
   [tc config]
-  (let [start (System/nanoTime)]
+  (let [tc (hooks/run-hooks config tc :pre-test-case)]
     (report config (assoc tc :type :begin-test-case))
     (run-befores tc)
     (let [results (let [around-fn (or (combine-arounds tc)
@@ -105,15 +111,13 @@
                          (run-before-eachs tc)
                          (vreset! ret (try-test-case tc))
                          (run-after-eachs tc)))))
-                    @ret)
-          duration (double (- (System/nanoTime) start))
-          results (assoc results ::duration duration)]
+                    @ret)]
       (report config results)
       (report config (-> tc
                          (assoc :type :end-test-case)
                          (assoc :results results)))
       (run-afters tc)
-      results)))
+      (hooks/run-hooks config results :post-test-case))))
 
 (defn ^:no-doc filter-and-run
   [suite config]

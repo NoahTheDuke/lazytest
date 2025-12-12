@@ -13,8 +13,8 @@
 (set! *warn-on-reflection* true)
 
 (defn report [config m]
-  (when-let [reporter (:reporter config)]
-    (reporter config m)))
+  (when-let [reporters (:reporters config)]
+    (run! (fn [reporter] (reporter config m) (flush) nil) reporters)))
 
 (defn reporter-dispatch [_config m] (:type m))
 
@@ -90,9 +90,10 @@
     (results-builder config child)))
 
 (defn- print-docs [docs]
-  (loop [[doc & docs] (seq (->> docs
-                                (filter identity)
-                                (remove #(when (string? %) (str/blank? %)))))
+  (loop [[doc & docs] (->> docs
+                           (filter identity)
+                           (remove #(when (string? %) (str/blank? %)))
+                           (seq))
          idx 0]
     (when doc
       (indent idx)
@@ -328,13 +329,11 @@
    :begin-test-ns "namespace suite"
    :begin-test-var "test var"
    :begin-test-suite "suite"
-   :begin-test-seq "suite"
    :begin-test-case "test case"
    :end-test-run "test run"
    :end-test-ns "namespace suite"
    :end-test-var "test var"
    :end-test-suite "suite"
-   :end-test-seq "suite"
    :end-test-case "test case"
    })
 
@@ -354,13 +353,11 @@
 (defmethod debug :begin-test-ns debug--begin-test-ns [_config s] (print-entering s))
 (defmethod debug :begin-test-var debug--begin-test-var [_config s] (print-entering s))
 (defmethod debug :begin-test-suite debug--begin-test-suite [_config s] (print-entering s))
-(defmethod debug :begin-test-seq debug--begin-test-seq [_config s] (print-entering s))
 
 (defmethod debug :end-test-run debug--end-test-run [_ _] (println "Ending test run"))
 (defmethod debug :end-test-ns debug--end-test-ns [_config s] (print-leaving s))
 (defmethod debug :end-test-var debug--end-test-var [_config s] (print-leaving s))
 (defmethod debug :end-test-suite debug--end-test-suite [_config s] (print-leaving s))
-(defmethod debug :end-test-seq debug--end-test-seq [_config s] (print-leaving s))
 
 (defn print-entering-tc [tc]
   (println "Running" (str (type->name (:type tc)) ":")
@@ -375,51 +372,6 @@
 
 (defmethod debug :pass debug--pass [_config result] (prn result))
 (defmethod debug :fail debug--fail [_config result] (prn result))
-
-;; PROFILE
-;; Print the top 5 namespaces and test vars by duration.
-;; Code adapted from kaocha
-;;
-;; Example:
-;;
-;; blah blah blah
-
-(defmulti profile {:arglists '([config m])} #'reporter-dispatch)
-(defmethod profile :default profile--default [_ _])
-(defmethod profile :end-test-run profile--end-test-run [_config {:keys [results]}]
-  (let [types (-> (group-by (comp :type :source) (result-seq results))
-                  (select-keys [:lazytest/ns :lazytest/var])
-                  (->> (reduce-kv (fn [m k v] (assoc m k (filterv :lazytest.runner/duration v))) {})))
-        total-duration (->> (mapcat identity (vals types))
-                            (map :lazytest.runner/duration)
-                            (reduce + 0))
-        slowest-ns-suites (take 5 (sort-by :lazytest.runner/duration > (:lazytest/ns types)))
-        ns-suite-duration (reduce + 0 (map :lazytest.runner/duration slowest-ns-suites))
-        slowest-vars (take 5 (sort-by :lazytest.runner/duration > (:lazytest/var types)))
-        var-duration (reduce + 0 (map :lazytest.runner/duration slowest-vars))
-        ]
-    (println (format "Top %s slowest test namespaces (%.5f seconds, %.1f%% of total time)"
-                     (count slowest-ns-suites)
-                     (double (/ ns-suite-duration 1e9))
-                     (double (* (/ ns-suite-duration total-duration) 100))))
-    (println (->> (for [suite slowest-ns-suites]
-                    (format "  %s %.5f seconds"
-                            (s/identifier suite)
-                            (double (/ (:lazytest.runner/duration suite) 1e9))))
-                  (str/join \newline)))
-    (newline)
-    (println (format "Top %s slowest test vars (%.5f seconds, %.1f%% of total time)"
-                     (count slowest-vars)
-                     (double (/ var-duration 1e9))
-                     (double (* (/ var-duration total-duration) 100))))
-    (println (->> (for [suite slowest-vars
-                        :let [ns (some-> suite :source :var symbol namespace)
-                              id (str ns (when ns "/") (s/identifier suite))]]
-                    (format "  %s %.5f seconds"
-                            id
-                            (double (/ (:lazytest.runner/duration suite) 1e9))))
-                  (str/join \newline)))
-    (flush)))
 
 ;; QUIET
 ;; Print nothing.

@@ -289,7 +289,7 @@ To partition your test suite based on metadata, you can use `-i`/`--include` to 
 
 ## Setup and Teardown
 
-To handle set up and tear down of stateful architecture, Lazytest provides the hook macros `before`, `before-each`, `after-each`, `after`, and `around`, along with the helper function `set-ns-context!`. You can call them directly in a `describe` block or add them to a `:context` vector in suite metadata. (To read a more specific description of how this works, please read the section titled `Run Lifecycle Overview`.)
+To handle set up and tear down of stateful architecture, Lazytest provides the context macros `before`, `before-each`, `after-each`, `after`, and `around`, along with the helper function `set-ns-context!`. You can call them directly in a `describe` block or add them to a `:context` vector in suite metadata. (To read a more specific description of how this works, please read the section titled `Run Lifecycle Overview`.)
 
 ```clojure
 (require '[lazytest.core :refer [expect-it before before-each after-each after around]])
@@ -327,13 +327,13 @@ To handle set up and tear down of stateful architecture, Lazytest provides the h
       (= [:before :before-each :expect-1 :before-each :expect-2] @state))))
 ```
 
-`around` hooks are combined with the same logic as `clojure.test`'s `join-fixtures`.
+`around` functions are combined with the same logic as `clojure.test`'s `join-fixtures`.
 
-Context functions of the same kind are run in the order they're defined. When executing a given suite or test-case, all `before` hooks are run once, then each `before-each` hook is run, then the `around` hooks are called on the nested tests (if they exist), then each `after-each` hook is run, then all `after` hooks are run once.
+Context functions of the same kind are run in the order they're defined. When executing a given suite or test-case, all `before` context functions are run once, then each `before-each` hook is run, then the `around` hooks are called on the nested tests (if they exist), then each `after-each` hook is run, then all `after` hooks are run once.
 
 To set context functions for an entire namespace, use `set-ns-context!`. There is currently no way to define run-wide context functions.
 
-In `clojure.test`, `(use-fixtures :each ...)` will set the provided fixtures to wrap each test var. To achieve the same in Lazytest, define a var of the target hook and add it to the `defdescribe`'s `:context` block of each var in the namespace. This is necessarily more tedious than `use-fixtures`, but it is also more explicit and gracefully handles special cases (define multiple functions to handle subtle differences, use whichever is situationally helpful).
+In `clojure.test`, `(use-fixtures :each ...)` will set the provided fixtures to wrap each test var. To achieve the same in Lazytest, define a var of the target context function and add it to the `defdescribe`'s `:context` block of each var in the namespace. This is necessarily more tedious than `use-fixtures`, but it is also more explicit and gracefully handles special cases (define multiple functions to handle subtle differences, use whichever is situationally helpful).
 
 ```clojure lazytest/skip=true
 (defonce ^:dynamic *db-connection* nil)
@@ -614,6 +614,11 @@ Additionally, the test case's result will be reported between `:begin-test-case`
 * `:pass`: The test case passed successfully.
 * `:fail`: The test case failed for some reason.
 
+## Plugins
+
+Lazytest supports writing plugins, called hooks, which can modify the state of a run while it is being executed. This is accomplished by writing a multimethod that implements one or more of the hook methods (specific keywords), which must return an updated run state (or `nil`, which is ignored).
+
+
 ## Doc Tests
 
 Lazytest can run tests in code blocks of your markdown files with `--md FILE`. It looks for any triple backtic-delimited code block that has `clojure` or `clj` as the language specifier, and that doesn't have `lazytest/skip=true` in the info-string, bundles it into a standalone `describe` block, and then runs all of the suites as a single suite under the name of the markdown file.
@@ -750,14 +755,14 @@ This is inspired by [Mocha](https://mochajs.org)'s excellent documentation.
     3. The suite for each var is selected by selecting all `--include` or `:focus` metadata suites and tests cases and then removing all `--exclude` suites and test cases. If no suites or test cases have `:focus` metadata or `--include` hasn't been provided, then everything is selected. (To be clear, `--exclude` overrides `:focus` and `--include`.)
 8. Lazytest calls the runner on the filtered run suite.
     * For suites:
-        1. Run each `before` hook.
-        2. If there are any `around` hooks, combine them with `clojure.test/join-fixtures`, and then execute the next step in a thunk wrapped in the combined `around` function.
+        1. Run each `before` context function.
+        2. If there are any `around` context functions, combine them with `clojure.test/join-fixtures`, and then execute the next step in a thunk wrapped in the combined `around` function.
         3. For each child in `:children`, restart from step 1 of the appropriate sequence.
         4. Run each `after` hook.
     * For test cases:
-        1. Run each `before-each` hook (including from all parents), outermost first, in definition order.
+        1. Run each `before-each` function (including from all parents), outermost first, in definition order.
         2. Execute the test function, get the `test-case-result`.
-        3. Run each `after-each` hook (including from all parents), innermost first, in definition order.
+        3. Run each `after-each` function (including from all parents), innermost first, in definition order.
 9. Depending on the chosen reporter, Lazytest prints the results of each suite and test case immediately or at another point.
 10. The run is ended with `System/exit`, and the exit value is either `0` for no failures or `1` for any number of failures.
 

@@ -23,6 +23,7 @@ splint:
 
 prep:
     clojure -X:deps prep
+    clojure -T:build compile-java
 
 clean:
     clojure -T:build clean

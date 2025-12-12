@@ -33,6 +33,10 @@
    [nil "--output SYMBOL" "Output format. Can be given multiple times. (Defaults to \"nested\".)"
     :parse-fn symbol
     :assoc-fn update-vec]
+   [nil "--hook SYMBOL" "Custom hooks to run. Can be given multiple times."
+    :id :hooks
+    :parse-fn symbol
+    :assoc-fn update-vec]
    [nil "--md FILE" "Run doctests for given markdown file. Can be given multiple times."
     :parse-fn io/file
     :assoc-fn update-vec]

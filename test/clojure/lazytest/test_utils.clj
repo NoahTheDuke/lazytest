@@ -14,7 +14,7 @@
   `(let [s# (java.io.StringWriter.)]
      (binding [*out* s#
                lc/*color* false]
-       ~@body
+       (do ~@body)
        (not-empty (str s#)))))
 
 (defmacro with-out-str-data-map
@@ -59,3 +59,6 @@
       {::result/type :mismatch
        ::result/value (->Mismatch (prepare-expected-ex this) actual)
        ::result/weight 1})))
+
+(defn vconj! [volatile value]
+  (vswap! volatile conj value))

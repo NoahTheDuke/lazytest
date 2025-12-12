@@ -1,11 +1,9 @@
 (ns context-tests.use-fixture
   (:require
-   [lazytest.core :refer [around defdescribe expect it set-ns-context!]]))
+   [lazytest.core :refer [around defdescribe expect it set-ns-context!]]
+   [lazytest.test-utils :refer [vconj!]]))
 
 (def use-fixture-state (volatile! []))
-
-(defn vconj! [volatile value]
-  (vswap! volatile conj value))
 
 (set-ns-context!
  [(around [f]

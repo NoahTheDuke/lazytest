@@ -16,8 +16,11 @@
    :comments Pattern/COMMENTS})
 
 (defn re-compile
-  ([s] (re-pattern s))
-  ([s & flags]
+  "Returns an instance of java.util.regex.Pattern, for use, e.g. in `re-matcher`.
+
+  If given only a string, acts as `re-pattern`. If given a string and trailing keywords, treats the keywords as java.util.regex.Pattern flags (cf. [[pattern-flags]]), using `bit-and` to merge them before passing them to `Pattern/compile`."
+  (^Pattern [s] (re-pattern s))
+  (^Pattern [s & flags]
    (assert (every? pattern-flags flags))
    (let [flags (map pattern-flags flags)]
      (if (= 1 (count flags))
@@ -26,3 +29,12 @@
 
 (comment
   (re-find (re-compile ".*#comment\n" :dotall :comments) "a\nb"))
+
+(defn ^:no-doc get-arg
+  "For internal use only.
+  Pops first argument from args if (pred arg) is true.
+  Returns a vector [first-arg remaining-args] or [nil args]."
+  [args pred]
+  (if (pred (first args))
+    [(first args) (next args)]
+    [nil args]))

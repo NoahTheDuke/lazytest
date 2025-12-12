@@ -36,12 +36,11 @@
 
   children is a sequence of test results and/or suite results."
   [source children]
-  {:type :lazytest.suite/suite-result
-   :doc (identifier source)
-   :file (:file source)
-   :line (:line source)
-   :source source
-   :children children})
+  (-> source
+      (assoc :type :lazytest.suite/suite-result)
+      (assoc :doc (identifier source))
+      (assoc :source source)
+      (assoc :children children)))
 
 (defn suite-result?
   [x]

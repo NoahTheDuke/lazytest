@@ -35,7 +35,7 @@
   ;; Run the tests with `-M:provided:dev:test:run`.
   :test {:extra-paths ["test/clojure"]}
 
-  :splint {:extra-deps {io.github.noahtheduke/splint {:mvn/version "1.21.0"}}
+  :splint {:extra-deps {io.github.noahtheduke/splint {:mvn/version "1.23.1"}}
            :main-opts ["-m" "noahtheduke.splint"]}
 
   :cljfmt {:deps {dev.weavejester/cljfmt {:mvn/version "0.12.0"}}

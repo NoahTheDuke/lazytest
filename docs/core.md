@@ -2,7 +2,7 @@
 
 In short: Tests are defined with `defdescribe`, suites (groups of nested suites and test cases) are defined with `describe`, test cases are defined with `it`, and assertions are defined with `expect` but can be any function that throws an exception on failure. When `lazytest.main/run` is called, all loaded namespaces are checked for tests, and the contained test cases are run (with suites providing context and additional documentation).
 
-Hooks can be used in `:context` metadata on suites, and assertion helpers can be used in test cases.
+Context functions can be used in `:context` metadata on suites, and assertion helpers can be used in test cases.
 
 ```clojure
 (require '[lazytest.core :refer :all])
@@ -81,7 +81,7 @@ temp-test
 => lazytest.suite/suite?
 ```
 
-# Hooks
+# Context
 
 ## `before` & `after`
 

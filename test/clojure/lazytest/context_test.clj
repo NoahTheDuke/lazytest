@@ -134,36 +134,66 @@
        (propagate-eachs {:context {:before-each [1 2 3]}}
                         {:context {:before-each [4 5 6]}}))))
 
+(defn top-level-ctx [state]
+  [{:before (fn before1 [] (vconj! state :before-top))}
+   {:before-each (fn before-each1 [] (vconj! state :before-each-top))}
+   {:around (fn around1 [f] (vconj! state :around-before-top) (f) (vconj! state :around-after-top))}
+   {:after-each (fn after-each1 [] (vconj! state :after-each-top))}
+   {:after (fn after1 [] (vconj! state :after-top))}])
+
+(defn middle-level-ctx [state]
+  [{:before (fn before2 [] (vconj! state :before-middle))}
+   {:before-each (fn before-each2 [] (vconj! state :before-each-middle))}
+   {:around (fn around2 [f] (vconj! state :around-before-middle) (f) (vconj! state :around-after-middle))}
+   {:after-each (fn after-each2 [] (vconj! state :after-each-middle))}
+   {:after (fn after2 [] (vconj! state :after-middle))}])
+
+(defn bottom-level-ctx [state]
+  [{:before (fn before3 [] (vconj! state :before-bottom))}
+   {:before-each (fn before-each3 [] (vconj! state :before-each-bottom))}
+   {:around (fn around3 [f] (vconj! state :around-before-bottom) (f) (vconj! state :around-after-bottom))}
+   {:after-each (fn after-each3 [] (vconj! state :after-each-bottom))}
+   {:after (fn after3 [] (vconj! state :after-bottom))}])
+
+(defn test-1-ctx [state]
+  [{:before (fn before4 [] (vconj! state :before-tc))}
+   {:before-each (fn before-each4 [] (vconj! state :before-each-tc))}
+   {:around (fn around4 [f] (vconj! state :around-before-tc) (f) (vconj! state :around-after-tc))}
+   {:after-each (fn after-each4 [] (vconj! state :after-each-tc))}
+   {:after (fn after4 [] (vconj! state :after-tc))}])
+
 (defdescribe complex-context-test
   (let [state (volatile! [])]
     (describe "top level"
-      {:context [(before (vconj! state :before-top))
-                 (before-each (vconj! state :before-each-top))
-                 (after-each (vconj! state :after-each-top))
-                 (after (vconj! state :after-top))]}
+      {:context (top-level-ctx state)}
       (describe "middle level"
-        {:context [(before (vconj! state :before-middle))
-                   (before-each (vconj! state :before-each-middle))
-                   (after-each (vconj! state :after-each-middle))
-                   (after (vconj! state :after-middle))]}
+        {:context (middle-level-ctx state)}
         (describe "bottom level"
-          {:context [(before (vconj! state :before-bottom))
-                     (before-each (vconj! state :before-each-bottom))
-                     (after-each (vconj! state :after-each-bottom))
-                     (after (vconj! state :after-bottom))]}
-          (expect-it "temp 1" (vconj! state :expect-1))
-          (expect-it "temp 2" (vconj! state :expect-2)))))
+          {:context (bottom-level-ctx state)}
+          (expect-it "temp 1"
+            {:context (test-1-ctx state)}
+            (vconj! state :expect-1))
+          (it "temp 2" (expect (vconj! state :expect-2))))))
     (expect-it "tracks correctly"
       (= [:before-top
+          :around-before-top
           :before-middle
+          :around-before-middle
           :before-bottom
+          :around-before-bottom
+          :before-tc
+          :around-before-tc
           :before-each-top
           :before-each-middle
           :before-each-bottom
+          :before-each-tc
           :expect-1
+          :after-each-tc
           :after-each-bottom
           :after-each-middle
           :after-each-top
+          :around-after-tc
+          :after-tc
           :before-each-top
           :before-each-middle
           :before-each-bottom
@@ -171,8 +201,11 @@
           :after-each-bottom
           :after-each-middle
           :after-each-top
+          :around-after-bottom
           :after-bottom
+          :around-after-middle
           :after-middle
+          :around-after-top
           :after-top] @state))))
 
 (defdescribe multiple-same-eachs-test
@@ -263,3 +296,51 @@ around 1 after"
               {:output ['lazytest.reporters/nested*]})
             (with-out-str-no-color)
             (str/trim)))))
+
+(defn root-ctx [state]
+  [(before (vconj! state [:root :before]))
+   (before-each (vconj! state [:root :before-each]))
+   (around [f] (vconj! state [:root :pre-around]) (f) (vconj! state [:root :post-around]))
+   (after (vconj! state [:root :after]))
+   (after-each (vconj! state [:root :after-each]))])
+
+(defn nested-ctx [state]
+  [(before (vconj! state [:nest :before]))
+   (before-each (vconj! state [:nest :before-each]))
+   (around [f] (vconj! state [:nest :pre-around]) (f) (vconj! state [:nest :post-around]))
+   (after (vconj! state [:nest :after]))
+   (after-each (vconj! state [:nest :after-each]))])
+
+(defn issue-31-suite [state]
+  (describe "test-hook-ordering"
+    {:context (root-ctx state)}
+    (it "a" (vconj! state :in-first-test))
+    (describe "nested"
+      {:context (nested-ctx state)}
+      (it "b" (vconj! state :in-second-test)))))
+
+(defdescribe issue-31-test
+  "Issue 31 asks about order of evaluation of hooks, especially when comparing suites and test cases"
+  (let [state (volatile! [])]
+    (it "demonstrates the issue"
+      (->> (lr/run-test-suite (issue-31-suite state)
+             {:output ['lazytest.reporters/nested*]})
+           (with-out-str-no-color)
+           (str/trim))
+      (expect (= [[:root :before]
+                  [:root :pre-around]
+                  [:root :before-each]
+                  :in-first-test
+                  [:root :after-each]
+                  [:nest :before]
+                  [:nest :pre-around]
+                  [:root :before-each]
+                  [:nest :before-each]
+                  :in-second-test
+                  [:nest :after-each]
+                  [:root :after-each]
+                  [:nest :post-around]
+                  [:nest :after]
+                  [:root :post-around]
+                  [:root :after]]
+                 @state)))))

@@ -234,13 +234,13 @@
         [attr-map children] (get-arg map? body)
         data (merged-data children &form doc (dissoc attr-map :context))
         context (:context attr-map)]
-    `(let [suite# (binding [*context* (atom (suite/suite ~data))]
-                    (let [ctx-fns# (binding [*context* nil] ~context)]
-                      (assert (or (nil? ctx-fns#) (sequential? ctx-fns#))
-                              ":context must be a sequence")
-                      (swap! *context* update :context
-                             (fn [c#]
-                               (ctx/merge-context (cons c# ctx-fns#)))))
+    `(let [ctx-fns# (binding [*context* nil] ~context)
+           suite# (binding [*context* (atom (suite/suite ~data))]
+                    (assert (or (nil? ctx-fns#) (sequential? ctx-fns#))
+                            ":context must be a sequence")
+                    (swap! *context* update :context
+                           (fn [c#]
+                             (ctx/merge-context (cons c# ctx-fns#))))
                     (run! update-children (flatten [~@children]))
                     @*context*)]
        (update-children suite#))))
@@ -312,11 +312,11 @@
         [attr-map body] (get-arg map? body)
         metadata (merged-data body &form doc (dissoc attr-map :context))
         context (:context attr-map)]
-    `(let [test-case# (test-case/test-case
+    `(let [ctx-fns# (binding [*context* nil] ~context)
+           test-case# (test-case/test-case
                        (-> ~metadata
                            (assoc :body (fn it# [] (let [ret# (do ~@body)] ret#)))
-                           (assoc :context (binding [*context* nil]
-                                             (ctx/merge-context ~context)))))]
+                           (assoc :context (ctx/merge-context ctx-fns#))))]
        (update-children test-case#))))
 
 (defmacro expect-it
@@ -342,13 +342,17 @@
               doc)
         [attr-map exprs] (get-arg map? body)
         [assertion] exprs
-        metadata (merged-data body &form doc attr-map)]
+        metadata (merged-data body &form doc (dissoc attr-map :context))
+        context (:context attr-map)]
     (when (not= 1 (count exprs))
       (throw (IllegalArgumentException. "expect-it takes 1 expr")))
     (when (and (seq? assertion) (symbol? (first assertion)))
       (assert (not= "expect" (name (first assertion)))))
-    `(let [test-case# (test-case/test-case
-                       (assoc ~metadata :body (fn expect-it# [] (expect ~assertion ~doc))))]
+    `(let [ctx-fns# (binding [*context* nil] ~context)
+           test-case# (test-case/test-case
+                       (-> ~metadata
+                           (assoc :body (fn expect-it# [] (expect ~assertion ~doc)))
+                           (assoc :context (ctx/merge-context ctx-fns#))))]
        (update-children test-case#))))
 
 ;;; Helpers

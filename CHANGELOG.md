@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- Fix bug with ordering of `before-each`/`after-each` and `around` in test cases. (See [#31](https://github.com/NoahTheDuke/lazytest/issues/31).)
+- Correct the order of `around` and `before-each`/`after-each` in test cases. (See [#31](https://github.com/NoahTheDuke/lazytest/issues/31).)
+- Fix `expect-it` to handle `:context` in the attr-map.
 
 ## 1.9.1
 

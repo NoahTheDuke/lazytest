@@ -24,12 +24,12 @@
         config (-> config
                    (update ::depth #(if id (inc %) %))
                    (update ::suite-history conj suite))
-        around-fn (if-let [around-fn (combine-arounds suite)]
+        around-fn (let [around-fn (or (combine-arounds suite)
+                                      (fn [f] (f)))]
                     (fn with-around [f]
                       (let [ret (volatile! nil)]
                         (around-fn (fn [] (vreset! ret (f))))
-                        @ret))
-                    (fn [f] (f)))
+                        @ret)))
         f #(let [child (propagate-eachs suite %)]
              (run-tree child config))
         results (around-fn #(vec (keep f (:children suite))))
@@ -92,16 +92,14 @@
   (let [start (System/nanoTime)]
     (report config (assoc tc :type :begin-test-case))
     (run-befores tc)
-    (let [results (if-let [around-fn (combine-arounds tc)]
-                    (let [ret (volatile! nil)]
-                      (run-before-eachs tc)
-                      (around-fn (fn [] (vreset! ret (try-test-case tc))))
-                      (run-after-eachs tc)
-                      @ret)
-                    (do (run-before-eachs tc)
-                        (let [ret (try-test-case tc)]
-                          (run-after-eachs tc)
-                          ret)))
+    (let [results (let [around-fn (or (combine-arounds tc)
+                                      (fn [f] (f)))
+                        ret (volatile! nil)]
+                    (around-fn (fn []
+                                 (run-before-eachs tc)
+                                 (vreset! ret (try-test-case tc))
+                                 (run-after-eachs tc)))
+                    @ret)
           duration (double (- (System/nanoTime) start))
           results (assoc results ::duration duration)]
       (report config results)

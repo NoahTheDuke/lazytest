@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix bug with ordering of `before-each`/`after-each` and `around` in test cases. (See [#31](https://github.com/NoahTheDuke/lazytest/issues/31).)
+
 ## 1.9.1
 
 Released `2025-09-17`.

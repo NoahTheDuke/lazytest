@@ -51,8 +51,7 @@
                          (assoc :type :end-test-run)
                          (assoc :results results)))
       (run-afters suite)
-      (hooks/run-hooks config (assoc suite :results results) :post-test-run)
-      results)))
+      (hooks/run-hooks config results :post-test-run))))
 
 (defmethod run-tree :lazytest/ns
   run-test--lazytest-ns
@@ -111,7 +110,7 @@
                          (run-before-eachs tc)
                          (vreset! ret (try-test-case tc))
                          (run-after-eachs tc)))))
-                    @ret)]
+                    (assoc @ret ::source-type :lazytest/test-case))]
       (report config results)
       (report config (-> tc
                          (assoc :type :end-test-case)

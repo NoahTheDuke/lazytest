@@ -28,12 +28,13 @@
 
 (defn- extract-file-line-doc [source thrown]
   (let [thrown-data (ex-data thrown)
-        caught-data (when (instance? Throwable (:caught thrown-data))
+        caught (:caught thrown-data)
+        caught-data (when (instance? Throwable caught)
                       (stacktrace-file-and-line
-                        (.getStackTrace ^Throwable (:caught thrown-data))))
-        source-meta (meta source)
-        m (merge source-meta thrown-data caught-data)]
-    (select-keys m [:line :file :doc])))
+                        (.getStackTrace ^Throwable caught)))]
+    {:line (or (:line caught-data) (:line thrown-data) (:line source))
+     :file (or (:file caught-data) (:file thrown-data) (:file source))
+     :doc (or (:doc caught-data) (:doc thrown-data) (:doc source))}))
 
 (defn test-case-result
   "Creates a test case result map with keys :pass?, :source, and :thrown.
@@ -48,15 +49,18 @@
    (let [{:keys [file line doc]} (extract-file-line-doc source thrown)
          {:keys [actual expected message caught evaluated]} (ex-data thrown)
          thrown' (or (when (instance? Throwable caught) caught) thrown)]
-     (with-meta {:type type'
-                 :source source :thrown thrown'
-                 :file (or file "NO_SOURCE_PATH") :line line
-                 :doc doc
-                 :message (or message (ex-message thrown'))
-                 :expected expected
-                 :actual (when (some? actual) actual)
-                 :evaluated evaluated}
-                {:type ::test-case-result}))))
+     (-> source
+       (assoc :type type')
+       (assoc :doc doc)
+       (assoc :source source)
+       (assoc :thrown thrown')
+       (assoc :file (or file "NO_SOURCE_PATH"))
+       (assoc :line line)
+       (assoc :message (or message (ex-message thrown')))
+       (assoc :expected expected)
+       (assoc :actual (when (some? actual) actual))
+       (assoc :evaluated evaluated)
+       (vary-meta assoc :type ::test-case-result)))))
 
 (defn test-case-result?
   "True if x is a test case result."
@@ -74,8 +78,8 @@
      :pass?  - true if the function ran without throwing
      :thrown - the Throwable instance if thrown"
   [tc]
-  (let [f (with-meta (:body tc) tc)]
+  (let [f (:body tc)]
     (try (f)
-      (test-case-result :pass f)
+      (test-case-result :pass tc)
       (catch Throwable t
-        (test-case-result :fail f t)))))
+        (test-case-result :fail tc t)))))

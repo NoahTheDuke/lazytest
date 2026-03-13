@@ -27,7 +27,8 @@
   "Get a string representation of the suite. Either the suite's
   :doc or the string version of its :var."
   [m]
-  (or (:doc m) (:var m)))
+  (when-let [id (or (:doc m) (:var m))]
+    (str id)))
 
 (defn suite-result
   "Creates a suite result map with keys :source and :children.

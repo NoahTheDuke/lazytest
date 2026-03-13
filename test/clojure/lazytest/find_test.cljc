@@ -28,10 +28,10 @@
             {::lr/source-type :lazytest/run
              :children
              [{::lr/source-type :lazytest/ns
-               :doc 'find-tests.examples
+               :doc "find-tests.examples"
                :children
                [{::lr/source-type :lazytest/var
-                 :doc (resolve 'find-tests.examples/test-fn)
+                 :doc "#'find-tests.examples/test-fn"
                  :children
                  [{:type :fail
                    :doc "`:lazytest/test` metadata"
@@ -39,7 +39,7 @@
                                     {:type 'clojure.lang.ExceptionInfo
                                      :expected '(zero? (test-fn 1))})}]}
                 {::lr/source-type :lazytest/var
-                 :doc (resolve 'find-tests.examples/test-test-case)
+                 :doc "#'find-tests.examples/test-test-case"
                  :children
                  [{:type :fail
                    :doc "test case example"
@@ -47,7 +47,7 @@
                                     {:type 'clojure.lang.ExceptionInfo
                                      :expected '(= 1 (test-test-case 1))})}]}
                 {::lr/source-type :lazytest/var
-                 :doc (resolve 'find-tests.examples/test-describe)
+                 :doc "#'find-tests.examples/test-describe"
                  :children
                  [{::lr/source-type :lazytest/suite
                    :doc "top level"

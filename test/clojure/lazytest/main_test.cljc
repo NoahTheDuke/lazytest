@@ -16,7 +16,7 @@
           :exit 0
           :results {::lr/source-type :lazytest/run
                     :children [{::lr/source-type :lazytest/ns
-                                :doc 'cli-filter-tests.a
+                                :doc "cli-filter-tests.a"
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "a-1-test"}
                                            {::lr/source-type :lazytest/var
@@ -34,7 +34,7 @@
           :exit 0
           :results {::lr/source-type :lazytest/run
                     :children [{::lr/source-type :lazytest/ns
-                                :doc 'cli-filter-tests.b
+                                :doc "cli-filter-tests.b"
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "b-1-test"}
                                            {::lr/source-type :lazytest/var
@@ -54,7 +54,7 @@
           :exit 0
           :results {::lr/source-type :lazytest/run
                     :children [{::lr/source-type :lazytest/ns
-                                :doc 'cli-filter-tests.a
+                                :doc "cli-filter-tests.a"
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "a-1-test"}]}]}}
          (sut/run ["--output" "quiet"
@@ -70,11 +70,11 @@
           :results {::lr/source-type :lazytest/run
                     :doc nil?
                     :children [{::lr/source-type :lazytest/ns
-                                :doc 'cli-filter-tests.a
+                                :doc "cli-filter-tests.a"
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "a-1-test"}]}
                                {::lr/source-type :lazytest/ns
-                                :doc 'cli-filter-tests.b
+                                :doc "cli-filter-tests.b"
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "b-2-test"}]}]}}
          (sut/run ["--output" "quiet"
@@ -91,7 +91,7 @@
         :results {::lr/source-type :lazytest/run
                   :doc nil?
                   :children [{::lr/source-type :lazytest/ns
-                              :doc 'cli-filter-tests.a
+                              :doc "cli-filter-tests.a"
                               :children [{::lr/source-type :lazytest/var
                                           :doc "a-1-test"}
                                          {::lr/source-type :lazytest/var
@@ -99,7 +99,7 @@
                                          {::lr/source-type :lazytest/var
                                           :doc "a-3-test"}]}
                              {::lr/source-type :lazytest/ns
-                              :doc 'cli-filter-tests.b
+                              :doc "cli-filter-tests.b"
                               :children [{::lr/source-type :lazytest/var
                                           :doc "b-2-test"}]}]}}
        (sut/run ["--output" "quiet"
@@ -116,7 +116,7 @@
           :exit 0
           :results {::lr/source-type :lazytest/run
                     :children [{::lr/source-type :lazytest/ns
-                                :doc 'cli-filter-tests.a
+                                :doc "cli-filter-tests.a"
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "a-1-test"}]}]}}
          (sut/run ["--output" "quiet"
@@ -131,7 +131,7 @@
           :exit 0
           :results {::lr/source-type :lazytest/run
                     :children [{::lr/source-type :lazytest/ns
-                                :doc 'cli-filter-tests.a
+                                :doc "cli-filter-tests.a"
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "a-2-test"}]}]}}
          (sut/run ["--output" "quiet"
@@ -147,13 +147,13 @@
           :exit 0
           :results {::lr/source-type :lazytest/run
                     :children [{::lr/source-type :lazytest/ns
-                                :doc 'cli-filter-tests.a
+                                :doc "cli-filter-tests.a"
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "a-2-test"}
                                            {::lr/source-type :lazytest/var
                                             :doc "a-3-test"}]}
                                {::lr/source-type :lazytest/ns
-                                :doc 'cli-filter-tests.b
+                                :doc "cli-filter-tests.b"
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "b-1-test"}
                                            {::lr/source-type :lazytest/var
@@ -172,13 +172,13 @@
           :exit 0
           :results {::lr/source-type :lazytest/run
                     :children [{::lr/source-type :lazytest/ns
-                                :doc 'cli-filter-tests.a
+                                :doc "cli-filter-tests.a"
                                 :children [{::lr/source-type :lazytest/var
                                               :doc "a-1-test"}
                                            {::lr/source-type :lazytest/var
                                             :doc "a-3-test"}]}
                                {::lr/source-type :lazytest/ns
-                                :doc 'cli-filter-tests.b
+                                :doc "cli-filter-tests.b"
                                 :children [{::lr/source-type :lazytest/var
                                             :doc "b-1-test"}
                                            {::lr/source-type :lazytest/var

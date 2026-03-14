@@ -138,6 +138,7 @@
   [{:before (fn before1 [] (vconj! state :before-top))}
    {:before-each (fn before-each1 [] (vconj! state :before-each-top))}
    {:around (fn around1 [f] (vconj! state :around-before-top) (f) (vconj! state :around-after-top))}
+   {:around-each (fn around-each1 [f] (vconj! state :around-each-before-top) (f) (vconj! state :around-each-after-top))}
    {:after-each (fn after-each1 [] (vconj! state :after-each-top))}
    {:after (fn after1 [] (vconj! state :after-top))}])
 
@@ -145,6 +146,7 @@
   [{:before (fn before2 [] (vconj! state :before-middle))}
    {:before-each (fn before-each2 [] (vconj! state :before-each-middle))}
    {:around (fn around2 [f] (vconj! state :around-before-middle) (f) (vconj! state :around-after-middle))}
+   {:around-each (fn around-each2 [f] (vconj! state :around-each-before-middle) (f) (vconj! state :around-each-after-middle))}
    {:after-each (fn after-each2 [] (vconj! state :after-each-middle))}
    {:after (fn after2 [] (vconj! state :after-middle))}])
 
@@ -152,6 +154,7 @@
   [{:before (fn before3 [] (vconj! state :before-bottom))}
    {:before-each (fn before-each3 [] (vconj! state :before-each-bottom))}
    {:around (fn around3 [f] (vconj! state :around-before-bottom) (f) (vconj! state :around-after-bottom))}
+   {:around-each (fn around-each3 [f] (vconj! state :around-each-before-bottom) (f) (vconj! state :around-each-after-bottom))}
    {:after-each (fn after-each3 [] (vconj! state :after-each-bottom))}
    {:after (fn after3 [] (vconj! state :after-bottom))}])
 
@@ -159,6 +162,7 @@
   [{:before (fn before4 [] (vconj! state :before-tc))}
    {:before-each (fn before-each4 [] (vconj! state :before-each-tc))}
    {:around (fn around4 [f] (vconj! state :around-before-tc) (f) (vconj! state :around-after-tc))}
+   {:around-each (fn around-each4 [f] (vconj! state :around-each-before-tc) (f) (vconj! state :around-each-after-tc))}
    {:after-each (fn after-each4 [] (vconj! state :after-each-tc))}
    {:after (fn after4 [] (vconj! state :after-tc))}])
 
@@ -183,24 +187,38 @@
           :around-before-bottom
           :before-tc
           :around-before-tc
+          :around-each-before-top
           :before-each-top
+          :around-each-before-middle
           :before-each-middle
+          :around-each-before-bottom
           :before-each-bottom
+          :around-each-before-tc
           :before-each-tc
           :expect-1
           :after-each-tc
+          :around-each-after-tc
           :after-each-bottom
+          :around-each-after-bottom
           :after-each-middle
+          :around-each-after-middle
           :after-each-top
+          :around-each-after-top
           :around-after-tc
           :after-tc
+          :around-each-before-top
           :before-each-top
+          :around-each-before-middle
           :before-each-middle
+          :around-each-before-bottom
           :before-each-bottom
           :expect-2
           :after-each-bottom
+          :around-each-after-bottom
           :after-each-middle
+          :around-each-after-middle
           :after-each-top
+          :around-each-after-top
           :around-after-bottom
           :after-bottom
           :around-after-middle

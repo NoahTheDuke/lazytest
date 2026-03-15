@@ -56,12 +56,20 @@
   (when-let [arounds (-> obj :context :around seq)]
     (c.t/join-fixtures arounds)))
 
+(defn combine-around-eachs
+  [obj]
+  (when-let [arounds (-> obj :context :around-each seq)]
+    (c.t/join-fixtures arounds)))
+
 (defn propagate-eachs
   [parent child]
   (-> child
       (assoc-in [:context :before-each]
                 (into (-> parent :context :before-each vec)
                       (-> child :context :before-each)))
+      (assoc-in [:context :around-each]
+                (into (-> parent :context :around-each vec)
+                      (-> child :context :around-each)))
       (assoc-in [:context :after-each]
                 (into (-> child :context :after-each vec)
                       (-> parent :context :after-each)))))

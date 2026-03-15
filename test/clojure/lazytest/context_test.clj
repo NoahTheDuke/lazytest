@@ -3,8 +3,9 @@
    [clojure.string :as str]
    [context-tests.use-fixture :refer [use-fixture-state]]
    [lazytest.context :refer [propagate-eachs]]
-   [lazytest.core :refer [after after-each around before before-each
-                          defdescribe describe expect expect-it it]]
+   [lazytest.core
+    :refer [after after-each around around-each before before-each
+            defdescribe describe expect expect-it it]]
    [lazytest.main :as main]
    [lazytest.runner :as lr]
    [lazytest.test-utils :refer [with-out-str-no-color]]))
@@ -130,6 +131,7 @@
 (defdescribe propagate-eachs-test
   (expect-it "combines correctly"
     (= {:context {:before-each [1 2 3 4 5 6]
+                  :around-each []
                   :after-each []}}
        (propagate-eachs {:context {:before-each [1 2 3]}}
                         {:context {:before-each [4 5 6]}}))))

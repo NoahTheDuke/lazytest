@@ -193,6 +193,24 @@
            nil)
        {:around around-fn#})))
 
+(defmacro around-each
+  "Builds a function for the `around-each` context. Works like an anonymous function:
+
+  ```clojure
+  (around-each [f]
+    (binding [*foo* 100]
+      (f)))
+  ```"
+  [param & body]
+  (assert (and (vector? param)
+               (= 1 (count param))
+               (simple-symbol? (first param))) "Must be a vector of one symbol")
+  `(let [around-each-fn# (fn around-each# ~param (let [ret# (do ~@body)] ret#))]
+     (if *context*
+       (do (swap! *context* update-in [:context :around-each] (fnil conj []) around-each-fn#)
+           nil)
+       {:around-each around-each-fn#})))
+
 (defn set-ns-context!
   "Add hooks to the namespace suite, instead of to a var or test suite.
 

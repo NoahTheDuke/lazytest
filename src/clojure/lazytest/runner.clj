@@ -1,7 +1,8 @@
 (ns lazytest.runner
   (:require
    [lazytest.config :refer [->config]]
-   [lazytest.context :refer [combine-arounds propagate-eachs run-after-eachs
+   [lazytest.context :refer [combine-arounds combine-around-eachs
+                             propagate-eachs run-after-eachs
                              run-afters run-before-eachs run-befores]]
    [lazytest.filter :refer [filter-tree]]
    [lazytest.find :refer [find-suite find-var-test-value]]
@@ -94,11 +95,16 @@
     (run-befores tc)
     (let [results (let [around-fn (or (combine-arounds tc)
                                       (fn [f] (f)))
+                        around-each-fn (or (combine-around-eachs tc)
+                                       (fn [f] (f)))
                         ret (volatile! nil)]
-                    (around-fn (fn []
-                                 (run-before-eachs tc)
-                                 (vreset! ret (try-test-case tc))
-                                 (run-after-eachs tc)))
+                    (around-fn
+                     (fn []
+                      (around-each-fn
+                       (fn []
+                         (run-before-eachs tc)
+                         (vreset! ret (try-test-case tc))
+                         (run-after-eachs tc)))))
                     @ret)
           duration (double (- (System/nanoTime) start))
           results (assoc results ::duration duration)]

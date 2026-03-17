@@ -63,12 +63,14 @@
                    (catch Throwable t (prn t) t))]
       (expect (= [:config
                   [:pre-test-run "full run"]
+                  [:pre-test-suite "full run"]
                   [:pre-test-suite "cool ns"]
                   [:pre-test-suite "suite 1"]
                   [:pre-test-case "test case 1"]
                   [:post-test-case "test case 1"]
                   [:post-test-suite "suite 1"]
                   [:post-test-suite "cool ns"]
+                  [:post-test-suite "full run"]
                   [:post-test-run "full run"]]
                 @state))
       (expect
@@ -97,3 +99,37 @@
                  :lazytest.hooks-test/pre-test-case true
                  :lazytest.hooks-test/post-test-case true}]}]}]}
           result)))))
+
+(defdescribe randomize-test
+  (let [state (volatile! [])]
+    (specify example-running-hook
+      (let [test-suite1 (-> (describe "suite 1"
+                              (it "test case 11" (expect (vconj! state 11)))
+                              (it "test case 12" (expect (vconj! state 12)))
+                              (it "test case 13" (expect (vconj! state 13)))
+                              (it "test case 14" (expect (vconj! state 14))))
+                          (assoc :type :lazytest/var :var #'randomize-test))
+            test-suite2 (-> (describe "suite 2"
+                              (it "test case 21" (expect (vconj! state 21)))
+                              (it "test case 22" (expect (vconj! state 22)))
+                              (it "test case 23" (expect (vconj! state 23)))
+                              (it "test case 24" (expect (vconj! state 24))))
+                          (assoc :type :lazytest/var :var #'randomize-test))
+            test-suite3 (-> (describe "suite 3"
+                              (it "test case 31" (expect (vconj! state 31)))
+                              (it "test case 32" (expect (vconj! state 32)))
+                              (it "test case 33" (expect (vconj! state 33)))
+                              (it "test case 34" (expect (vconj! state 34))))
+                          (assoc :type :lazytest/var :var #'randomize-test))]
+        (try (runner/filter-and-run
+               (suite {:type :lazytest/run
+                       :doc "full run"
+                       :nses [*ns*]
+                       :children
+                       [(suite {:type :lazytest/ns
+                                :doc "cool ns"
+                                :children [test-suite1 test-suite2 test-suite3]})]})
+               (->config {:output (constantly nil)
+                          :hooks [`sut/randomize]}))
+          (catch Throwable t (prn t) t))
+        (expect (seq @state))))))

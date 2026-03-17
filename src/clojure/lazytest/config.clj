@@ -61,6 +61,4 @@
                      (assoc :output output)
                      (assoc :reporters reporters)
                      (assoc :hooks hooks))]
-      (if-some [config (run-hooks config config :config)]
-        config
-        config))))
+      (run-hooks config config :config))))

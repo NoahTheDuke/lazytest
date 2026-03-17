@@ -152,3 +152,16 @@
                               (double (/ (::duration suite) 1e9))))
                     (str/join \newline)))
       (flush))))
+
+;; RANDOMIZE
+;; Randomize the order of namespaces and suites in namespaces during a test run
+(defn shuffle-with-seed [^java.util.List coll ^java.util.random.RandomGenerator rng]
+  (let [al (java.util.ArrayList. coll)]
+    (java.util.Collections/shuffle al rng)
+    (vec al)))
+
+(defhook randomize
+  (config [config _]
+    (assoc config ::rng (new java.util.Random)))
+  (pre-test-suite [config suite]
+    (update suite :children shuffle-with-seed (::rng config))))

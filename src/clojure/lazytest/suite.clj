@@ -3,7 +3,7 @@
 (set! *warn-on-reflection* true)
 
 ^:clj-reload/keep
-(defrecord Suite [type doc children context ns file line var metadata])
+(defrecord Suite [type doc source children context ns file line var metadata])
 
 (defn suite? "True if x is a test suite."
   [obj]
@@ -38,7 +38,7 @@
   children is a sequence of test results and/or suite results."
   [source children]
   (-> source
-      (assoc :type :lazytest.suite/suite-result)
+      (assoc :type ::suite-result)
       (assoc :doc (identifier source))
       (assoc :source source)
       (assoc :children children)))

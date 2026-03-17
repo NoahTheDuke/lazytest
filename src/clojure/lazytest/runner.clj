@@ -41,9 +41,9 @@
   run-test--lazytest-run
   [suite config]
   (let [start (System/nanoTime)
-        suite (as-> suite %
-                  (hooks/run-hooks config % :pre-test-run)
-                  (hooks/run-hooks config % :pre-test-suite))]
+        suite (as-> suite $
+                  (hooks/run-hooks config $ :pre-test-run)
+                  (hooks/run-hooks config $ :pre-test-suite))]
     (report config (assoc suite :type :begin-test-run))
     (run-befores suite)
     (let [results (->suite-result suite config :lazytest/run)
@@ -53,9 +53,9 @@
                          (assoc :type :end-test-run)
                          (assoc :results results)))
       (run-afters suite)
-      (as-> results %
-        (hooks/run-hooks config % :post-test-suite)
-        (hooks/run-hooks config % :post-test-run)))))
+      (as-> results $
+        (hooks/run-hooks config $ :post-test-suite)
+        (hooks/run-hooks config $ :post-test-run)))))
 
 (defmethod run-tree :lazytest/ns
   run-test--lazytest-ns

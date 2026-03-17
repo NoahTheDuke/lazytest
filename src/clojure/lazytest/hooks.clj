@@ -36,11 +36,11 @@
 (def ^:private all-hook-syms (into #{} (map symbol) all-hook-keys))
 
 (defmacro defhook
-  "`defhook` generates a conforming multimethod with correct dispatch and `:default` behavior. Provided methods must accept a config map and a relevant map (a suite or test-case generally), and must return an object of the same type.
+  "`defhook` generates a conforming multimethod with correct dispatch and `:default` behavior. Provided methods (except `cli-opts`) must accept a config map and a relevant map (a suite or test-case generally), and must return an object of the same type.
 
   Allowed hook methods (with input notes):
-  * cli-opts (map has `:existing` and `:new` cli-args. Any new opts should be `conj`ed onto `:new`. changes to `:existing` are ignored.)
-  * config (map is the same `config` map)
+  * cli-opts (input is a map with a `:new` vector)
+  * config (input is the same `config` map)
   * pre-test-run
   * post-test-run
   * pre-test-suite
@@ -113,82 +113,96 @@
     (update ::duration #(double (- (System/nanoTime) %)))))
 
 (defhook profiling
-  "Print the top 5 namespaces and test vars by duration."
+  "Print the slowest namespaces and test vars by duration."
+  (cli-opts [_config opts]
+    (update opts :new into
+      [[nil "--[no-]profiling" "Print the slowest namespaces and test vars."
+        :id :profiling/enabled]
+       [nil "--profiling-count COUNT" "Number of namespaces and test vars to print."
+        :id :profiling/count
+        :default 5
+        :parse-fn #(Long/parseLong %)]]))
   (pre-test-suite
-    [_config m]
-    (start m))
+    [config m]
+    (when (:profiling/enabled config)
+      (start m)))
   (post-test-suite
-    [_config m]
-    (stop m))
+    [config m]
+    (when (:profiling/enabled config)
+      (stop m)))
   (post-test-run
-    [_config {:keys [results]}]
-    (let [types (-> (group-by (comp :type :source) (result-seq results))
+    [config results]
+    (when (:profiling/enabled config)
+      (let [cnt (or (:profiling/count config) 5)
+            types (-> (group-by (comp :type :source) (result-seq results))
                     (select-keys [:lazytest/ns :lazytest/var])
                     (->> (reduce-kv (fn [m k v] (assoc m k (filterv ::duration v))) {})))
-          total-duration (->> (mapcat identity (vals types))
-                              (map ::duration)
-                              (reduce + 0))
-          slowest-ns-suites (take 5 (sort-by ::duration > (:lazytest/ns types)))
-          ns-suite-duration (reduce + 0 (map ::duration slowest-ns-suites))
-          slowest-vars (take 5 (sort-by ::duration > (:lazytest/var types)))
-          var-duration (reduce + 0 (map ::duration slowest-vars))]
-      (println (format "Top %s slowest test namespaces (%.5f seconds, %.1f%% of total time)"
-                       (count slowest-ns-suites)
-                       (double (/ ns-suite-duration 1e9))
-                       (double (* (/ ns-suite-duration total-duration) 100))))
-      (println (->> (for [suite slowest-ns-suites]
-                      (format "  %s %.5f seconds"
-                              (s/identifier suite)
-                              (double (/ (::duration suite) 1e9))))
-                    (str/join \newline)))
-      (newline)
-      (println (format "Top %s slowest test vars (%.5f seconds, %.1f%% of total time)"
-                       (count slowest-vars)
-                       (double (/ var-duration 1e9))
-                       (double (* (/ var-duration total-duration) 100))))
-      (println (->> (for [suite slowest-vars
-                          :let [ns (some-> suite :source :var symbol namespace)
-                                id (str ns (when ns "/") (s/identifier suite))]]
-                      (format "  %s %.5f seconds"
-                              id
-                              (double (/ (::duration suite) 1e9))))
-                    (str/join \newline)))
-      (flush))))
+            total-duration (->> (mapcat identity (vals types))
+                             (map ::duration)
+                             (reduce + 0))
+            slowest-ns-suites (take cnt (sort-by ::duration > (:lazytest/ns types)))
+            ns-suite-duration (reduce + 0 (map ::duration slowest-ns-suites))
+            slowest-vars (take cnt (sort-by ::duration > (:lazytest/var types)))
+            var-duration (reduce + 0 (map ::duration slowest-vars))]
+        (println (format "Top %s slowest test namespaces (%.5f seconds, %.1f%% of total time)"
+                   (count slowest-ns-suites)
+                   (double (/ ns-suite-duration 1e9))
+                   (double (* (/ ns-suite-duration total-duration) 100))))
+        (println (->> (for [suite slowest-ns-suites]
+                        (format "  %s %.5f seconds"
+                          (s/identifier suite)
+                          (double (/ (::duration suite) 1e9))))
+                   (str/join \newline)))
+        (newline)
+        (println (format "Top %s slowest test vars (%.5f seconds, %.1f%% of total time)"
+                   (count slowest-vars)
+                   (double (/ var-duration 1e9))
+                   (double (* (/ var-duration total-duration) 100))))
+        (println (->> (for [suite slowest-vars
+                            :let [ns (some-> suite :source :var symbol namespace)
+                                  id (str ns (when ns "/") (s/identifier suite))]]
+                        (format "  %s %.5f seconds"
+                          id
+                          (double (/ (::duration suite) 1e9))))
+                   (str/join \newline)))
+        (flush)))))
 
 ;; RANDOMIZE
-;; Randomize the order of namespaces and suites in namespaces during a test run
 (defn shuffle-with-seed [^java.util.List coll ^java.util.Random rng]
   (let [al (java.util.ArrayList. coll)]
     (java.util.Collections/shuffle al rng)
     (vec al)))
 
 (defhook randomize
+  "Randomize the order of namespaces and suites in namespaces during a test run."
   (cli-opts [_config opts]
-    (update opts :new into [[nil "--randomize TYPE" "Randomize the order of everything (all), namespaces (ns), test vars (var), nested suites & test-cases (suite), or nothing (none, default)."
-                             :id :randomize/enabled
-                             :parse-fn #(case (->keyword (str/lower-case %))
-                                          :all :all
-                                          (:ns :nss :nses) :ns
-                                          (:var :vars) :var
-                                          (:suite :suites) :suite
-                                          #_:else nil)]
-                            [nil "--seed NUM" "Seed for random shuffle"
-                             :id :randomize/seed
-                             :parse-fn #(Long/parseLong %)]]))
+    (update opts :new into
+      [[nil "--randomize TYPE" "Randomize the order of runs: all, ns, var, suite, or none."
+        :id :randomize/type
+        :default "none"
+        :parse-fn #(case (->keyword (str/lower-case %))
+                     :all :all
+                     (:ns :nss :nses) :ns
+                     (:var :vars) :var
+                     (:suite :suites) :suite
+                     #_:else nil)]
+       [nil "--randomize-seed NUM" "Seed for random shuffle."
+        :id :randomize/seed
+        :parse-fn #(Long/parseLong %)]]))
   (config [config _]
-    (when (:randomize/enabled config)
+    (when (:randomize/type config)
       (as-> config $
         (update $ :randomize/seed #(or % (rand-int Integer/MAX_VALUE)))
-        (assoc $ ::rng (java.util.Random. (:randomize/seed $))))))
+        (assoc $ :randomize/rng (java.util.Random. (:randomize/seed $))))))
   (pre-test-suite [config suite]
-    (let [random-level (:randomize/enabled config)
+    (let [random-level (:randomize/type config)
           suite-type (:type suite)]
       (when (and random-level
               (or (= :all random-level)
                 (and (#{:ns :var :suite} random-level) (= :lazytest/run suite-type))
                 (and (#{:ns :var} random-level) (= :lazytest/ns suite-type))
                 (and (#{:suite} random-level) (#{:lazytest/var :lazytest/suite} suite-type))))
-        (update suite :children shuffle-with-seed (::rng config)))))
+        (update suite :children shuffle-with-seed (:randomize/rng config)))))
   (post-test-run [config _run]
-    (when (:randomize/enabled config)
+    (when (:randomize/type config)
       (printf "Ran with --seed %d\n" (:randomize/seed config)))))

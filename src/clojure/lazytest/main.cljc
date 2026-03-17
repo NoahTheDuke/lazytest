@@ -28,19 +28,19 @@
          (map (juxt identity slurp))
          (keep dt/build-tests-for-file))))
 
-(defn require-dirs [config dir]
-  (let [dirs (map io/file (or dir #{"test"}))
+(defn require-dirs [config dirs]
+  (let [dirs (map io/file (or dirs #{"test"}))
         md-nses (add-md-tests config dirs)
         nses (into (find-ns-decls dirs)
                    md-nses)]
     (when (empty? nses)
-      (throw (ex-info "No namespaces to run" {:dir dir})))
+      (throw (ex-info "No namespaces to run" {:dirs dirs})))
     (apply require nses)
     nses))
 
-(defn run-impl [{:keys [dir] :as config}]
+(defn run-impl [{:keys [dirs] :as config}]
   (let [config (->config config)
-        nses (require-dirs config dir)]
+        nses (require-dirs config dirs)]
     (run-tests nses config)))
 
 (defn run [args]

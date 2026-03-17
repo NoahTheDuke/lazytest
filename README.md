@@ -329,7 +329,7 @@ To handle set up and tear down of stateful architecture, Lazytest provides the c
 
 `around` functions are combined with the same logic as `clojure.test`'s `join-fixtures`.
 
-Context functions of the same kind are run in the order they're defined. When executing a given suite or test-case, all `before` context functions are run once, then each `before-each` hook is run, then the `around` hooks are called on the nested tests (if they exist), then each `after-each` hook is run, then all `after` hooks are run once.
+Context functions of the same kind are run in the order they're defined. When executing a given suite or test-case, all `before` context functions are run once, then each `before-each` context function is run, then the `around` context functions are called on the nested tests (if they exist), then each `after-each` context function is run, then all `after` context functions are run once.
 
 To set context functions for an entire namespace, use `set-ns-context!`. There is currently no way to define run-wide context functions.
 
@@ -614,7 +614,7 @@ Additionally, the test case's result will be reported between `:begin-test-case`
 * `:pass`: The test case passed successfully.
 * `:fail`: The test case failed for some reason.
 
-## Plugins
+## Plugins / Hooks
 
 Lazytest supports writing plugins, called hooks, which can modify the state of a run while it is being executed. This is accomplished by writing a multimethod that implements one or more of the hook methods (specific keywords), which must return an updated run state (or `nil`, which is ignored).
 
@@ -758,11 +758,14 @@ This is inspired by [Mocha](https://mochajs.org)'s excellent documentation.
         1. Run each `before` context function.
         2. If there are any `around` context functions, combine them with `clojure.test/join-fixtures`, and then execute the next step in a thunk wrapped in the combined `around` function.
         3. For each child in `:children`, restart from step 1 of the appropriate sequence.
-        4. Run each `after` hook.
+        4. Run each `after` context function.
     * For test cases:
-        1. Run each `before-each` function (including from all parents), outermost first, in definition order.
-        2. Execute the test function, get the `test-case-result`.
-        3. Run each `after-each` function (including from all parents), innermost first, in definition order.
+        1. Run each `before` context function.
+        2. If there are any `around` context functions, combine them with `clojure.test/join-fixtures`, and then execute the next 3 steps in a thunk wrapped in the combined `around` function.
+        3. Run each `before-each` function (including from all parents), outermost first, in definition order.
+        4. Execute the test function, get the `test-case-result`.
+        5. Run each `after-each` function (including from all parents), innermost first, in definition order.
+        6. Run each `after` context function.
 9. Depending on the chosen reporter, Lazytest prints the results of each suite and test case immediately or at another point.
 10. The run is ended with `System/exit`, and the exit value is either `0` for no failures or `1` for any number of failures.
 

@@ -17,6 +17,7 @@
 
 (def cli-options
   [["-d" "--dir DIR" "Directory containing tests."
+    :id :dirs
     :assoc-fn update-vec]
    ["-n" "--namespace SYMBOL" "Run only the specified test namespaces. Can be given multiple times."
     :id :ns-filter
@@ -32,8 +33,10 @@
    ["-e" "--exclude KEYWORD" "Exclude test sequences or vars with this metadata keyword."
     :parse-fn ->keyword
     :assoc-fn update-set]
-   [nil "--output SYMBOL" "Output format. Can be given multiple times. (Defaults to \"nested\".)"
+   [nil "--output SYMBOL" "Output format. Can be given multiple times."
     :parse-fn symbol
+    :default nil
+    :default-desc "nested"
     :assoc-fn update-vec]
    [nil "--hook SYMBOL" "Custom hooks to run. Can be given multiple times."
     :id :hooks
@@ -44,7 +47,8 @@
     :assoc-fn update-vec]
    [nil "--doctests" "Run doctests for vars and markdown files found in paths."]
    [nil "--watch" "Run under Watch mode. Uses clj-reload to reload changed and dependent namespaces, then reruns test suite."]
-   [nil "--delay NUM" "(Watch mode) How many milliseconds to wait before checking for changes. (Defaults to 500.)"
+   [nil "--delay NUM" "(Watch mode) How many milliseconds to wait before checking for changes."
+    :default 500
     :parse-fn #(Long/parseLong %)]
    [nil "--help" "Print help information."]
    [nil "--version" "Print version information."]])
@@ -81,15 +85,15 @@
   (let [opts (cli/parse-opts raw-args cli-options :strict true :summary-fn identity)
         hooks (-> opts :options :hooks not-empty (some-> resolve-hooks))
         hook-cli-opts (when hooks
-                        (run-hooks {:hooks hooks} {:existing cli-options :new []} :cli-opts))
+                        (run-hooks {:hooks hooks} {:new []} :cli-opts))
         opts (if-let [new-opts (not-empty (:new hook-cli-opts))]
                (cli/parse-opts raw-args (into cli-options new-opts) :strict true :summary-fn identity)
                opts)
         {:keys [options errors summary arguments]} opts]
     (cond
       (:help options) (help-message summary)
-      (:version options) {:exit-message "lazytest 0.0" :ok true}
+      (:version options) {:exit-message (lazytest-version) :ok true}
       errors (print-errors errors)
       :else (-> options
-                (update :dir (comp not-empty vec concat) arguments)
+                (update :dirs (comp not-empty vec concat) arguments)
                 (update :delay #(or % 500))))))

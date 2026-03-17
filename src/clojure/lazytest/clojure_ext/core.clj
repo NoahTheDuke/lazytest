@@ -1,4 +1,6 @@
 (ns lazytest.clojure-ext.core
+  (:require
+   [clojure.string :as str]) 
   (:import
    (java.util.regex Pattern)))
 
@@ -38,3 +40,11 @@
   (if (pred (first args))
     [(first args) (next args)]
     [nil args]))
+
+(defn ->keyword
+  "Convert strings with optional leading colons to keywords.
+
+  \"foo\" -> :foo
+  \":foo\" -> :foo"
+  [s]
+  (keyword (if (str/starts-with? s ":") (subs s 1) s)))

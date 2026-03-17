@@ -3,6 +3,7 @@
    [clojure.java.io :as io]
    [clojure.string :as str]
    [clojure.tools.cli :as cli]
+   [lazytest.clojure-ext.core :refer [->keyword]]
    [lazytest.config :refer [lazytest-version resolve-hooks]]
    [lazytest.hooks :refer [run-hooks]]))
 
@@ -26,10 +27,10 @@
     :parse-fn symbol
     :assoc-fn update-set]
    ["-i" "--include KEYWORD" "Run only test sequences or vars with this metadata keyword."
-    :parse-fn #(keyword (if (str/starts-with? % ":") (subs % 1) %))
+    :parse-fn ->keyword
     :assoc-fn update-set]
    ["-e" "--exclude KEYWORD" "Exclude test sequences or vars with this metadata keyword."
-    :parse-fn #(keyword (if (str/starts-with? % ":") (subs % 1) %))
+    :parse-fn ->keyword
     :assoc-fn update-set]
    [nil "--output SYMBOL" "Output format. Can be given multiple times. (Defaults to \"nested\".)"
     :parse-fn symbol

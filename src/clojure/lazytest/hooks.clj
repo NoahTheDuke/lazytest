@@ -6,7 +6,7 @@
    [clojure.set :as set]
    [clojure.spec.alpha :as spec]
    [clojure.string :as str]
-   [lazytest.clojure-ext.core :refer [get-arg]]
+   [lazytest.clojure-ext.core :refer [get-arg ->keyword]]
    [lazytest.clojure-ext.specs]
    [lazytest.results :refer [result-seq]]
    [lazytest.suite :as s]))
@@ -39,7 +39,7 @@
   "`defhook` generates a conforming multimethod with correct dispatch and `:default` behavior. Provided methods must accept a config map and a relevant map (a suite or test-case generally), and must return an object of the same type.
 
   Allowed hook methods (with input notes):
-  * cli-opts (map has `:existing` and `:new` cli-args. Any new opts should be `conj`ed onto `:new`)
+  * cli-opts (map has `:existing` and `:new` cli-args. Any new opts should be `conj`ed onto `:new`. changes to `:existing` are ignored.)
   * config (map is the same `config` map)
   * pre-test-run
   * post-test-run
@@ -157,23 +157,38 @@
 
 ;; RANDOMIZE
 ;; Randomize the order of namespaces and suites in namespaces during a test run
-(defn shuffle-with-seed [^java.util.List coll ^java.util.random.RandomGenerator rng]
+(defn shuffle-with-seed [^java.util.List coll ^java.util.Random rng]
   (let [al (java.util.ArrayList. coll)]
     (java.util.Collections/shuffle al rng)
     (vec al)))
 
 (defhook randomize
   (cli-opts [_config opts]
-    (update opts :new into [[nil "--seed NUM" "Seed for random shuffle"
+    (update opts :new into [[nil "--randomize TYPE" "Randomize the order of everything (all), namespaces (ns), test vars (var), nested suites & test-cases (suite), or nothing (none, default)."
+                             :id :randomize/enabled
+                             :parse-fn #(case (->keyword (str/lower-case %))
+                                          :all :all
+                                          (:ns :nss :nses) :ns
+                                          (:var :vars) :var
+                                          (:suite :suites) :suite
+                                          #_:else nil)]
+                            [nil "--seed NUM" "Seed for random shuffle"
                              :id :randomize/seed
                              :parse-fn #(Long/parseLong %)]]))
   (config [config _]
-    (as-> config %
-      (update % :randomize/seed #(or % (rand-int (dec Integer/MAX_VALUE))))
-      (assoc % ::rng (if-let [seed (:randomize/seed %)]
-                       (new java.util.Random seed)
-                       (new java.util.Random)))))
+    (when (:randomize/enabled config)
+      (as-> config $
+        (update $ :randomize/seed #(or % (rand-int Integer/MAX_VALUE)))
+        (assoc $ ::rng (java.util.Random. (:randomize/seed $))))))
   (pre-test-suite [config suite]
-    (update suite :children shuffle-with-seed (::rng config)))
+    (let [random-level (:randomize/enabled config)
+          suite-type (:type suite)]
+      (when (and random-level
+              (or (= :all random-level)
+                (and (#{:ns :var :suite} random-level) (= :lazytest/run suite-type))
+                (and (#{:ns :var} random-level) (= :lazytest/ns suite-type))
+                (and (#{:suite} random-level) (#{:lazytest/var :lazytest/suite} suite-type))))
+        (update suite :children shuffle-with-seed (::rng config)))))
   (post-test-run [config _run]
-    (printf "Ran with --seed %d\n" (:randomize/seed config))))
+    (when (:randomize/enabled config)
+      (printf "Ran with --seed %d\n" (:randomize/seed config)))))

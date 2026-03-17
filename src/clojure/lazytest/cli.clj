@@ -3,7 +3,8 @@
    [clojure.java.io :as io]
    [clojure.string :as str]
    [clojure.tools.cli :as cli]
-   [lazytest.config :refer [lazytest-version]]))
+   [lazytest.config :refer [lazytest-version resolve-hooks]]
+   [lazytest.hooks :refer [run-hooks]]))
 
 (set! *warn-on-reflection* true)
 
@@ -75,9 +76,15 @@
   or {map of cli opts}.
 
   :ok is false if given invalid options."
-  [opts]
-  (let [{:keys [options errors summary arguments]}
-        (cli/parse-opts opts cli-options :strict true :summary-fn identity)]
+  [raw-args]
+  (let [opts (cli/parse-opts raw-args cli-options :strict true :summary-fn identity)
+        hooks (-> opts :options :hooks not-empty (some-> resolve-hooks))
+        hook-cli-opts (when hooks
+                        (run-hooks {:hooks hooks} {:existing cli-options :new []} :cli-opts))
+        opts (if-let [new-opts (not-empty (:new hook-cli-opts))]
+               (cli/parse-opts raw-args (into cli-options new-opts) :strict true :summary-fn identity)
+               opts)
+        {:keys [options errors summary arguments]} opts]
     (cond
       (:help options) (help-message summary)
       (:version options) {:exit-message "lazytest 0.0" :ok true}

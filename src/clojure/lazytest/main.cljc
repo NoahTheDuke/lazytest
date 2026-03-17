@@ -55,6 +55,7 @@
       :else
       (let [results (run-impl opts)
             summary (summarize results)]
+        (flush)
         (-> summary
             (assoc :results results)
             (assoc :exit (summary-exit-value summary)))))))

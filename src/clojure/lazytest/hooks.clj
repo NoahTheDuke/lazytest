@@ -25,7 +25,8 @@
 (defn hook-dispatch [_config m] (::hook-type m))
 
 (def all-hook-keys
-  #{:config
+  #{:cli-opts
+    :config
     :pre-test-run
     :post-test-run
     :pre-test-suite
@@ -35,10 +36,11 @@
 (def ^:private all-hook-syms (into #{} (map symbol) all-hook-keys))
 
 (defmacro defhook
-  "`defhook` generates a conforming multimethod with correct dispatch and `:default` behavior. Provided methods must accept a config map and a suite or test-case map, and must return an object of the same type.
+  "`defhook` generates a conforming multimethod with correct dispatch and `:default` behavior. Provided methods must accept a config map and a relevant map (a suite or test-case generally), and must return an object of the same type.
 
-  Allowed hook methods:
-  * config
+  Allowed hook methods (with input notes):
+  * cli-opts (map has `:existing` and `:new` cli-args. Any new opts should be `conj`ed onto `:new`)
+  * config (map is the same `config` map)
   * pre-test-run
   * post-test-run
   * pre-test-suite
@@ -161,7 +163,17 @@
     (vec al)))
 
 (defhook randomize
+  (cli-opts [_config opts]
+    (update opts :new into [[nil "--seed NUM" "Seed for random shuffle"
+                             :id :randomize/seed
+                             :parse-fn #(Long/parseLong %)]]))
   (config [config _]
-    (assoc config ::rng (new java.util.Random)))
+    (as-> config %
+      (update % :randomize/seed #(or % (rand-int (dec Integer/MAX_VALUE))))
+      (assoc % ::rng (if-let [seed (:randomize/seed %)]
+                       (new java.util.Random seed)
+                       (new java.util.Random)))))
   (pre-test-suite [config suite]
-    (update suite :children shuffle-with-seed (::rng config))))
+    (update suite :children shuffle-with-seed (::rng config)))
+  (post-test-run [config _run]
+    (printf "Ran with --seed %d\n" (:randomize/seed config))))

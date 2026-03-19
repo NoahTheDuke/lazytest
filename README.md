@@ -686,23 +686,23 @@ Ran with --seed 263867813
 The expected parameters are the same for all, the config map and then the target suite or test-case (with exceptions noted below). The output of the hooks must either be a replacement of the non-config object (`:pre-test-suite` takes `config` and `suite` and should return a `suite`) or `nil` to indicate a no-op.
 
 ```clojure lazytest/skip=true
+(defmulti example-hook-mm {:arglists '([config m])} #'lazytest.hooks/hook-dispatch)
+(defmethod example-hook-mm :default [config m] m)
+(defmethod example-hook-mm :config [config config] ...)
+(defmethod example-hook-mm :pre-test-run [config suite] ...)
+
 (defn example-hook-func [config obj]
   (case (:lazytest.hooks/hook-type obj)
     :config ...
     :pre-test-run ...
     #_:else nil))
-
-(defmulti example-hook-mm {:arglists '([config m])} #'lazytest.hooks/hook-dispatch)
-(defmethod example-hook-mm :default [config m] m)
-(defmethod example-hook-mm :config [config config] ...)
-(defmethod example-hook-mm :pre-test-run [config suite] ...)
 ```
 
 The current set of hooks, along with relevant details:
 
 * `:cli-opts`: Called before cli opts have been fully parsed. Input is a map with a `:new` vector. The map must be updated and the `:new` vector is the only item used.
 * `:config`: Called after reporters and hooks have been resolved. Input is the `config` map.
-* `:pre-test-run`, `:post-test-run`: Called before the runner has started a full run. Won't be called if `lazytest.runner/run-test-var` or `lazytest.repl/run-test-var` is used. Input is the entire run's suite.
+* `:pre-test-run`: Called before the runner has started a full run. Won't be called if `lazytest.runner/run-test-var` or `lazytest.repl/run-test-var` is used. Input is the entire run's suite.
 * `:post-test-run`: Called after the runner has finished a full run. Won't be called if `lazytest.runner/run-test-var` or `lazytest.repl/run-test-var` is used. Input is a `suite-result`, with the original `suite` stored under `:source`.
 * `:pre-test-suite`: Called for every `suite` (namespace, var, nested suites). Input is the suite.
 * `:post-test-suite`: Called after each `suite` (namespace, var, nested suites) has run. Input is a `suite-result`, with the original `suite` stored under `:source`.
@@ -712,7 +712,9 @@ The current set of hooks, along with relevant details:
 > [!NOTE]
 > `:pre-test-run` and `:post-test-run` both receive the same inputs as `:pre-test-suite` and `:post-test-suite` when at the start or end of a run. The `-run` versions merely exists as a convenience, to simplify writing initial and final hooks.
 
-Additionally to manually writing multimethods by hand, a helper macro `lazytest.hooks/defhook` exists to ease this process. It will use the built-in hook dispatch function, define a no-op `:default`, and has syntax similar to `extend-protocol`:
+#### defhook
+
+In addition to writing multimethods by hand, a helper macro `lazytest.hooks/defhook` exists to ease this process. It will use the built-in hook dispatch function, define a no-op `:default`, and has syntax similar to `extend-protocol`:
 
 ```clojure lazytest/skip=true
 (defhook yell

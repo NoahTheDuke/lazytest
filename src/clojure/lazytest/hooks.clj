@@ -117,7 +117,8 @@
   (cli-opts [_config opts]
     (update opts :new into
       [[nil "--[no-]profiling" "Print the slowest namespaces and test vars."
-        :id :profiling/enabled]
+        :id :profiling/enabled
+        :default true]
        [nil "--profiling-count COUNT" "Number of namespaces and test vars to print."
         :id :profiling/count
         :default 5
@@ -179,7 +180,8 @@
     (update opts :new into
       [[nil "--randomize TYPE" "Randomize the order of runs: all, ns, var, suite, or none."
         :id :randomize/type
-        :default "none"
+        :default :all
+        :default-desc "all"
         :parse-fn #(case (->keyword (str/lower-case %))
                      :all :all
                      (:ns :nss :nses) :ns
@@ -199,9 +201,9 @@
           suite-type (:type suite)]
       (when (and random-level
               (or (= :all random-level)
-                (and (#{:ns :var :suite} random-level) (= :lazytest/run suite-type))
-                (and (#{:ns :var} random-level) (= :lazytest/ns suite-type))
-                (and (#{:suite} random-level) (#{:lazytest/var :lazytest/suite} suite-type))))
+                (and (= :ns random-level) (= :lazytest/run suite-type))
+                (and (= :var random-level) (= :lazytest/ns suite-type))
+                (and (= :suite random-level) (#{:lazytest/var :lazytest/suite} suite-type))))
         (update suite :children shuffle-with-seed (:randomize/rng config)))))
   (post-test-run [config _run]
     (when (:randomize/type config)

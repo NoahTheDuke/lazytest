@@ -1,5 +1,6 @@
 (ns lazytest.hooks-test 
   (:require
+   [lazytest.cli :refer [validate-opts]]
    [lazytest.clojure-ext.core :refer [re-compile]]
    [lazytest.config :refer [->config]]
    [lazytest.core :refer [before-each defdescribe describe expect it specify]]
@@ -11,6 +12,11 @@
    [lazytest.test-utils :refer [vconj! with-out-str-no-color]]))
 
 (set! *warn-on-reflection* true)
+
+(defn build-config [opts]
+  (let [parsed (validate-opts (mapv str opts))]
+    (assert (not (contains? parsed :ok)) (:exit-message parsed))
+    (->config parsed)))
 
 (def example-state (volatile! []))
 
@@ -49,8 +55,8 @@
                                 [(suite {:type :lazytest/ns
                                          :doc "cool ns"
                                          :children [test-suite1 test-suite2]})]})
-                        (->config {:output (constantly nil)
-                                   :hooks [`example-running-hook]}))
+                        (build-config ["--output" "quiet"
+                                       "--hook" `example-running-hook]))
                    (catch Throwable t (prn t) t))]
       (expect (= [:config
                   [:pre-test-run "full run"]
@@ -101,9 +107,8 @@
                       (suite {:type :lazytest/ns
                               :nses [*ns*]
                               :children [test-suite]})
-                      (->config {:output (constantly nil)
-                                 :profiling/enabled true
-                                 :hooks [`sut/profiling]})))]
+                      (build-config ["--output" "quiet"
+                                     "--hook" `sut/profiling])))]
       (expect (match? (re-compile "Top 1 slowest test namespaces.*Top 1 slowest test vars" :dotall)
                       results)))))
 
@@ -142,8 +147,8 @@
         (expect (seq @state))))))
 
 (defn hook-with-case [state]
-  (fn [_config obj]
-    (case (::sut/hook-type obj)
+  (fn [_config obj hook-type]
+    (case hook-type
       :config (vconj! state :case-config)
       :pre-test-run (vconj! state [:case-pre-test-run (s/identifier obj)])
       :post-test-run (vconj! state [:case-post-test-run (s/identifier obj)])
@@ -172,6 +177,7 @@
                 [(suite {:type :lazytest/ns
                          :doc "cool ns"
                          :children [test-suite1 test-suite2]})]})
+        ;; not using `build-config` because i'm using a higher-order function
         (->config {:output (constantly nil)
                    :hooks [(hook-with-case state)]}))
       (expect (= [:case-config

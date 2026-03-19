@@ -3,14 +3,18 @@
 (set! *warn-on-reflection* true)
 
 (defn focus-fns
-  "Returns map of {:include? include-fn :exclude? exclude-fn}."
+  "Returns map of {:include-fn include-fn :exclude-fn exclude-fn}."
   [config]
-  (let [include? (when-let [include (seq (:include config))]
-                   (apply some-fn include))
-        exclude? (when-let [exclude (seq (:exclude config))]
-                   (apply some-fn exclude))]
-    {:include? include?
-     :exclude? exclude?}))
+  (if (and (contains? config :include-fn)
+        (contains? config :exclude-fn))
+    config
+    (let [include-fn (when-let [include (seq (:include config))]
+                       (apply some-fn include))
+          exclude-fn (when-let [exclude (seq (:exclude config))]
+                       (apply some-fn exclude))]
+      (-> config
+        (assoc :include-fn include-fn)
+        (assoc :exclude-fn exclude-fn)))))
 
 (defn filter-tree-dispatch [obj _] (:type obj))
 
@@ -27,16 +31,16 @@
   "If any items in sequence s are focused, return them, with focus
   metadata added to the sequence; else return s unchanged."
   [suite config]
-  (let [{:keys [include? exclude?]} (focus-fns config)]
+  (let [{:keys [include-fn exclude-fn] :as config} (focus-fns config)]
     (letfn [(gather-items [given]
              (let [ret (reduce
                          (fn [{:keys [any-focused items]} cur]
                            (let [m (:metadata cur)
                                  this-excluded? (or (:skip m)
-                                                    (when exclude?
-                                                      (exclude? m)))
+                                                    (when exclude-fn
+                                                      (exclude-fn m)))
                                  this-focused? (or (:focus m)
-                                                   (when include? (include? m)))
+                                                   (when include-fn (include-fn m)))
                                  cur (if this-focused?
                                        (assoc-in cur [:metadata :focus] true)
                                        cur)]
@@ -54,7 +58,7 @@
                             (filterv #(-> % :metadata :focus) fs)
                             fs)})))]
       (let [{focused? :any-focused
-             children :items} (some->> (:children suite)
+             children :items} (some->> (seq (:children suite))
                                        (keep #(filter-tree % config))
                                        (gather-items))]
       (when (seq children)

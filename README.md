@@ -618,7 +618,7 @@ Additionally, the test case's result will be reported between `:begin-test-case`
 
 ## Hooks (Plugins)
 
-Lazytest supports writing plugins, called hooks, which can modify the state of a run while it is being executed. The authors of lazytest can't predict every need, so we've added hooks as a means of "hooking" into the runtime system. Hooks are functions (generally multimethods) that dispatch on the `:lazytest.hooks/hook-type` value of a given map to do different things (set custom data, print info, change something about the data).
+Lazytest supports writing plugins, called hooks, which can modify the state of a run while it is being executed. The authors of Lazytest can't predict every need, so we've added hooks as a means of "hooking" into the runtime system. Hooks are functions (generally multimethods) that dispatch on a keyword to do different things (set custom data, print info, change something about the data).
 
 ### Using Existing Hooks
 
@@ -628,13 +628,15 @@ Each hook can provide its own cli options, so it can be helpful to call `clojure
 
 ### Built-in Hooks
 
-The two built-in hooks run by default but they can be included and still disabled by passing in the right flag. This is a deliberate design choice and not every hook will work like this.
+The two built-in hooks run by default but they can be included and disabled by passing in the right flag. This is a deliberate design choice and not every hook will work like this.
 
 #### `lazytest.hooks/profiling`
 
 Print the slowest namespaces and test vars by duration. By default, it will print 5 namespaces and 5 vars, but this can be changed with `--profiling-count`. Can be disabled with `--no-profiling`.
 
 ```
+$ clojure -M:dev:test:lazytest --hook profiling
+
 Top 5 slowest test namespaces (0.48764 seconds, 45.9% of total time)
   lazytest.libs-test 0.40812 seconds
   lazytest.main-test 0.03445 seconds
@@ -659,7 +661,7 @@ The granularity can be changed with `--randomize`: `all` for everything (default
 Likewise, the shuffle is done with a random seed which is printed at the end of the run. The same ordering can be achieved by passing `--randomize-seed` with a previous run's seed.
 
 ```
-$ clojure -M:dev:test:run --hook randomize
+$ clojure -M:dev:test:lazytest --hook randomize
 
 lazytest.order-test
   One
@@ -683,44 +685,17 @@ Ran with --seed 263867813
 
 ### Writing Custom Hooks
 
-The expected parameters are the same for all, the config map and then the target suite or test-case (with exceptions noted below). The output of the hooks must either be a replacement of the non-config object (`:pre-test-suite` takes `config` and `suite` and should return a `suite`) or `nil` to indicate a no-op.
+#### `defhook`
 
-```clojure lazytest/skip=true
-(defmulti example-hook-mm {:arglists '([config m])} #'lazytest.hooks/hook-dispatch)
-(defmethod example-hook-mm :default [config m] m)
-(defmethod example-hook-mm :config [config config] ...)
-(defmethod example-hook-mm :pre-test-run [config suite] ...)
+The primary means of writing a custom hooks is the helper macro `lazytest.hooks/defhook`. It creates a multimethod with the built-in hook dispatch function, defines a no-op `:default`, and has syntax similar to `extend-protocol`. The available hook methods are defined by the hook keywords, listed below. Each takes a `config` map and a `source` object. (Unlike manually created hook functions, the `hook-type` argument is inserted for you.)
 
-(defn example-hook-func [config obj]
-  (case (:lazytest.hooks/hook-type obj)
-    :config ...
-    :pre-test-run ...
-    #_:else nil))
-```
+```clojure
+(require '[lazytest.hooks :refer [defhook]])
 
-The current set of hooks, along with relevant details:
-
-* `:cli-opts`: Called before cli opts have been fully parsed. Input is a map with a `:new` vector. The map must be updated and the `:new` vector is the only item used.
-* `:config`: Called after reporters and hooks have been resolved. Input is the `config` map.
-* `:pre-test-run`: Called before the runner has started a full run. Won't be called if `lazytest.runner/run-test-var` or `lazytest.repl/run-test-var` is used. Input is the entire run's suite.
-* `:post-test-run`: Called after the runner has finished a full run. Won't be called if `lazytest.runner/run-test-var` or `lazytest.repl/run-test-var` is used. Input is a `suite-result`, with the original `suite` stored under `:source`.
-* `:pre-test-suite`: Called for every `suite` (namespace, var, nested suites). Input is the suite.
-* `:post-test-suite`: Called after each `suite` (namespace, var, nested suites) has run. Input is a `suite-result`, with the original `suite` stored under `:source`.
-* `:pre-test-case`: Called for every `test-case` that is executed. Input is the `test-case`.
-* `:post-test-case`: Called after each `test-case` is executed. Input is the `test-case-result`, with the original `test-case` stored under `:source`.
-
-> [!NOTE]
-> `:pre-test-run` and `:post-test-run` both receive the same inputs as `:pre-test-suite` and `:post-test-suite` when at the start or end of a run. The `-run` versions merely exists as a convenience, to simplify writing initial and final hooks.
-
-#### defhook
-
-In addition to writing multimethods by hand, a helper macro `lazytest.hooks/defhook` exists to ease this process. It will use the built-in hook dispatch function, define a no-op `:default`, and has syntax similar to `extend-protocol`:
-
-```clojure lazytest/skip=true
 (defhook yell
   "Prints a message at the start and end of the whole run."
   (cli-opts [config opts]
-    (update opts :new into
+    (into opts
       [[nil "--[no-]yell" "Yell loudly"
         :id :yell/enabled
         :default true]]))
@@ -731,8 +706,43 @@ In addition to writing multimethods by hand, a helper macro `lazytest.hooks/defh
   (post-test-run
     [config m]
     (println "ENDING")
-    m)
-  ...)
+    m))
+
+(with-out-str (yell nil {:random :object} :post-test-run))
+;; => "ENDING\n"
+```
+
+The current set of hook keywords, along with relevant details:
+
+* `:cli-opts`: Called before `config` is built or cli opts have been fully parsed. Input is a vector of cli options.
+* `:config`: Called after reporters and hooks have been resolved. Input is the `config` map.
+* `:pre-test-run`: Called before the runner has started a full run. Won't be called if `lazytest.runner/run-test-var` or `lazytest.repl/run-test-var` is used. Input is the entire run's `suite`.
+* `:post-test-run`: Called after the runner has finished a full run. Won't be called if `lazytest.runner/run-test-var` or `lazytest.repl/run-test-var` is used. Input is a `suite-result`, with the original `suite` stored under `:source`.
+* `:pre-test-suite`: Called for every `suite` (namespace, var, nested suites). Input is the suite.
+* `:post-test-suite`: Called after each `suite` (namespace, var, nested suites) has run. Input is a `suite-result`, with the original `suite` stored under `:source`.
+* `:pre-test-case`: Called for every `test-case` that is executed. Input is the `test-case`.
+* `:post-test-case`: Called after each `test-case` is executed. Input is the `test-case-result`, with the original `test-case` stored under `:source`.
+
+> [!NOTE]
+> `:pre-test-run` and `:post-test-run` both receive the same inputs as `:pre-test-suite` and `:post-test-suite` when at the start or end of a run. The `-run` versions merely exists as a convenience, to simplify writing initial and final hooks.
+
+#### Manually writing a hook function
+
+Hooks are merely functions that are called with the same 3 arguments: the `config` map, a `source` object, and the `hook-type` keyword . The `hook-type` keyword is used as the dispatch value, and will be limited to the existing set of hook keywords (as listed above). It is expected that a given hook function will do different things based on `hook-type`, but that is not always the case.
+
+The hook function should return `nil` (indicating a no-op) or the `source` object, modified as desired.
+
+```clojure lazytest/skip=true
+(defmulti example-hook-mm {:arglists '([config m hook-type])} #'lazytest.hooks/hook-dispatch)
+(defmethod example-hook-mm :default [config m _] m)
+(defmethod example-hook-mm :config [config config _] ...)
+(defmethod example-hook-mm :pre-test-run [config suite _] ...)
+
+(defn example-hook-func [obj config hook-type]
+  (case hook-type
+    :config ...
+    :pre-test-run ...
+    #_:else nil))
 ```
 
 ## Doc Tests

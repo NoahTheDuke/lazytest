@@ -25,4 +25,6 @@
   "Given a summary map as returned by summarize, returns 0 if there
   are no failures and 1 if there are."
   [summary]
-  (if (zero? (:fail summary)) 0 1))
+  (if (or (zero? (:total summary))
+        (pos? (:fail summary)))
+    1 0))

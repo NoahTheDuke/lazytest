@@ -53,7 +53,19 @@
         (expect (match? (assoc s
                                :metadata {:focus true}
                                :children [tc1])
-                        (sut/filter-tree s nil))))))
+                        (sut/filter-tree s nil)))))
+    (it "prefers --exclude over focus"
+      (let [tc1 (test-case {:doc "1"
+                            :metadata {:focus true}})
+            tc2 (test-case {:doc "2"
+                            :metadata {:focus true}})
+            s1 (suite {:doc "skip?"
+                       :metadata {:special true}
+                      :children [tc1 tc2]})
+            s2 (suite {:doc "top level"
+                       :metadata {:nonsense true}
+                      :children [s1]})]
+        (expect (nil? (sut/filter-tree s2 {:exclude [:special]}))))))
   (describe "var"
     (it "works normally"
       (let [s (test-var {:var #'temp-var
@@ -108,5 +120,4 @@
         (intern 'temp-ns 'tc2 tc2)
         (let [s (find-ns-suite (the-ns 'temp-ns))]
           (expect (match? (assoc s :metadata {:focus true})
-                          (sut/filter-tree s nil)))))))
-  )
+                          (sut/filter-tree s nil))))))))

@@ -18,9 +18,9 @@
                      (concat
                       [(api/token-node 'defmulti) hook-name]
                       (when docstring [docstring])
-                      [(api/coerce {:arglists '([config m])})
+                      [(api/coerce {:arglists '([config m hook-type])})
                        (api/coerce (list 'var 'lazytest.hooks/hook-dispatch))]))
-                    (api/coerce (list 'defmethod (api/sexpr hook-name) (api/keyword-node :default) '[_config m] 'm))]
+                    (api/coerce (list 'defmethod (api/sexpr hook-name) (api/keyword-node :default) '[_config m _hook-type] 'm))]
                    (map (fn [impl]
                           (if-not (api/list-node? impl)
                             (let [{:keys [row col end-row end-col]} (meta impl)]
@@ -37,9 +37,9 @@
                                   (api/token-node 'defmethod)
                                   (with-meta hook-name (meta hook-key))
                                   hook-key'
-                                  hook-args
+                                  (update hook-args :children #(conj (vec %) (api/coerce (gensym "_hook-type"))))
                                   hook-body))
                                 (meta impl)))))
                         hook-impls)
-                   (api/coerce (list 'var (api/sexpr hook-name)))))]
-    {:node new-node}))
+                   [(api/coerce (list 'var (api/sexpr hook-name)))]))]
+    {:node (with-meta new-node (meta node))}))

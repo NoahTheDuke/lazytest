@@ -2,7 +2,8 @@
   (:require
    [clj-reload.core :as reload]
    [clojure.string :as str]
-   [lazytest.color :refer [colorize]])
+   [lazytest.color :refer [colorize]]
+   [lazytest.config :refer [->config]])
   (:import
    [java.util.concurrent ScheduledThreadPoolExecutor TimeUnit]))
 
@@ -31,10 +32,12 @@
 (defn watch [run-impl opts]
   (reload/init
     {:files #".*[.](clj|cljc|md)"})
-  (let [opts (update opts :output #(or (not-empty %) ['lazytest.reporters/dots]))
-        f (fn [] (reload-and-run run-impl opts))]
+  (let [config (-> opts
+                 (update :output #(or (not-empty %) ['lazytest.reporters/dots]))
+                 (->config))
+        f (fn [] (reload-and-run run-impl config))]
     ;; initial run
     (newline)
-    (run-impl opts)
+    (run-impl config)
     (doto (ScheduledThreadPoolExecutor. 1)
-      (.scheduleWithFixedDelay f 0 (:delay opts) TimeUnit/MILLISECONDS))))
+      (.scheduleWithFixedDelay f 0 (:delay config 500) TimeUnit/MILLISECONDS))))

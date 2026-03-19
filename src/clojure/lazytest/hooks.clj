@@ -1,5 +1,5 @@
 (ns lazytest.hooks
-  "A hook is a multimethod that implements one or more of the hook methods.
+  "A hook is a function that implements one or more of the hook methods.
 
   Hooks allow for modifying the state of a run while it is being executed."
   (:require
@@ -17,12 +17,10 @@
   [config m hook-type]
   (let [hooks (:hooks config)]
     (if (and (sequential? hooks) (seq hooks))
-      (let [m (assoc m ::hook-type hook-type)]
-        (-> (reduce (fn [m f] (or (unreduced (f config m)) m)) m hooks)
-            (dissoc ::hook-type)))
+      (reduce (fn [m f] (or (unreduced (f config m hook-type)) m)) m hooks)
       m)))
 
-(defn hook-dispatch [_config m] (::hook-type m))
+(defn hook-dispatch [_config _m hook-type] hook-type)
 
 (def all-hook-keys
   #{:cli-opts
@@ -36,10 +34,10 @@
 (def ^:private all-hook-syms (into #{} (map symbol) all-hook-keys))
 
 (defmacro defhook
-  "`defhook` generates a conforming multimethod with correct dispatch and `:default` behavior. Provided methods (except `cli-opts`) must accept a config map and a relevant map (a suite or test-case generally), and must return an object of the same type.
+  "`defhook` generates a conforming multimethod with correct dispatch and `:default` behavior. Provided methods (except `cli-opts`) must accept a config map and a target object, and should return `nil` or the (potentially updated) target.
 
   Allowed hook methods (with input notes):
-  * cli-opts (input is a map with a `:new` vector)
+  * cli-opts (input is a vector of cli options)
   * config (input is the same `config` map)
   * pre-test-run
   * post-test-run
@@ -72,15 +70,16 @@
           method-namer (fn [hook-key] (symbol (str (name hook-name) "--" (name hook-key))))]
       (assert (empty? (set/difference (set hook-keys) all-hook-keys))
               "Only valid hook names, please")
-      `(do (defmulti ~hook-name ~@docstring {:arglists '~'([config m])} (var ~`hook-dispatch))
-           (defmethod ~hook-name :default ~(method-namer :default) ~'[_config m] ~'m)
+      `(do (defmulti ~hook-name ~@docstring {:arglists '~'([config m _hook-type])} (var ~`hook-dispatch))
+           (defmethod ~hook-name :default ~(method-namer :default) ~'[_config m _hook-type] ~'m)
            ~@(map (fn [[hook-key hook-args & hook-body]]
                     `(defmethod ~hook-name ~(keyword hook-key) ~(method-namer hook-key)
-                       ~hook-args
+                       [~@hook-args _#]
                        ~@hook-body))
                   hook-impls)
            #'~hook-name))))
 
+;; def-impl leads to better error messages in this case
 (spec/def-impl ::allowed-keys all-hook-syms #(contains? all-hook-syms %))
 (spec/def ::body
   (spec/cat :params (spec/spec :lazytest.clojure-ext.specs/param-list)
@@ -96,26 +95,10 @@
   :args ::defhook-args
   :ret any?)
 
-;; PROFILING
-;; Print the top 5 namespaces and test vars by duration.
-;; Code adapted from kaocha
-;;
-;; Example:
-;;
-;; blah blah blah
-
-(defn start [m]
-  (assoc m ::duration (System/nanoTime)))
-
-(defn stop [m]
-  (cond-> m
-    (::duration m)
-    (update ::duration #(double (- (System/nanoTime) %)))))
-
 (defhook profiling
   "Print the slowest namespaces and test vars by duration."
   (cli-opts [_config opts]
-    (update opts :new into
+    (into opts
       [[nil "--[no-]profiling" "Print the slowest namespaces and test vars."
         :id :profiling/enabled
         :default true]
@@ -126,11 +109,13 @@
   (pre-test-suite
     [config m]
     (when (:profiling/enabled config)
-      (start m)))
+      (assoc m ::duration (System/nanoTime))))
   (post-test-suite
     [config m]
     (when (:profiling/enabled config)
-      (stop m)))
+      (cond-> m
+        (::duration m)
+        (update ::duration #(double (- (System/nanoTime) %))))))
   (post-test-run
     [config results]
     (when (:profiling/enabled config)
@@ -168,7 +153,6 @@
                    (str/join \newline)))
         (flush)))))
 
-;; RANDOMIZE
 (defn shuffle-with-seed [^java.util.List coll ^java.util.Random rng]
   (let [al (java.util.ArrayList. coll)]
     (java.util.Collections/shuffle al rng)
@@ -177,7 +161,7 @@
 (defhook randomize
   "Randomize the order of namespaces and suites in namespaces during a test run."
   (cli-opts [_config opts]
-    (update opts :new into
+    (into opts
       [[nil "--randomize TYPE" "Randomize the order of runs: all, ns, var, suite, or none."
         :id :randomize/type
         :default :all

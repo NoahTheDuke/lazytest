@@ -11,7 +11,7 @@
    [lazytest.runner :as lr]))
 
 (defdescribe ^:integration honeysql-test
-  (let [honeysql (delay (gl/procure "https://github.com/seancorfield/honeysql.git" 'com.github.seancorfield/honeysql "v2.6.1196"))
+  (let [honeysql (delay (gl/procure "https://github.com/seancorfield/honeysql.git" 'com.github.seancorfield/honeysql "v2.7.1368"))
         readme (delay (io/file @honeysql "README.md"))
         readme-str (delay (-> (slurp @readme)
                               (str/replace

@@ -85,8 +85,8 @@
   (let [opts (cli/parse-opts raw-args cli-options :strict true :summary-fn identity)
         hooks (-> opts :options :hooks not-empty (some-> resolve-hooks))
         hook-cli-opts (when hooks
-                        (run-hooks {:hooks hooks} {:new []} :cli-opts))
-        opts (if-let [new-opts (not-empty (:new hook-cli-opts))]
+                        (run-hooks {:hooks hooks} [] :cli-opts))
+        opts (if-let [new-opts (not-empty hook-cli-opts)]
                (cli/parse-opts raw-args (into cli-options new-opts) :strict true :summary-fn identity)
                opts)
         {:keys [options errors summary arguments]} opts]
@@ -95,5 +95,4 @@
       (:version options) {:exit-message (lazytest-version) :ok true}
       errors (print-errors errors)
       :else (-> options
-                (update :dirs (comp not-empty vec concat) arguments)
-                (update :delay #(or % 500))))))
+              (update :dirs (comp not-empty vec concat) arguments)))))

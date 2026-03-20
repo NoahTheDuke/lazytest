@@ -77,6 +77,8 @@
            :lazytest.runner/source-type :lazytest/run
            :lazytest.hooks-test/pre-test-run true
            :lazytest.hooks-test/post-test-run true
+           :lazytest.hooks-test/pre-test-suite true
+           :lazytest.hooks-test/post-test-suite true
            :children
            [{:type :lazytest.suite/suite-result
              :doc "cool ns"
@@ -116,22 +118,22 @@
   (let [state (volatile! [])]
     (specify example-running-hook
       (let [test-suite1 (-> (describe "suite 1"
-                              (it "test case 11" (expect (vconj! state 11)))
-                              (it "test case 12" (expect (vconj! state 12)))
-                              (it "test case 13" (expect (vconj! state 13)))
-                              (it "test case 14" (expect (vconj! state 14))))
+                              (it "test case 11" (vconj! state 11))
+                              (it "test case 12" (vconj! state 12))
+                              (it "test case 13" (vconj! state 13))
+                              (it "test case 14" (vconj! state 14)))
                           (assoc :type :lazytest/var :var #'randomize-test))
             test-suite2 (-> (describe "suite 2"
-                              (it "test case 21" (expect (vconj! state 21)))
-                              (it "test case 22" (expect (vconj! state 22)))
-                              (it "test case 23" (expect (vconj! state 23)))
-                              (it "test case 24" (expect (vconj! state 24))))
+                              (it "test case 21" (vconj! state 21))
+                              (it "test case 22" (vconj! state 22))
+                              (it "test case 23" (vconj! state 23))
+                              (it "test case 24" (vconj! state 24)))
                           (assoc :type :lazytest/var :var #'randomize-test))
             test-suite3 (-> (describe "suite 3"
-                              (it "test case 31" (expect (vconj! state 31)))
-                              (it "test case 32" (expect (vconj! state 32)))
-                              (it "test case 33" (expect (vconj! state 33)))
-                              (it "test case 34" (expect (vconj! state 34))))
+                              (it "test case 31" (vconj! state 31))
+                              (it "test case 32" (vconj! state 32))
+                              (it "test case 33" (vconj! state 33))
+                              (it "test case 34" (vconj! state 34)))
                           (assoc :type :lazytest/var :var #'randomize-test))]
         (try (runner/filter-and-run
                (suite {:type :lazytest/run

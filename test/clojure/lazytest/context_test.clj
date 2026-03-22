@@ -190,36 +190,36 @@
           :before-tc
           :around-before-tc
           :around-each-before-top
-          :before-each-top
           :around-each-before-middle
-          :before-each-middle
           :around-each-before-bottom
-          :before-each-bottom
           :around-each-before-tc
+          :before-each-top
+          :before-each-middle
+          :before-each-bottom
           :before-each-tc
           :expect-1
           :after-each-tc
-          :around-each-after-tc
           :after-each-bottom
-          :around-each-after-bottom
           :after-each-middle
-          :around-each-after-middle
           :after-each-top
+          :around-each-after-tc
+          :around-each-after-bottom
+          :around-each-after-middle
           :around-each-after-top
           :around-after-tc
           :after-tc
           :around-each-before-top
-          :before-each-top
           :around-each-before-middle
-          :before-each-middle
           :around-each-before-bottom
+          :before-each-top
+          :before-each-middle
           :before-each-bottom
           :expect-2
           :after-each-bottom
-          :around-each-after-bottom
           :after-each-middle
-          :around-each-after-middle
           :after-each-top
+          :around-each-after-bottom
+          :around-each-after-middle
           :around-each-after-top
           :around-after-bottom
           :after-bottom

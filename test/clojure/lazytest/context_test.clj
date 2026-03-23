@@ -81,6 +81,22 @@
           (expect-it "temp 3" (vconj! state :expect-3)))
         (expect-it "tracks correctly"
           (= [:before-each :expect-1 :before-each :expect-2 :before-each :expect-3] @state))))
+    (describe around-each
+      (let [state (volatile! [])]
+        (describe "inner"
+          {:context [(around-each [f]
+                       (vconj! state :around-each-before)
+                       (f)
+                       (vconj! state :around-each-after))]}
+          (expect-it "temp 1" (vconj! state :expect-1))
+          (expect-it "temp 2" (vconj! state :expect-2)))
+        (expect-it "tracks correctly"
+          (= [:around-each-before
+              :expect-1
+              :around-each-after
+              :around-each-before
+              :expect-2
+              :around-each-after] @state))))
     (describe after-each
       (let [state (volatile! [])]
         (describe "inner"

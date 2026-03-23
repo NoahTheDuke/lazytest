@@ -1,5 +1,6 @@
 {:lint-as {lazytest.core/given clojure.core/let
            lazytest.core/around clojure.core/fn
+           lazytest.core/around-each clojure.core/fn
            lazytest.core/defdescribe clojure.core/def
            ;; clojure.test interface
            lazytest.experimental.interfaces.clojure-test/deftest clojure.test/deftest

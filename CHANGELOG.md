@@ -2,12 +2,13 @@
 
 ## Unreleased
 
-Big feature: Hooks! These are also known as 
+Big feature: Hooks! Or plugins, as they're sometimes called. These are entrypoints into the running state of lazytest, called on a given object (the config, the current suite, etc), that allow an author to inspect and/or update that object before it's evaluated or before it's returned. It should allow for better extensibility and configurability.
 
 ### Added
 
+- Add `around-each` context functions. (See [#31](https://github.com/NoahTheDuke/lazytest/issues/31), and PR [#34](https://github.com/NoahTheDuke/lazytest/issues/34) by [@edenworky](https://github.com/edenworky)!)
 - Add `lazytest.hooks` to support writing plugins/hooks that modify the run.
-- Write initial demonstration hook, `profiling`.
+- Write initial demonstration hooks, `profiling` and `randomize`.
 
 ### Changed/Fixed
 

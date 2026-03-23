@@ -291,7 +291,7 @@ To partition your test suite based on metadata, you can use `-i`/`--include` to 
 
 ## Setup and Teardown
 
-To handle set up and tear down of stateful architecture, Lazytest provides the context macros `before`, `before-each`, `after-each`, `after`, and `around`, along with the helper function `set-ns-context!`. You can call them directly in a `describe` block or add them to a `:context` vector in suite metadata. (To read a more specific description of how this works, please read the section titled `Run Lifecycle Overview`.)
+To handle set up and tear down of stateful architecture, Lazytest provides the context macros `before`, `before-each`, `after-each`, `after`, `around`, and `around-each`, along with the helper function `set-ns-context!`. You can call them directly in a `describe` block or add them to a `:context` vector in suite metadata. (To read a more specific description of how this works, please read the section titled `Run Lifecycle Overview`.)
 
 ```clojure
 (require '[lazytest.core :refer [expect-it before before-each after-each after around]])
@@ -329,9 +329,24 @@ To handle set up and tear down of stateful architecture, Lazytest provides the c
       (= [:before :before-each :expect-1 :before-each :expect-2] @state))))
 ```
 
-`around` functions are combined with the same logic as `clojure.test`'s `join-fixtures`.
+### Context functions run in two directions
 
-Context functions of the same kind are run in the order they're defined. When executing a given suite or test-case, all `before` context functions are run once, then each `before-each` context function is run, then the `around` context functions are called on the nested tests (if they exist), then each `after-each` context function is run, then all `after` context functions are run once.
+Every `before`, `around`, `before-each`, and `around-each` function is called in the order its defined, and every `after` and `after-each` is called in the opposite order it's defined. This is because `before/-each` and `after/-each` are intended to act like one half of an `around` or `around-each` call, which are designed like `clojure.core/with-open` and other similar functions. So `before` is called forward, and then `after` is called backward. This can be confusing, but I promise it's worthwhile.
+
+### Context functions work in two different modes
+
+#### Context functions that run once
+
+The `before`/`around`/`after` context functions are run only by the suite or test case they're defined for. So a `before` at the top of a test var will be run once before any child is evaluated, and a nested `around` will only wrap the evaluation of any children suites or test-cases, not parent or sibling suites. The same is true for test-cases: Any `before`/`around`/`after` context functions will be evaluated only once for that specific test-case.
+
+#### Context functions that run multiple times
+
+The `before-each`/`around-each`/`after-each` context functions are not run for the suite they're defined for, they're run by every nested test case, no matter how nested. A given test case gathers _all_ parent `*-each` context functions, and then executes them with `around-each` wrapping any `before-each` or `after-each` functions. As with `after`, `after-each` is evaluated in reverse declaration order.
+
+> [!NOTE]
+> Why the different order for `before`/`around`/`after`, and `around-each`/`before-each`/`after-each`? Purely differences in implementation. Ideally, the `before`/`around`/`after` would work the other way, with `around` wrapping both `before`/`after` and all children, but that isn't how I initially built it and it would be a breaking change to change it now. Maybe if we release a 2.0 in the future, it will change.
+
+### Namespace-level context functions
 
 To set context functions for an entire namespace, use `set-ns-context!`. There is currently no way to define run-wide context functions.
 

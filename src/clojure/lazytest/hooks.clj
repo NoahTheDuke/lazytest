@@ -100,26 +100,26 @@
   (cli-opts [_config opts]
     (into opts
       [[nil "--[no-]profiling" "Print the slowest namespaces and test vars."
-        :id :profiling/enabled
+        :id :lazytest.profiling/enabled
         :default true]
        [nil "--profiling-count COUNT" "Number of namespaces and test vars to print."
-        :id :profiling/count
+        :id :lazytest.profiling/count
         :default 5
         :parse-fn #(Long/parseLong %)]]))
   (pre-test-suite
     [config m]
-    (when (:profiling/enabled config)
+    (when (:lazytest.profiling/enabled config)
       (assoc m ::duration (System/nanoTime))))
   (post-test-suite
     [config m]
-    (when (:profiling/enabled config)
+    (when (:lazytest.profiling/enabled config)
       (cond-> m
         (::duration m)
         (update ::duration #(double (- (System/nanoTime) %))))))
   (post-test-run
     [config results]
-    (when (:profiling/enabled config)
-      (let [cnt (or (:profiling/count config) 5)
+    (when (:lazytest.profiling/enabled config)
+      (let [cnt (or (:lazytest.profiling/count config) 5)
             types (-> (group-by (comp :type :source) (result-seq results))
                     (select-keys [:lazytest/ns :lazytest/var])
                     (->> (reduce-kv (fn [m k v] (assoc m k (filterv ::duration v))) {})))
@@ -163,7 +163,7 @@
   (cli-opts [_config opts]
     (into opts
       [[nil "--randomize TYPE" "Randomize the order of runs: all, ns, var, suite, or none."
-        :id :randomize/type
+        :id :lazytest.randomize/type
         :default :all
         :default-desc "all"
         :parse-fn #(case (->keyword (str/lower-case %))
@@ -173,22 +173,22 @@
                      (:suite :suites) :suite
                      #_:else nil)]
        [nil "--randomize-seed NUM" "Seed for random shuffle."
-        :id :randomize/seed
+        :id :lazytest.randomize/seed
         :parse-fn #(Long/parseLong %)]]))
   (config [config _]
-    (when (:randomize/type config)
+    (when (:lazytest.randomize/type config)
       (as-> config $
-        (update $ :randomize/seed #(or % (rand-int Integer/MAX_VALUE)))
-        (assoc $ :randomize/rng (java.util.Random. (:randomize/seed $))))))
+        (update $ :lazytest.randomize/seed #(or % (rand-int Integer/MAX_VALUE)))
+        (assoc $ :lazytest.randomize/rng (java.util.Random. (:lazytest.randomize/seed $))))))
   (pre-test-suite [config suite]
-    (let [random-level (:randomize/type config)
+    (let [random-level (:lazytest.randomize/type config)
           suite-type (:type suite)]
       (when (and random-level
               (or (= :all random-level)
                 (and (= :ns random-level) (= :lazytest/run suite-type))
                 (and (= :var random-level) (= :lazytest/ns suite-type))
                 (and (= :suite random-level) (#{:lazytest/var :lazytest/suite} suite-type))))
-        (update suite :children shuffle-with-seed (:randomize/rng config)))))
+        (update suite :children shuffle-with-seed (:lazytest.randomize/rng config)))))
   (post-test-run [config _run]
-    (when (:randomize/type config)
-      (printf "Ran with --seed %d\n" (:randomize/seed config)))))
+    (when (:lazytest.randomize/type config)
+      (printf "Ran with --seed %d\n" (:lazytest.randomize/seed config)))))

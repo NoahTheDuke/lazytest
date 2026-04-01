@@ -17,6 +17,7 @@ Big feature: Hooks! Or plugins, as they're sometimes called. These are entrypoin
 - Change the config object to use `:reporters`, not `:reporter`.
 - Add clj-kondo hook for `lazytest.hooks/defhook`.
 - Change documentation (readme, docstrings) to use `context` instead of `hook` for `before`/`after`/etc.
+- BREAKING: Change the order of context hook calls so that `around` wraps `before` and `after`. There are very few use cases where this will matter, so I am not too worried about it.
 
 ## 1.9.1
 

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.0.0
+
+Released `2026-03-31`.
+
 Big feature: Hooks! Or plugins, as they're sometimes called. These are entrypoints into the running state of lazytest, called on a given object (the config, the current suite, etc), that allow an author to inspect and/or update that object before it's evaluated or before it's returned. It should allow for better extensibility and configurability.
 
 ### Added
@@ -13,11 +17,11 @@ Big feature: Hooks! Or plugins, as they're sometimes called. These are entrypoin
 ### Changed/Fixed
 
 - Correct the order of `around` and `before-each`/`after-each` in test cases. (See [#31](https://github.com/NoahTheDuke/lazytest/issues/31).)
+- BREAKING: Change the order of context hook calls so that `around` wraps `before` and `after`. There are very few use cases where this will matter, so I am not too worried about it.
 - Fix `expect-it` to handle `:context` in the attr-map.
 - Change the config object to use `:reporters`, not `:reporter`.
 - Add clj-kondo hook for `lazytest.hooks/defhook`.
 - Change documentation (readme, docstrings) to use `context` instead of `hook` for `before`/`after`/etc.
-- BREAKING: Change the order of context hook calls so that `around` wraps `before` and `after`. There are very few use cases where this will matter, so I am not too worried about it.
 
 ## 1.9.1
 

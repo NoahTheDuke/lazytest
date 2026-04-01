@@ -12,6 +12,9 @@ current_version := `cat resources/LAZYTEST_VERSION | xargs`
     sd '{{current_version}}' '{{version}}' build.clj
     sd '## Unreleased' '## Unreleased\n\n## {{version}}\n\nReleased `{{today}}`.' CHANGELOG.md
 
+version:
+    @echo '{{current_version}}'
+
 @gen-docs:
     markdown-toc -i --maxdepth 2 README.md
 

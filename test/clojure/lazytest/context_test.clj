@@ -194,14 +194,14 @@
             (vconj! state :expect-1))
           (it "temp 2" (expect (vconj! state :expect-2))))))
     (expect-it "tracks correctly"
-      (= [:before-top
-          :around-before-top
-          :before-middle
+      (= [:around-before-top
+          :before-top
           :around-before-middle
-          :before-bottom
+          :before-middle
           :around-before-bottom
-          :before-tc
+          :before-bottom
           :around-before-tc
+          :before-tc
           :around-each-before-top
           :around-each-before-middle
           :around-each-before-bottom
@@ -219,8 +219,8 @@
           :around-each-after-bottom
           :around-each-after-middle
           :around-each-after-top
-          :around-after-tc
           :after-tc
+          :around-after-tc
           :around-each-before-top
           :around-each-before-middle
           :around-each-before-bottom
@@ -234,12 +234,12 @@
           :around-each-after-bottom
           :around-each-after-middle
           :around-each-after-top
-          :around-after-bottom
           :after-bottom
-          :around-after-middle
+          :around-after-bottom
           :after-middle
-          :around-after-top
-          :after-top] @state))))
+          :around-after-middle
+          :after-top
+          :around-after-top] @state))))
 
 (defdescribe multiple-same-eachs-test
   (let [state (volatile! [])]
@@ -360,20 +360,20 @@ around 1 after"
              {:output ['lazytest.reporters/nested*]})
            (with-out-str-no-color)
            (str/trim))
-      (expect (= [[:root :before]
-                  [:root :pre-around]
+      (expect (= [[:root :pre-around]
+                  [:root :before]
                   [:root :before-each]
                   :in-first-test
                   [:root :after-each]
-                  [:nest :before]
                   [:nest :pre-around]
+                  [:nest :before]
                   [:root :before-each]
                   [:nest :before-each]
                   :in-second-test
                   [:nest :after-each]
                   [:root :after-each]
-                  [:nest :post-around]
                   [:nest :after]
-                  [:root :post-around]
-                  [:root :after]]
+                  [:nest :post-around]
+                  [:root :after]
+                  [:root :post-around]]
                  @state)))))

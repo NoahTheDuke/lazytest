@@ -291,7 +291,7 @@ To partition your test suite based on metadata, you can use `-i`/`--include` to 
 
 ## Setup and Teardown
 
-To handle set up and tear down of stateful architecture, Lazytest provides the context macros `before`, `before-each`, `after-each`, `after`, `around`, and `around-each`, along with the helper function `set-ns-context!`. You can call them directly in a `describe` block or add them to a `:context` vector in suite metadata. (To read a more specific description of how this works, please read the section titled `Run Lifecycle Overview`.)
+To handle set up and tear down of stateful architecture, Lazytest provides the context macros `before`, `before-each`, `after-each`, `after`, `around`, and `around-each`, along with the helper function `set-ns-context!`. You can call them directly in a `describe` block or add them to a `:context` vector in suite metadata, or you can write the function directly as a map with the macro names as keywords. (To read a more specific description of how this works, please read the section titled `Run Lifecycle Overview`.)
 
 ```clojure
 (require '[lazytest.core :refer [expect-it before before-each after-each after around]])
@@ -321,8 +321,8 @@ To handle set up and tear down of stateful architecture, Lazytest provides the c
 (defdescribe each-test
   (let [state (volatile! [])]
     (describe "each examples"
-      {:context [(before (vswap! state conj :before))
-                 (before-each (vswap! state conj :before-each))]}
+      {:context [{:before (fn [] (vswap! state conj :before))
+                  :before-each (fn [] (vswap! state conj :before-each))}]}
       (expect-it "can do side effects" (vswap! state conj :expect-1))
       (expect-it "can do side effects" (vswap! state conj :expect-2)))
     (expect-it "has been properly tracked"
@@ -331,20 +331,17 @@ To handle set up and tear down of stateful architecture, Lazytest provides the c
 
 ### Context functions run in two directions
 
-Every `before`, `around`, `before-each`, and `around-each` function is called in the order its defined, and every `after` and `after-each` is called in the opposite order it's defined. This is because `before/-each` and `after/-each` are intended to act like one half of an `around` or `around-each` call, which are designed like `clojure.core/with-open` and other similar functions. So `before` is called forward, and then `after` is called backward. This can be confusing, but I promise it's worthwhile.
+Every `around`, `before`, `around-each`, and `before-each` function is called in the order its defined, and every `after` and `after-each` is called in the opposite order it's defined. This is because `before/-each` and `after/-each` are intended to act like one half of an `around` or `around-each` call, which are designed like `clojure.core/with-open` and other similar functions. So `before` is called forward, and then `after` is called backward. This can be confusing, but I promise it's worthwhile.
 
 ### Context functions work in two different modes
 
 #### Context functions that run once
 
-The `before`/`around`/`after` context functions are run only by the suite or test case they're defined for. So a `before` at the top of a test var will be run once before any child is evaluated, and a nested `around` will only wrap the evaluation of any children suites or test-cases, not parent or sibling suites. The same is true for test-cases: Any `before`/`around`/`after` context functions will be evaluated only once for that specific test-case.
+The `around`/`before`/`after` context functions are run only by the suite or test case they're defined for. So a `before` at the top of a test var will be run once before any child is evaluated, and a nested `around` will only wrap the evaluation of any children suites or test-cases, not parent or sibling suites. The same is true for test-cases: Any `around`/`before`/`after` context functions will be evaluated only once for that specific test-case.
 
 #### Context functions that run multiple times
 
-The `before-each`/`around-each`/`after-each` context functions are not run for the suite they're defined for, they're run by every nested test case, no matter how nested. A given test case gathers _all_ parent `*-each` context functions, and then executes them with `around-each` wrapping any `before-each` or `after-each` functions. As with `after`, `after-each` is evaluated in reverse declaration order.
-
-> [!NOTE]
-> Why the different order for `before`/`around`/`after`, and `around-each`/`before-each`/`after-each`? Purely differences in implementation. Ideally, the `before`/`around`/`after` would work the other way, with `around` wrapping both `before`/`after` and all children, but that isn't how I initially built it and it would be a breaking change to change it now. Maybe if we release a 2.0 in the future, it will change.
+The `around-each`/`before-each`/`after-each` context functions are not run for the suite they're defined for, they're run by every nested test case, no matter how nested. A given test case gathers _all_ parent `*-each` context functions, and then executes them with `around-each` wrapping any `before-each` or `after-each` functions. As with `after`, `after-each` is evaluated in reverse declaration order.
 
 ### Namespace-level context functions
 
@@ -683,13 +680,10 @@ lazytest.order-test
     √ 1 equals one
   Four
     √ 4 equals four
-    One
-      √ 1 equals one
+    √ 1 equals one
     √ 5 equals five
-    Three
-      √ 3 equals three
-    Two
-      √ 2 equals two
+    √ 3 equals three
+    √ 2 equals two
   Two
     √ 2 equals two
   Three
@@ -896,13 +890,13 @@ This is inspired by [Mocha](https://mochajs.org)'s excellent documentation.
     3. The suite for each var is selected by selecting all `--include` or `:focus` metadata suites and tests cases and then removing all `--exclude` suites and test cases. If no suites or test cases have `:focus` metadata or `--include` hasn't been provided, then everything is selected. (To be clear, `--exclude` overrides `:focus` and `--include`.)
 8. Lazytest calls the runner on the filtered run suite.
     * For suites:
-        1. Run each `before` context function.
-        2. If there are any `around` context functions, combine them with `clojure.test/join-fixtures`, and then execute the next step in a thunk wrapped in the combined `around` function.
+        1. If there are any `around` context functions, combine them with `clojure.test/join-fixtures`, and then execute the rest of the steps in a thunk wrapped in the combined `around` function.
+        2. Run each `before` context function.
         3. For each child in `:children`, restart from step 1 of the appropriate sequence.
         4. Run each `after` context function.
     * For test cases:
-        1. Run each `before` context function.
-        2. If there are any `around` context functions, combine them with `clojure.test/join-fixtures`, and then execute the next 3 steps in a thunk wrapped in the combined `around` function.
+        1. If there are any `around` context functions, combine them with `clojure.test/join-fixtures`, and then execute the rest of the steps in a thunk wrapped in the combined `around` function.
+        2. Run each `before` context function.
         3. Run each `before-each` function (including from all parents), outermost first, in definition order.
         4. Execute the test function, get the `test-case-result`.
         5. Run each `after-each` function (including from all parents), innermost first, in definition order.

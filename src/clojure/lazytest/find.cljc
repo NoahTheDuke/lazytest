@@ -2,7 +2,8 @@
   (:require
    [lazytest.core :refer [describe it]]
    [lazytest.suite :refer [suite suite?]]
-   [lazytest.test-case :refer [test-case?]]))
+   [lazytest.test-case :refer [test-case?]]
+   [medley.core :refer [find-first]]))
 
 (defn- set-var [value this-var]
   (-> value
@@ -39,8 +40,7 @@
   (->> (ns-interns this-ns)
        (vals)
        (sort-by (comp (juxt :line :column) meta))
-       (keep find-var-test-value)
-       seq))
+       (into [] (keep find-var-test-value))))
 
 (defn find-ns-suite
   "Returns a test suite for the namespace.
@@ -74,15 +74,17 @@
 (defn find-suite
   "Returns test suite containing suites for the given namespaces.
   If no names given, searches all namespaces."
-  [& names]
-  (let [names' (or (seq names) (all-ns))
-        nses (mapv the-ns names')
-        suites (keep find-ns-suite nses)
-        focused? (some #(-> % :metadata :focus) suites)]
-    (cond-> (suite {:type :lazytest/run
-                    :nses nses
-                    :children suites})
-      focused? (assoc-in [:metadata :focus] (boolean focused?)))))
+  ([names]
+   (let [names' (or (not-empty names) (all-ns))
+         nses (mapv the-ns names')
+         suites (into [] (keep find-ns-suite) nses)
+         focused? (boolean (find-first #(-> % :metadata :focus) suites))]
+     (cond-> (suite {:type :lazytest/run
+                     :nses nses
+                     :children suites})
+       focused? (assoc-in [:metadata :focus] focused?))))
+  ([name' & names]
+   (find-suite (vec (conj names name')))))
 
 (comment
   (load-file "corpus/find_tests/examples.clj")

@@ -1,4 +1,5 @@
 (ns lazytest.reporters
+  (:refer-clojure :exclude [short])
   (:require
    [clojure.data :refer [diff]]
    [clojure.pprint :as pp]
@@ -378,3 +379,9 @@
 
 (defmulti quiet {:arglists '([config m])} #'reporter-dispatch)
 (defmethod quiet :default quiet--default [_ _])
+
+;; SHORT
+;; Only prints errors and the summary.
+
+(def short
+  [focused results summary])

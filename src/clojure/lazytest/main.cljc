@@ -20,16 +20,19 @@
 
 (defn add-md-tests
   [config dirs]
-  (let [files (concat
-               (map io/file (:md config))
+  (let [files (into
+               (mapv io/file (:md config))
                (when (:doctests config)
-                 (mapcat #(find-sources-in-dir % {:extensions [".md"]}) dirs)))]
-    (->> files
-         (map (juxt identity slurp))
-         (keep dt/build-tests-for-file))))
+                 (->Eduction (mapcat #(find-sources-in-dir % {:extensions [".md"]})) dirs)))]
+    (when (seq files)
+      (->Eduction
+       (comp
+        (map (juxt identity slurp))
+        (keep dt/build-tests-for-file))
+       files))))
 
 (defn require-dirs [config dirs]
-  (let [dirs (map io/file (or dirs #{"test"}))
+  (let [dirs (mapv io/file (or dirs #{"test"}))
         md-nses (add-md-tests config dirs)
         nses (into (find-ns-decls dirs)
                    md-nses)]

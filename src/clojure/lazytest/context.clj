@@ -1,6 +1,7 @@
 (ns lazytest.context
   (:require
-   [clojure.test :as c.t]))
+   [clojure.test :as c.t]
+   [lazytest.clojure-ext.core :refer [->vec]]))
 
 (set! *warn-on-reflection* true)
 
@@ -53,24 +54,24 @@
 
 (defn combine-arounds
   [obj]
-  (when-let [arounds (-> obj :context :around seq)]
+  (when-let [arounds (-> obj :context :around not-empty)]
     (c.t/join-fixtures arounds)))
 
 (defn combine-around-eachs
   [obj]
-  (when-let [arounds (-> obj :context :around-each seq)]
+  (when-let [arounds (-> obj :context :around-each not-empty)]
     (c.t/join-fixtures arounds)))
 
 (defn propagate-eachs
   [parent child]
   (-> child
       (assoc-in [:context :before-each]
-                (into (-> parent :context :before-each vec)
+                (into (-> parent :context :before-each ->vec)
                       (-> child :context :before-each)))
       (assoc-in [:context :around-each]
-                (into (-> parent :context :around-each vec)
+                (into (-> parent :context :around-each ->vec)
                       (-> child :context :around-each)))
       (assoc-in [:context :after-each]
-                (into (-> child :context :after-each vec)
+                (into (-> child :context :after-each ->vec)
                       (-> parent :context :after-each)))))
 

@@ -58,9 +58,8 @@
                             (filterv #(-> % :metadata :focus) fs)
                             fs)})))]
       (let [{focused? :any-focused
-             children :items} (some->> (seq (:children suite))
-                                       (keep #(filter-tree % config))
-                                       (gather-items))]
+             children :items} (when-let [children (not-empty (:children suite))]
+                                (gather-items (->Eduction (keep #(filter-tree % config)) children)))]
       (when (seq children)
         (-> suite
             (assoc :children children)

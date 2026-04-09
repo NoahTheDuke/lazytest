@@ -1,9 +1,10 @@
 (ns lazytest.runner
   (:require
+   [lazytest.clojure-ext.core :refer [invoke]]
    [lazytest.config :refer [->config]]
-   [lazytest.context :refer [combine-arounds combine-around-eachs
-                             propagate-eachs run-after-eachs
-                             run-afters run-before-eachs run-befores]]
+   [lazytest.context :refer [combine-around-eachs combine-arounds
+                             propagate-eachs run-after-eachs run-afters
+                             run-before-eachs run-befores]]
    [lazytest.filter :refer [filter-tree]]
    [lazytest.find :refer [find-suite find-var-test-value]]
    [lazytest.hooks :as hooks]
@@ -26,8 +27,8 @@
                    (update ::depth #(if id (inc %) %))
                    (update ::suite-history conj suite))
         around-fn (let [around-fn (or (combine-arounds suite)
-                                      (fn [f] (f)))]
-                    (fn with-around [f]
+                                    invoke)]
+                    (fn [f]
                       (let [ret (volatile! nil)]
                         (around-fn (fn []
                                      (run-befores suite)
@@ -36,7 +37,7 @@
                         @ret)))
         f #(let [child (propagate-eachs suite %)]
              (run-tree child config))
-        results (around-fn #(vec (keep f (:children suite))))]
+        results (around-fn #(into [] (keep f) (:children suite)))]
     (-> (suite-result suite results)
         (assoc ::source-type source-type))))
 
@@ -97,9 +98,9 @@
   (let [tc (hooks/run-hooks config tc :pre-test-case)]
     (report config (assoc tc :type :begin-test-case))
     (let [results (let [around-fn (or (combine-arounds tc)
-                                    (fn [f] (f)))
+                                    invoke)
                         around-each-fn (or (combine-around-eachs tc)
-                                         (fn [f] (f)))
+                                         invoke)
                         ret (volatile! nil)]
                     (around-fn
                       (fn []
@@ -128,7 +129,7 @@
   "Runs tests defined in the given namespaces. Applies filters in config."
   ([namespaces] (run-tests namespaces (->config nil)))
   ([namespaces config]
-   (-> (apply find-suite namespaces)
+   (-> (find-suite namespaces)
        (filter-and-run config))))
 
 (defn run-all-tests

@@ -54,6 +54,8 @@ test-bb *args:
 test-raw *args:
     clojure -M:provided:dev:test:run {{args}}
 
+alias run := test-raw
+
 [no-exit-message]
 test *args:
     @just prep
@@ -70,7 +72,7 @@ test-all *args:
 
 repl arg="":
     @just prep
-    clojure -M:provided:dev:test{{arg}}:bench:repl
+    clojure -M:provided:dev:test{{arg}}:profile:repl
 
 @clojars:
     env CLOJARS_USERNAME='noahtheduke' CLOJARS_PASSWORD=`cat ../clojars.txt` clojure -T:build deploy

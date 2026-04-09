@@ -48,3 +48,14 @@
   \":foo\" -> :foo"
   [s]
   (keyword (if (str/starts-with? s ":") (subs s 1) s)))
+
+(defn ->vec
+  [coll]
+  (if (vector? coll) coll (vec coll)))
+
+(defn invoke
+  "call a function"
+  ([f] (f))
+  ([f x] (f x))
+  ([f x y] (f x y))
+  ([f x y z & args] (apply f x y z args)))

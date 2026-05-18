@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed/Fixed
+
+- BREAKING: If `-n` or `-v` are passed in, only require the associated namespaces. (See [#35](https://github.com/NoahTheDuke/lazytest/issues/35).) This _shouldn't_ break anyone's code, but if you're being naughty in some way (interning a var in another namespace without requiring it first, etc), this might break your code. Don't be naughty, and you'll be fine.
+
 ## 2.0.0
 
 Released `2026-03-31`.

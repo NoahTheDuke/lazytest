@@ -35,7 +35,13 @@
   (let [dirs (mapv io/file (or dirs #{"test"}))
         md-nses (add-md-tests config dirs)
         nses (into (find-ns-decls dirs)
-                   md-nses)]
+                   md-nses)
+        ns-filter (not-empty (:ns-filter config))
+        var-filter (not-empty (:var-filter config))
+        nses (if (or ns-filter var-filter)
+               (let [pred (into (set ns-filter) (map (comp symbol namespace)) var-filter)]
+                 (filterv pred nses))
+               nses)]
     (when (empty? nses)
       (throw (ex-info "No namespaces to run" {:dirs dirs})))
     (apply require nses)

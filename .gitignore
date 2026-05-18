@@ -12,3 +12,4 @@ classes
 target
 conjure-log*
 .DS_Store
+.shadow-cljs/

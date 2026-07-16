@@ -32,9 +32,9 @@
         caught-data (when (instance? Throwable caught)
                       (stacktrace-file-and-line
                         (.getStackTrace ^Throwable caught)))]
-    {:line (or (:line caught-data) (:line thrown-data) (:line source))
-     :file (or (:file caught-data) (:file thrown-data) (:file source))
-     :doc (or (:doc caught-data) (:doc thrown-data) (:doc source))}))
+    {:line (or (:line thrown-data) (:line caught-data) (:line source))
+     :file (or (:file thrown-data) (:file caught-data) (:file source))
+     :doc (or (:doc thrown-data) (:doc caught-data) (:doc source))}))
 
 (defn test-case-result
   "Creates a test case result map with keys :pass?, :source, and :thrown.

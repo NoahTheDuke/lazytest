@@ -5,6 +5,8 @@
 ### Changed/Fixed
 
 - BREAKING: If `-n` or `-v` are passed in, only require the associated namespaces. (See [#35](https://github.com/NoahTheDuke/lazytest/issues/35).) This _shouldn't_ break anyone's code, but if you're being naughty in some way (interning a var in another namespace without requiring it first, etc), this might break your code. Don't be naughty, and you'll be fine.
+- Prioritize the location and doc data from the assertion context over a caught exception. This means that the "in example.clj:5" line will always point to the location of the test case, not the source of a caught exception.
+- Increase number of stack trace lines to 5, add an "Originating error:" note to the front for clarity.
 
 ## 2.0.0
 

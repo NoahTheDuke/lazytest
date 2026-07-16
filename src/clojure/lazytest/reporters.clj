@@ -129,6 +129,8 @@
   (let [st (when-not (ex-failed? t)
              (.getStackTrace t))]
     (when-let [e (first st)]
+      (println "Originating error:")
+      (print "    ")
       (stack/print-trace-element e)
       (newline)
       (doseq [e (if (nil? n)
@@ -156,7 +158,7 @@
                  (= 3 (count (:evaluated result))))
         (print-equality-failed (:evaluated result))))
     (newline)
-    (print-stack-trace (:thrown result) 1)
+    (print-stack-trace (:thrown result) 5)
     (println (colorize (format "in %s:%s\n" (:file result) (:line result)) :light)))
   (flush))
 

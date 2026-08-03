@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+Big feature: Basic cucumber support! Using the new hook system, you can use `lazytest.extensions.cucumber/hook` to consume Cucumber files, and the step funcitons in `lazytest.extensions.cucumber` to write your Steps glue code (`Given ...` etc). This work would not have been possible without the excellent library [kaocha-cucumber](https://github.com/lambdaisland/kaocha-cucumber), which includes all of the interop.
+
 ### Changed/Fixed
 
 - Update `-v`/`--var` and `-n`/`--namespace` CLI filters to validate that they're given fully qualified or simple symbols, respectively.

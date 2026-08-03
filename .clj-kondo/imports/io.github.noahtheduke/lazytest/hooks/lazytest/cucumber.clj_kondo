@@ -1,0 +1,15 @@
+(ns hooks.lazytest.cucumber
+  (:require [clj-kondo.hooks-api :as api]))
+
+(defn StepFunction
+  [{:keys [node]}]
+  (let [[step doc args & body] (:children node)
+        new-node (api/list-node
+                  [step
+                   doc
+                   (api/list-node
+                    (list*
+                     (api/token-node 'fn)
+                     args
+                     body))])]
+    {:node (with-meta new-node (meta node))}))

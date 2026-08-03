@@ -74,6 +74,7 @@ test-all *args:
     clojure -M:v1.10:provided:dev:test:run {{test-all-args}} {{args}}
     clojure -M:v1.11:provided:dev:test:run {{test-all-args}} {{args}}
     clojure -M:v1.12:provided:dev:test:run {{test-all-args}} {{args}}
+    @just test-raw --doctests --md README.md --dir docs --dir test --hook lazytest.extensions.cucumber/hook --cucumber --cucumber-features test/features --cucumber-steps test/clojure/step_definitions {{args}}
 
 repl arg="":
     @just prep
@@ -109,3 +110,15 @@ inform-cljdoc version=current_version:
     echo 'Informing cljdoc'
     just inform-cljdoc {{version}}
     echo "Don't forget to cut a release on Github!"
+
+run-cljdoc:
+    docker run --rm \
+      --volume $(pwd):{{invocation_directory_native()}} \
+      --volume "$HOME/.m2:/root/.m2" \
+      --volume ./.cljdoc-preview:/app/data \
+      --entrypoint clojure \
+      cljdoc/cljdoc -Sforce -M:cli ingest \
+        --project {{project}} \
+        --version {{current_version}}-SNAPSHOT \
+        --git {{invocation_directory_native()}} \
+        --rev $(git rev-parse HEAD)

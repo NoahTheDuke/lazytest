@@ -22,7 +22,16 @@
                         lazytest.extensions.expectations/more-of hooks.lazytest.expectations/more-of
                         lazytest.experimental.interfaces.expectations/more-> hooks.lazytest.expectations/more->
                         lazytest.experimental.interfaces.expectations/more-of hooks.lazytest.expectations/interface-more-of
+                        ;; hooks
                         lazytest.hooks/defhook hooks.lazytest.hooks/defhook
+                        ;; cucumber
+                        lazytest.extensions.cucumber/After hooks.lazytest.cucumber/StepFunction
+                        lazytest.extensions.cucumber/And hooks.lazytest.cucumber/StepFunction
+                        lazytest.extensions.cucumber/Before hooks.lazytest.cucumber/StepFunction
+                        lazytest.extensions.cucumber/But hooks.lazytest.cucumber/StepFunction
+                        lazytest.extensions.cucumber/Given hooks.lazytest.cucumber/StepFunction
+                        lazytest.extensions.cucumber/Then hooks.lazytest.cucumber/StepFunction
+                        lazytest.extensions.cucumber/When hooks.lazytest.cucumber/StepFunction
                         }}
  :linters {:lazytest/hook-impl {:level :error}
            :clojure-lsp/unused-public-var

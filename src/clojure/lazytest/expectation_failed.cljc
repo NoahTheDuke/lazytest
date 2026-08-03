@@ -1,6 +1,6 @@
 (ns lazytest.expectation-failed
   (:require
-    [com.noahbogart.sinker :as sinker])
+   [com.noahbogart.sinker :as sinker])
   #?@(:bb []
       :clj [(:import
              (lazytest ExpectationFailed))]))

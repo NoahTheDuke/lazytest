@@ -70,10 +70,11 @@ test-all *args:
     @just splint
     @just compile
     @just prep
-    bb lazytest {{test-all-args}} {{args}}
-    clojure -M:v1.10:provided:dev:test:run {{test-all-args}} {{args}}
-    clojure -M:v1.11:provided:dev:test:run {{test-all-args}} {{args}}
-    clojure -M:v1.12:provided:dev:test:run {{test-all-args}} {{args}}
+    # bb lazytest {{test-all-args}} {{args}}
+    # clojure -M:v1.10:provided:dev:test:run {{test-all-args}} {{args}}
+    # clojure -M:v1.11:provided:dev:test:run {{test-all-args}} {{args}}
+    # clojure -M:v1.12:provided:dev:test:run {{test-all-args}} {{args}}
+    @just test-raw --doctests --md README.md --dir docs --dir test --hook lazytest.extensions.cucumber/hook --cucumber --cucumber-features test/features --cucumber-steps test/clojure/step_definitions {{args}}
 
 repl arg="":
     @just prep

@@ -1,7 +1,7 @@
 (ns lazytest.doctest
   (:require
    [clojure.string :as str]
-   [noahtheduke.cond-plus :refer [cond+]]
+   [com.noahbogart.cond-plus :refer [cond+]]
    [lazytest.clojure-ext.core :refer [re-compile]]
    [medley.core :as med]
    [rewrite-clj.node :as n]

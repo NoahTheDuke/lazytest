@@ -38,7 +38,7 @@
    [lazytest.expectation-failed :refer [->ExpectationFailed]]
    [lazytest.suite :as suite]
    [lazytest.test-case :as test-case]
-   [noahtheduke.sinker :refer [try+]]))
+   [com.noahbogart.sinker :refer [try+]]))
 
 (set! *warn-on-reflection* true)
 

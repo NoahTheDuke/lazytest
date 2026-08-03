@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Prepare java
         uses: actions/setup-java@v5
@@ -32,13 +32,13 @@ jobs:
           clojure-lsp-version: 2025.08.25-14.21.46
 
       - name: Install clojure tools
-        uses: DeLaGuardo/setup-clojure@13.4
+        uses: DeLaGuardo/setup-clojure@13.6.1
         with:
-          cli: 1.12.2.1565
-          bb: 1.12.208
+          cli: 1.12.5.1664
+          bb: 1.13.219
 
       - name: Cache clojure dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.m2/repository

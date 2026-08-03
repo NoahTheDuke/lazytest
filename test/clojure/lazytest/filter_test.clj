@@ -41,7 +41,33 @@
                             :metadata {:skip true}})
             s (suite {:children [tc1 tc2]})]
         (expect (match? (assoc s :children [tc1])
-                        (sut/filter-tree s nil)))))
+                  (sut/filter-tree s nil)))))
+    (it "returns suite if self matches"
+      (let [tc1 (test-case {:doc "1"
+                            :metadata {:tc1 true}})
+            tc2 (test-case {:doc "2"
+                            :metadata {:tc2 true}})
+            s (suite {:metadata {:suite true}
+                      :children [tc1 tc2]})]
+        (expect (match? s (sut/filter-tree s {:include [:suite]})))))
+    (it "returns nested suites if they match"
+      (let [tc1 (test-case {:doc "1"
+                            :metadata {:tc1 true}})
+            s1 (suite {:metadata {:suite true}
+                       :children [tc1]})
+            tc2 (test-case {:doc "2"
+                            :metadata {:tc2 true}})
+            s2 (suite {:children [tc2]})
+            s3 (suite {:children [s1 s2]})]
+        (expect (match? (assoc s3
+                          :metadata {:focus true}
+                          :children [s1])
+                  (sut/filter-tree s3 {:include [:suite]})))))
+    (it "returns nil if no children match"
+      (let [tc1 (test-case {:doc "1"})
+            tc2 (test-case {:doc "2"})
+            s (suite {:children [tc1 tc2]})]
+        (expect (nil? (sut/filter-tree s {:include [:missing]})))))
     (it "prefers skip over focus"
       (let [tc1 (test-case {:doc "1"
                             :metadata {:focus true}})

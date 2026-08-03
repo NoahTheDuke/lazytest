@@ -3,7 +3,8 @@
 (set! *warn-on-reflection* true)
 
 (defn focus-fns
-  "Returns map of {:include-fn include-fn :exclude-fn exclude-fn}."
+  "Updates the provided config to have `:include-fn` and `:exclude-fn` based on `:include` and `:exclude` respectfully.
+  When they are seqs, `:include` and `:exclude` sequences are applied to `some-fn`, returning a 1-arity function that checks if any of the include/exclude keywords exist on the arg."
   [config]
   (if (and (contains? config :include-fn)
         (contains? config :exclude-fn))
@@ -27,43 +28,60 @@
 
 (defmethod filter-tree nil filter-tree--nil [_obj _config] nil)
 
+(defn- gather-items [given config]
+  (let [{:keys [include-fn exclude-fn] :as config} (focus-fns config)
+        parent-focused (::parent-focused config)
+        ret (reduce
+              (fn [{:keys [any-focused items]} cur]
+                (let [m (:metadata cur)
+                      this-excluded? (or (:skip m)
+                                       (when exclude-fn
+                                         (exclude-fn m)))
+                      this-focused? (or (:focus m)
+                                      (when include-fn (include-fn m)))
+                      cur (if this-focused?
+                            (assoc-in cur [:metadata :focus] true)
+                            cur)]
+                  {:any-focused (or any-focused this-focused?)
+                   :this-focused this-focused?
+                   :items (cond
+                            this-excluded? items
+                            this-focused? (conj items cur)
+                            (and include-fn (not parent-focused)) items
+                            :else (conj items cur))}))
+              {:any-focused false
+               :this-focused false
+               :items []}
+              given)]
+    (when-let [fs (not-empty (:items ret))]
+      (assoc ret :items (if (:any-focused ret)
+                          (filterv #(-> % :metadata :focus) fs)
+                          fs)))))
+
 (defn filter-suite
   "If any items in sequence s are focused, return them, with focus
   metadata added to the sequence; else return s unchanged."
   [suite config]
-  (let [{:keys [include-fn exclude-fn] :as config} (focus-fns config)]
-    (letfn [(gather-items [given]
-             (let [ret (reduce
-                         (fn [{:keys [any-focused items]} cur]
-                           (let [m (:metadata cur)
-                                 this-excluded? (or (:skip m)
-                                                    (when exclude-fn
-                                                      (exclude-fn m)))
-                                 this-focused? (or (:focus m)
-                                                   (when include-fn (include-fn m)))
-                                 cur (if this-focused?
-                                       (assoc-in cur [:metadata :focus] true)
-                                       cur)]
-                             {:any-focused (or any-focused this-focused?)
-                              :items (if this-excluded?
-                                       items
-                                       (conj items cur))}))
-                         {:any-focused false
-                          :items []}
-                         given)
-                    any-focused (:any-focused ret)]
-                (when-let [fs (not-empty (:items ret))]
-                  {:any-focused any-focused
-                   :items (if any-focused
-                            (filterv #(-> % :metadata :focus) fs)
-                            fs)})))]
-      (let [{focused? :any-focused
-             children :items} (when-let [children (not-empty (:children suite))]
-                                (gather-items (->Eduction (keep #(filter-tree % config)) children)))]
-      (when (seq children)
-        (-> suite
-            (assoc :children children)
-            (cond-> focused? (assoc-in [:metadata :focus] true))))))))
+  (let [{:keys [include-fn] :as config} (focus-fns config)
+        {focused? :any-focused
+         children :items} (when-let [children (not-empty (:children suite))]
+                            (let [m (:metadata suite)
+                                  this-focused? (or (:focus m)
+                                                  (when include-fn (include-fn m)))
+                                  config (update config ::parent-focused #(or % this-focused?))]
+                              (gather-items (->Eduction (keep #(filter-tree % config)) children) config)))]
+    (when (seq children)
+      (-> suite
+        (assoc :children children)
+        (cond-> focused? (assoc-in [:metadata :focus] true))))))
+
+(comment
+  (let [child1 {:type :lazytest/test-case}
+        children [child1]]
+    (filter-suite {:type :lazytest/suite
+                   :metadata {:cool true}
+                   :children children}
+      {:include [:cool]})))
 
 (defmethod filter-tree :lazytest/test-case
   filter-tree--lazytest-test-case

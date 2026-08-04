@@ -877,7 +877,7 @@ This is inspired by [Mocha](https://mochajs.org)'s excellent documentation.
 
 1. A user runs Lazytest, either through leiningen or Clojure CLI.
 2. Lazytest parses the command line arguments to determine the relevant configuration.
-3. Lazytest finds test files. If the user provides `--dir`, then every file in the file trees of all given directories are checked. Otherwise, all files within the `test` directorie are checked.
+3. Lazytest finds test files. If the user provides `--dir`, then every file in the file trees of all given directories are checked. Otherwise, all files within the `test` directory are checked.
 4. Lazytest loads all test files. Using `tools.namespace`, the namespace of each `.clj` is extracted and `require`d, which creates the necessary vars.
 5. Lazytest gathers all test vars from the required namespaces. It checks each var in each namespace against the following list of questions.
     1. Is the var defined with `defdescribe`? Call the `defdescribe`-constructed function and use the result.

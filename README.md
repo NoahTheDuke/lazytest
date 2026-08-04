@@ -824,6 +824,7 @@ runners["test-runners"].lazytest = {
   ["name-suffix"] = ""
 }
 vim.g["conjure#client#clojure#nrepl#test#runner"] = "lazytest"
+vim.g["conjure#client#clojure#nrepl#test#current_form_names"] = { "describe" }
 ```
 
 ### VSCode

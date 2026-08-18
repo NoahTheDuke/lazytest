@@ -83,6 +83,7 @@ repl arg="":
 
 # Builds the uberjar, builds the jar, sends the jar to clojars
 @release version:
+    git switch main
     echo 'Running tests'
     just test-all
     echo 'Setting new version {{version}}'

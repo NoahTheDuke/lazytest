@@ -61,14 +61,18 @@ test *args:
     @just prep
     @just test-raw {{args}}
 
+test-all-args := "--doctests --md README.md --dir docs --dir test --output results --output summary"
+
 [no-exit-message]
 test-all *args:
     @just clojure-lsp
     @just splint
     @just compile
     @just prep
-    bb lazytest --doctests --md README.md --dir docs --dir test --output results --output summary {{args}}
-    @just test-raw --doctests --md README.md --dir docs --dir test --output results --output summary {{args}}
+    bb lazytest {{test-all-args}} {{args}}
+    clojure -M:v1.10:provided:dev:test:run {{test-all-args}} {{args}}
+    clojure -M:v1.11:provided:dev:test:run {{test-all-args}} {{args}}
+    clojure -M:v1.12:provided:dev:test:run {{test-all-args}} {{args}}
 
 repl arg="":
     @just prep

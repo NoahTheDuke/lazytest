@@ -3,6 +3,7 @@ default:
 
 today := `date +%F`
 current_version := `cat resources/LAZYTEST_VERSION | xargs`
+project := 'io.github.noahtheduke/lazytest'
 
 # Set version, change all instances of <<next>> to version
 @set-version version:
@@ -81,6 +82,12 @@ repl arg="":
 @clojars:
     env CLOJARS_USERNAME='noahtheduke' CLOJARS_PASSWORD=`cat ../clojars.txt` clojure -T:build deploy
 
+inform-cljdoc version=current_version:
+    curl -X POST \
+        -d project={{project}} \
+        -d version={{version}} \
+        https://cljdoc.org/api/request-build2
+
 # Builds the uberjar, builds the jar, sends the jar to clojars
 @release version:
     git switch main
@@ -99,3 +106,6 @@ repl arg="":
     @just uberjar
     echo 'Deploying to clojars'
     just clojars
+    echo 'Informing cljdoc'
+    just inform-cljdoc {{version}}
+    echo "Don't forget to cut a release on Github!"

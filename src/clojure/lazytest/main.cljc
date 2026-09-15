@@ -39,7 +39,7 @@
         ns-filter (not-empty (:ns-filter config))
         var-filter (not-empty (:var-filter config))
         nses (if (or ns-filter var-filter)
-               (let [pred (into (set ns-filter) (map (comp symbol namespace)) var-filter)]
+               (let [pred (into (set ns-filter) (keep #(some-> % namespace symbol)) var-filter)]
                  (filterv pred nses))
                nses)]
     (when (empty? nses)

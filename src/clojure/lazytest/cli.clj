@@ -22,11 +22,13 @@
    ["-n" "--namespace SYMBOL" "Run only the specified test namespaces. Can be given multiple times."
     :id :ns-filter
     :parse-fn symbol
-    :assoc-fn update-set]
+    :assoc-fn update-set
+    :validate [simple-symbol? "Must be a simple symbol."]]
    ["-v" "--var SYMBOL" "Run only the specified fully-qualified symbol."
     :id :var-filter
     :parse-fn symbol
-    :assoc-fn update-set]
+    :assoc-fn update-set
+    :validate [qualified-symbol? "Must be a fully-qualified symbol."]]
    ["-i" "--include KEYWORD" "Run only test sequences or vars with this metadata keyword."
     :parse-fn ->keyword
     :assoc-fn update-set]

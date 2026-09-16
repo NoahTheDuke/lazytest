@@ -437,8 +437,7 @@
                    causes) true
              (some #(instance? c %) causes)
              (let [found (some #(when (instance? c %) %) causes)
-                   msg (format "%s found but not with expected message"
-                               (.getName c))]
+                   msg (str (.getName c) " found but not with expected message")]
                (throw (->ExpectationFailed
                        msg
                        {:message msg

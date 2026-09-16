@@ -126,10 +126,11 @@
 (defn print-stack-trace
   "Adapted from clojure.stacktrace/print-stack-trace"
   [^Throwable t n]
-  (let [st (when-not (ex-failed? t)
-             (.getStackTrace t))]
+  (when-let [st (when-not (ex-failed? t)
+                  (.getStackTrace t))]
     (when-let [e (first st)]
       (println "Originating error:")
+      (println (str "* " (ex-message t)))
       (print "    ")
       (stack/print-trace-element e)
       (newline)

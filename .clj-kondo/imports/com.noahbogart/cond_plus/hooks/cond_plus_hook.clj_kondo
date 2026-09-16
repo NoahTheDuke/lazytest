@@ -20,7 +20,8 @@
              :col col
              :end-col end-col})
           found-else?)
-        (let [[sym arrow & fn-expr] (api/sexpr clause)]
+        (let [clause-sexpr (api/sexpr clause)
+              [sym arrow & fn-expr] clause-sexpr]
           (cond
             ;; non-final else
             found-else?
@@ -61,7 +62,7 @@
                    :end-col end-col})
                 ;; early exit cuz not worth analyzing the rest
                 (reduced nil))
-              (do (when-not arrow
+              (do (when (= 1 (count clause-sexpr))
                     (let [{:keys [row end-row col end-col]} (meta clause)]
                       (api/reg-finding!
                         {:message ":else must have a body"

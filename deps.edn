@@ -3,7 +3,7 @@
         org.clojure/tools.namespace {:mvn/version "1.5.1"}
         io.github.tonsky/clj-reload {:mvn/version "1.0.0"}
         dev.weavejester/medley {:mvn/version "1.10.0"}
-        com.noahbogart/cond-plus {:mvn/version "1.4.0"}
+        com.noahbogart/cond-plus {:mvn/version "1.4.1"}
         com.noahbogart/sinker {:mvn/version "0.4.1"}
         rewrite-clj/rewrite-clj {:mvn/version "1.2.55"}}
  :deps/prep-lib {:ensure "target/classes"

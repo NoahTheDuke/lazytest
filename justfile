@@ -119,6 +119,6 @@ run-cljdoc:
       --entrypoint clojure \
       cljdoc/cljdoc -Sforce -M:cli ingest \
         --project {{project}} \
-        --version {{current_version}}-SNAPSHOT \
+        --version {{current_version}} \
         --git {{invocation_directory_native()}} \
         --rev $(git rev-parse HEAD)

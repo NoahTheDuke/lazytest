@@ -34,4 +34,4 @@ As this is a test runner, it's expected that you use lazytest to write all tests
 
 If you wish to match against a test case failure, you can use `(ex-info "message" {...data here...})` in a `match?` call. I've extended the `mc/Matchers` protocol for `ExceptionInfo`, and done some light clean-up so we can get nice output when there's mismatchs. Additionally, you can specify `:type` in the ex-info map, to set the expected exception type.
 
-(See [test/clojure/lazytest/test_utils.clj][] for the details.)
+(See [test/clojure/lazytest/test_utils.clj](https://github.com/NoahTheDuke/lazytest/blob/main/test/clojure/lazytest/test_utils.clj) for the details.)

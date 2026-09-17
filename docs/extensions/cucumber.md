@@ -1,4 +1,4 @@
-# Hook: Cucumber
+# Extension: Cucumber
 
 Quoting from the [Cucumber website](https://cucumber.io/), "Cucumber is a tool for running automated acceptance tests, written in plain language. Because they're written in plain language, they can be read by anyone on your team, improving communication, collaboration and trust."
 
@@ -20,9 +20,9 @@ Add `lambdaisland/kaocha-cucumber` to your test alias alongside `lazytest`, excl
 
 Cucumber tests are behavioral tests written in a sort-of "plain language" called Gherkin that requires glue code called steps to actually convert the test steps into executable code.
 
-Steps are defined globally in Clojure code, generally in dedicated namespaces. The namespace [[lazytest.extensions.cucumber]] defines macros that match the following Gherkin constructs: `Given`, `And`, `But`, `When`, `Then`, `Before`, and `After`. They all share the signature `(Given pattern binds & body)`, where the binds are `[state & args]` with the args matching the number of arguments detailed in the pattern.
+Steps are defined globally in Clojure code, generally in dedicated namespaces. The namespace [lazytest.extensions.cucumber][cucumber] defines macros that match the following Gherkin constructs: [`Given`][given], [`And`][and], [`But`][but], [`When`][when], [`Then`][then], [`Before`][before], and [`After`][after]. They all share the signature `(Given pattern binds & body)`, where the binds are `[state & args]` with the args matching the number of arguments detailed in the pattern.
 
-The binds and body are turned into a function. The functions are executed in a `lazytest.test-case/test-case`, so `expect` calls (and other assertions) properly work, and they _must_ return the state variable (or else throws).
+The binds and body are turned into a function. The functions are executed in a [`lazytest.test-case/test-case`][test-case], so [`expect`][expect] calls (and other assertions) properly work, and they _must_ return the state variable (or else throws).
 
 For example:
 
@@ -57,7 +57,7 @@ Feature: Steps are executed one by one
 
 Then when executing lazytest, pass in the feature directory and the step directory. Both will be picked up, each feature will be converted to a lazytest test suite and added to the test run.
 
-```bash
+```
 $ clojure -M:dev:test --hook lazytest.extensions.cucumber/hook --cucumber-features test/features --cucumber-steps test/clojure/step_definitions
 
 ...
@@ -68,3 +68,15 @@ Cucumber Tests
 Ran 123 test cases in 0.55025 seconds.
 0 failures.
 ```
+
+[after]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.extensions.cucumber#After
+[and]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.extensions.cucumber#And
+[before]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.extensions.cucumber#Before
+[but]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.extensions.cucumber#But
+[cucumber]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.extensions.cucumber
+[expect]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.core#expect
+[given]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.extensions.cucumber#Given
+[hook]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.extensions.cucumber#hook
+[test-case]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.test-case#test-case
+[then]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.extensions.cucumber#Then
+[when]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.extensions.cucumber#When

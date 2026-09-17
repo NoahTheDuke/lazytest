@@ -1,5 +1,6 @@
 (ns step-definitions.order
   (:require
+   [clojure.edn :as edn]
    [lazytest.core :refer [expect]]
    [lazytest.extensions.cucumber :refer [But Given Then When]]))
 

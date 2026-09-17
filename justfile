@@ -62,7 +62,7 @@ test *args:
     @just prep
     @just test-raw {{args}}
 
-test-all-args := "--doctests --md README.md --dir docs --dir test --output results --output summary"
+test-all-args := "--doctests --md README.md --dir docs --dir test/clojure/lazytest --output short"
 
 [no-exit-message]
 test-all *args:
@@ -119,6 +119,6 @@ run-cljdoc:
       --entrypoint clojure \
       cljdoc/cljdoc -Sforce -M:cli ingest \
         --project {{project}} \
-        --version {{current_version}}-SNAPSHOT \
+        --version {{current_version}} \
         --git {{invocation_directory_native()}} \
         --rev $(git rev-parse HEAD)

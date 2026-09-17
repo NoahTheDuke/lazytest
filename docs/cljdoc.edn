@@ -1,10 +1,23 @@
 {:cljdoc/languages ["clj"]
  :cljdoc.doc/tree
  [["Home" {:file "README.md"}]
-  ["Lazytest API" {:file "docs/core.md"}]
-  ["Extensions"
-   ["Hooks"
-    ["Randomize" {:file "docs/extensions/randomize.md"}]
-    ["Cucumber" {:file "docs/extensions/cucumber.md"}]]]
+  ["Installation" {:file "docs/installation.md"}]
+  ["Usage" {:file "docs/usage.md"}]
+  ["Writing Tests" {:file "docs/writing-tests.md"}
+   ["Lazytest API" {:file "docs/writing-tests/core-api.md"}]
+   ["Test Suite Metadata" {:file "docs/writing-tests/metadata.md"}]
+   ["Setup and Teardown" {:file "docs/writing-tests/setup-teardown.md"}]]
+  ["Doc Tests" {:file "docs/doc-tests.md"}]
+  ["Hooks (Plugins)" {:file "docs/hooks.md"}
+   ["Profiling" {:file "docs/hooks/profiling.md"}]
+   ["Randomize" {:file "docs/hooks/randomize.md"}]]
+  ["Extensions" {:file "docs/extensions.md"}
+   ["Cucumber" {:file "docs/extensions/cucumber.md"}]
+   ["Expectations v2" {:file "docs/extensions/expectations-v2.md"}]
+   ["Matcher Combinators" {:file "docs/extensions/matcher-combinators.md"}]]
+  ["Editor Integration" {:file "docs/editor-integration.md"}]
+  ["Deep Dives" {:file "docs/deep-dives.md"}
+   ["Run Lifecycle Overview" {:file "docs/deep-dives/run-lifecycle-overview.md"}]
+   ["Internals" {:file "docs/deep-dives/internals.md"}]]
   ["Contributing" {:file "CONTRIBUTING.md"}]
   ["Changelog" {:file "CHANGELOG.md"}]]}

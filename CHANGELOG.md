@@ -6,6 +6,7 @@
 
 - Update `-v`/`--var` and `-n`/`--namespace` CLI filters to validate that they're given fully qualified or simple symbols, respectively.
 - Update `"Originating error:"` to print the originating error's message as well, to help debugging.
+- Call `:pre-test-run` hooks before filtering, to correctly filter test suites added/changed by hooks.
 
 ## 2.1.0
 

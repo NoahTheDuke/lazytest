@@ -45,9 +45,7 @@
   run-test--lazytest-run
   [suite config]
   (let [start (System/nanoTime)
-        suite (as-> suite $
-                  (hooks/run-hooks config $ :pre-test-run)
-                  (hooks/run-hooks config $ :pre-test-suite))]
+        suite (hooks/run-hooks config suite :pre-test-suite)]
     (report config (assoc suite :type :begin-test-run))
     (let [results (->suite-result suite config :lazytest/run)
           duration (double (- (System/nanoTime) start))
@@ -55,9 +53,7 @@
       (report config (-> suite
                          (assoc :type :end-test-run)
                          (assoc :results results)))
-      (as-> results $
-        (hooks/run-hooks config $ :post-test-suite)
-        (hooks/run-hooks config $ :post-test-run)))))
+      (hooks/run-hooks config results :post-test-suite))))
 
 (defmethod run-tree :lazytest/ns
   run-test--lazytest-ns
@@ -121,9 +117,11 @@
 (defn ^:no-doc filter-and-run
   [suite config]
   (let [config (->config config)]
-    (-> suite
-        (filter-tree config)
-        (run-tree config))))
+    (as-> suite $
+      (hooks/run-hooks config $ :pre-test-run)
+      (filter-tree $ config)
+      (run-tree $ config)
+      (hooks/run-hooks config $ :post-test-run))))
 
 (defn run-tests
   "Runs tests defined in the given namespaces. Applies filters in config."

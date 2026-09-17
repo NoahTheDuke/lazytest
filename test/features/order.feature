@@ -19,4 +19,4 @@ Feature: Steps are executed one by one
     And I append 7 to the list
     And I append 8 to the list
     Then bar should have value "bellows"
-    But the list should be [5 6 8 9]
+    But the list should be [5 6 7 8]

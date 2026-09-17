@@ -1,1 +1,10 @@
-{:cljdoc/languages ["clj"]}
+{:cljdoc/languages ["clj"]
+ :cljdoc.doc/tree
+ [["Home" {:file "README.md"}]
+  ["Lazytest API" {:file "docs/core.md"}]
+  ["Extensions"
+   ["Hooks"
+    ["Randomize" {:file "docs/extensions/randomize.md"}]
+    ["Cucumber" {:file "docs/extensions/cucumber.md"}]]]
+  ["Contributing" {:file "CONTRIBUTING.md"}]
+  ["Changelog" {:file "CHANGELOG.md"}]]}

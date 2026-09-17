@@ -268,3 +268,5 @@
                   (assoc :lazytest.cucumber/state (atom {})))]
         (when-let [features (load-cucumber-features ctx)]
           (update suite :children conj (features->suite ctx features)))))))
+
+(keys (ns-publics *ns*))

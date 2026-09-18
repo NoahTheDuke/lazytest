@@ -1,5 +1,6 @@
 (ns lazytest.clojure-ext.specs
   "Copying some core.specs.alpha specs for use in babashka" 
+  {:no-doc true}
   (:require
     [clojure.spec.alpha :as s]))
 

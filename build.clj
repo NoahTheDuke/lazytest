@@ -110,6 +110,8 @@
 (defn install [opts]
   (let [opts (make-opts opts)]
     (clean opts)
-    (jar opts)
+    (compile-java opts)
+    (write-pom opts)
+    (b/jar opts)
     (b/install opts)
     (println "Installed version" (:lib opts) (:version opts))))

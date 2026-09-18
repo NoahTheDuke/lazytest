@@ -10,7 +10,7 @@
    [lazytest.hooks :as hooks]
    [lazytest.reporters :as r :refer [report]]
    [lazytest.suite :as s :refer [suite suite-result suite?]]
-   [lazytest.test-case :refer [try-test-case]]))
+   [lazytest.test-case :as tc]))
 
 (set! *warn-on-reflection* true)
 
@@ -30,10 +30,13 @@
                                     invoke)]
                     (fn [f]
                       (let [ret (volatile! nil)]
-                        (around-fn (fn []
-                                     (run-befores suite)
-                                     (vreset! ret (f))
-                                     (run-afters suite)))
+                        (try
+                          (around-fn (fn []
+                                       (run-befores suite)
+                                       (vreset! ret (f))
+                                       (run-afters suite)))
+                          (catch Throwable t
+                            (vreset! ret [(tc/test-case-result :fail suite t)])))
                         @ret)))
         f #(let [child (propagate-eachs suite %)]
              (run-tree child config))
@@ -45,9 +48,7 @@
   run-test--lazytest-run
   [suite config]
   (let [start (System/nanoTime)
-        suite (as-> suite $
-                  (hooks/run-hooks config $ :pre-test-run)
-                  (hooks/run-hooks config $ :pre-test-suite))]
+        suite (hooks/run-hooks config suite :pre-test-suite)]
     (report config (assoc suite :type :begin-test-run))
     (let [results (->suite-result suite config :lazytest/run)
           duration (double (- (System/nanoTime) start))
@@ -55,9 +56,7 @@
       (report config (-> suite
                          (assoc :type :end-test-run)
                          (assoc :results results)))
-      (as-> results $
-        (hooks/run-hooks config $ :post-test-suite)
-        (hooks/run-hooks config $ :post-test-run)))))
+      (hooks/run-hooks config results :post-test-suite))))
 
 (defmethod run-tree :lazytest/ns
   run-test--lazytest-ns
@@ -102,15 +101,18 @@
                         around-each-fn (or (combine-around-eachs tc)
                                          invoke)
                         ret (volatile! nil)]
-                    (around-fn
-                      (fn []
-                        (run-befores tc)
-                        (around-each-fn
-                          (fn []
-                            (run-before-eachs tc)
-                            (vreset! ret (try-test-case tc))
-                            (run-after-eachs tc)))
-                        (run-afters tc)))
+                    (try
+                      (around-fn
+                        (fn []
+                          (run-befores tc)
+                          (around-each-fn
+                            (fn []
+                              (run-before-eachs tc)
+                              (vreset! ret (tc/try-test-case tc))
+                              (run-after-eachs tc)))
+                          (run-afters tc)))
+                      (catch Throwable t
+                        (vreset! ret [(tc/test-case-result :fail tc t)])))
                     (assoc @ret ::source-type :lazytest/test-case))]
       (report config results)
       (report config (-> tc
@@ -121,9 +123,11 @@
 (defn ^:no-doc filter-and-run
   [suite config]
   (let [config (->config config)]
-    (-> suite
-        (filter-tree config)
-        (run-tree config))))
+    (as-> suite $
+      (hooks/run-hooks config $ :pre-test-run)
+      (filter-tree $ config)
+      (run-tree $ config)
+      (hooks/run-hooks config $ :post-test-run))))
 
 (defn run-tests
   "Runs tests defined in the given namespaces. Applies filters in config."

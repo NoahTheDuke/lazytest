@@ -55,7 +55,7 @@ jobs:
       - name: tests
         run: |
           clojure -T:build compile-java
-          bb lazytest --output summary
-          clojure -M:v1.10:provided:dev:test:ci --output summary
-          clojure -M:v1.11:provided:dev:test:ci --output summary
-          clojure -M:v1.12:provided:dev:test:ci --output summary
+          bb lazytest --doctests --md README.md --dir docs --dir test/clojure/lazytest --output short
+          clojure -M:v1.10:provided:dev:test:ci --doctests --md README.md --dir docs --dir test/clojure/lazytest --output short
+          clojure -M:v1.11:provided:dev:test:ci --doctests --md README.md --dir docs --dir test/clojure/lazytest --output short
+          clojure -M:v1.12:provided:dev:test:ci --doctests --md README.md --dir docs --dir test --hook lazytest.extensions.cucumber/hook --cucumber --cucumber-features test/features --cucumber-steps test/clojure/step_definitions

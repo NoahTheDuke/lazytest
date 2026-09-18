@@ -13,3 +13,4 @@ target
 conjure-log*
 .DS_Store
 .shadow-cljs/
+.cljdoc-preview/

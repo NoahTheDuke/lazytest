@@ -11,7 +11,9 @@
                  :fn compile-java}
  :aliases
  {:run {:main-opts ["-m" "lazytest.main"]}
-  :provided {:extra-deps {nubank/matcher-combinators {:mvn/version "3.11.0"}}}
+  :provided {:extra-deps {nubank/matcher-combinators {:mvn/version "3.11.0"}
+                          lambdaisland/kaocha-cucumber {:mvn/version "0.11.100"
+                                                        :exclusions [lambdaisland/kaocha]}}}
   ;; Development tools
   :dev {:extra-paths ["dev" "corpus" "docs"]
         :extra-deps {org.clojure/spec.alpha {:mvn/version "0.6.249"}

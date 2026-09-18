@@ -5,7 +5,7 @@
   ["Usage" {:file "docs/usage.md"}]
   ["Writing Tests" {:file "docs/writing-tests.md"}
    ["Lazytest API" {:file "docs/writing-tests/core-api.md"}]
-   ["Partitioning Test Suites" {:file "docs/writing-tests/partitioning.md"}]
+   ["Test Suite Metadata" {:file "docs/writing-tests/metadata.md"}]
    ["Setup and Teardown" {:file "docs/writing-tests/setup-teardown.md"}]]
   ["Doc Tests" {:file "docs/doc-tests.md"}]
   ["Hooks (Plugins)" {:file "docs/hooks.md"}
@@ -16,7 +16,8 @@
    ["Expectations v2" {:file "docs/extensions/expectations-v2.md"}]
    ["Matcher Combinators" {:file "docs/extensions/matcher-combinators.md"}]]
   ["Editor Integration" {:file "docs/editor-integration.md"}]
-  ["Deep Dives"
-   ["Run Lifecycle Overview" {:file "docs/deep-dives/run-lifecycle-overview.md"}]]
+  ["Deep Dives" {:file "docs/deep-dives.md"}
+   ["Run Lifecycle Overview" {:file "docs/deep-dives/run-lifecycle-overview.md"}]
+   ["Internals" {:file "docs/deep-dives/internals.md"}]]
   ["Contributing" {:file "CONTRIBUTING.md"}]
   ["Changelog" {:file "CHANGELOG.md"}]]}

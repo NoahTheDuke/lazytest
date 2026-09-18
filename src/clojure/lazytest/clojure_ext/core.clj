@@ -1,4 +1,5 @@
 (ns lazytest.clojure-ext.core
+  {:no-doc true}
   (:require
    [clojure.string :as str]) 
   (:import

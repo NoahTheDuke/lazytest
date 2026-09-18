@@ -2,10 +2,7 @@
 
 <!-- toc -->
 
-- [Getting Started](#getting-started)
-- [Why a new test framework?](#why-a-new-test-framework)
-- [Supported dialects](#supported-dialects)
-- [License](#license)
+- [Watch mode](#watch-mode)
 
 <!-- tocstop -->
 

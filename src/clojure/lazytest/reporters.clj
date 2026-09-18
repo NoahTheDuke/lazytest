@@ -1,4 +1,23 @@
 (ns lazytest.reporters
+  "All of the built-in reporters. Most are multimethods, but some are more simple functions, while others are vectors of reporter references (combining them to give a more traditional output).
+
+  Full reporters (includes `focused`, `results`, and `summary`):
+  * [[nested]]: Print each suite and test case on a new line, indenting on each suite.
+  * [[dots]]: Prints tests and namespaces as dots.
+  * [[clojure-test]]: Prints test output similarly to `clojure.test`'s output.
+  * [[short]]: Only prints errors and the summary.
+
+  Composable reporters:
+  * [[dots*]]: Prints tests and namespaces as dots (without results or summary).
+  * [[nested*]]: Print each suite and test case on a new line, indenting on each suite (without results or summary).
+  * [[focused]]: Prints a message before a test run when any tests are focused.
+  * [[results]]: Print failed assertions, their arguments, and associated information.
+  * [[summary]]: Prints the number of test cases and failures.
+
+  Utility reporters:
+  * [[debug]]: Prints loudly about every step of the way. Incredibly noisy, not recommended.
+  * [[quiet]]: Prints nothing. Does not prevent other reporters from printing.
+  "
   (:refer-clojure :exclude [short])
   (:require
    [clojure.data :refer [diff]]
@@ -17,19 +36,22 @@
   (when-let [reporters (:reporters config)]
     (run! (fn [reporter] (reporter config m) (flush) nil) reporters)))
 
-(defn reporter-dispatch [_config m] (:type m))
+(defn reporter-dispatch
+  "A unified dispatch function for all reporters."
+  [_config m] (:type m))
 
 (defn- indent [n]
   (print (str/join (repeat n "  "))))
 
 ;; FOCUSED
-;; Prints a message when tests are focused.
-;;
-;; Example:
-;;
-;; === FOCUSED TESTS ONLY ===
 
-(defmulti focused {:arglists '([config m])} #'reporter-dispatch)
+(defmulti focused
+  "Prints a message when tests are focused.
+
+  Example:
+
+  === FOCUSED TESTS ONLY ==="
+  {:arglists '([config m])} #'reporter-dispatch)
 (defmethod focused :default focused--default [_ _])
 (defmethod focused :begin-test-run focused--begin-test-run [_ m]
   (when (-> m :metadata :focus)
@@ -38,14 +60,17 @@
   (flush))
 
 ;; SUMMARY
-;; Prints the number of test cases and failures.
-;;
-;; Example:
-;;
-;; Ran 5 test cases in 0.04501 seconds.
-;; 0 failures.
 
-(defmulti summary {:arglists '([config m])} #'reporter-dispatch)
+(defmulti summary
+  "Prints the number of test cases and failures.
+
+  Example:
+
+  Ran 5 test cases in 0.04501 seconds.
+  0 failures."
+  {:arglists '([config m])}
+  #'reporter-dispatch)
+
 (defmethod summary :default summary--default [_ _])
 (defmethod summary :end-test-run summary--end-test-run [_ m]
   (let [{:keys [total fail]} (summarize (:results m))
@@ -59,26 +84,6 @@
     (flush)))
 
 ;; RESULTS
-;; Print the failed assertions, their arguments, and associated information.
-;;
-;; Example:
-;;
-;; lazytest.core-test
-;;   with-redefs-test
-;;     redefs inside 'it' blocks:
-;;
-;; this should be true
-;; Expected: (= 7 (plus 2 3))
-;; Actual: false
-;; Evaluated arguments:
-;;  * 7
-;;  * 6
-;; Only in first argument:
-;; 7
-;; Only in second argument:
-;; 6
-;;
-;; in lazytest/core_test.clj:30
 
 (defmulti ^:private results-builder {:arglists '([config m])} #'reporter-dispatch)
 
@@ -123,7 +128,7 @@
 
 (defmethod results-builder :pass results-builder--pass [_ _])
 
-(defn print-stack-trace
+(defn- print-stack-trace
   "Adapted from clojure.stacktrace/print-stack-trace"
   [^Throwable t n]
   (when-let [st (when-not (ex-failed? t)
@@ -163,20 +168,44 @@
     (println (colorize (format "in %s:%s\n" (:file result) (:line result)) :light)))
   (flush))
 
-(defmulti results {:arglists '([config m])} #'reporter-dispatch)
+(defmulti results
+  "Print failed assertions, their arguments, and associated information.
+
+  Example:
+
+  lazytest.core-test
+    with-redefs-test
+      redefs inside 'it' blocks:
+
+  this should be true
+  Expected: (= 7 (plus 2 3))
+  Actual: false
+  Evaluated arguments:
+   * 7
+   * 6
+  Only in first argument:
+  7
+  Only in second argument:
+  6
+
+  in lazytest/core_test.clj:30"
+  {:arglists '([config m])}
+  #'reporter-dispatch)
+
 (defmethod results :default results--default [_ _])
 (defmethod results :end-test-run results--end-test-run [config m]
   (results-builder config (:results m)))
 
 ;; DOTS
-;; Passing test cases are printed as `.`, and failures as `F`.
-;; Test cases in namespaces are wrapped in parentheses.
-;;
-;; Example:
-;;
-;; (....)(F)(.F..)
 
-(defmulti dots* {:arglists '([config m])} #'reporter-dispatch)
+(defmulti dots*
+  "Passing test cases are printed as `.`, and failures as `F`.
+  Test cases in namespaces are wrapped in parentheses.
+
+  Example:
+
+  (....)(F)(.F..)"
+  {:arglists '([config m])} #'reporter-dispatch)
 (defmethod dots* :default dots*--default [_ _])
 (defmethod dots* :pass dots*--pass [_ _] (print (colorize "." :green)))
 (defmethod dots* :fail dots*--fail [_ _] (print (colorize "F" :red)))
@@ -185,27 +214,28 @@
 (defmethod dots* :end-test-run dots*--end-test-run [_ _] (newline))
 
 (def dots
+  "Fully-featured dots reporter that includes focused, results, and summary."
   [focused dots* results summary])
 
 ;; NESTED
-;; Print each suite and test case on a new line, and indent each suite.
-;;
-;; Example:
-;;
-;;  lazytest.core-test
-;;    it-test
-;;      √ will early exit
-;;      √ arbitrary code
-;;    with-redefs-test
-;;      redefs inside 'it' blocks
-;;        × should be rebound FAIL
-;;      redefs outside 'it' blocks
-;;        √ should not be rebound
+(defmulti nested*
+  "Print each suite and test case on a new line, and indent each suite.
 
-(defmulti nested* {:arglists '([config m])} #'reporter-dispatch)
+  Example:
+
+   lazytest.core-test
+     it-test
+       √ will early exit
+       √ arbitrary code
+     with-redefs-test
+       redefs inside 'it' blocks
+         × should be rebound FAIL
+       redefs outside 'it' blocks
+         √ should not be rebound"
+  {:arglists '([config m])} #'reporter-dispatch)
 (defmethod nested* :default nested*--default [_ _])
 
-(defn print-test-seq
+(defn- print-test-seq
   [config s]
   (let [id (s/identifier s)
         depth (:lazytest.runner/depth config)]
@@ -219,7 +249,7 @@
 (defmethod nested* :begin-test-suite nested*--begin-test-suite [config s] (print-test-seq config s))
 (defmethod nested* :end-test-run nested*--end-test-run [_ _] (newline) (flush))
 
-(defn print-test-result
+(defn- print-test-result
   [config result]
   (let [id (tc/identifier result)]
     (indent (:lazytest.runner/depth config))
@@ -236,25 +266,29 @@
 (defmethod nested* :fail nested*--fail [config result] (print-test-result config result))
 
 (def nested
+  "Fully-featured nested* reporter that includes focused, results, and summary."
   [focused nested* results summary])
 
 ;; CLOJURE-TEST
-;; Adapts clojure.test's default reporter to Lazytests' system.
-;; It treats suite and test-case :docs as testing strings.
-;;
-;; Example:
-;;
-;; Testing lazytest.core-test
-;;
-;; FAIL in (with-redefs-test) (lazytest/core_test.clj:33)
-;; redefs outside 'it' blocks should not be rebound
-;; expected: (not= 5 (plus 2 3))
-;;   actual: false
-;;
-;; Ran 12 tests containing 29 test cases.
-;; 1 failure, 0 errors.
 
-(defmulti clojure-test {:arglists '([config m])} #'reporter-dispatch)
+(defmulti clojure-test
+  "Adapts clojure.test's default reporter to Lazytests' system.
+  It treats suite and test-case :docs as testing strings.
+
+  Example:
+
+  Testing lazytest.core-test
+
+  FAIL in (with-redefs-test) (lazytest/core_test.clj:33)
+  redefs outside 'it' blocks should not be rebound
+  expected: (not= 5 (plus 2 3))
+    actual: false
+
+  Ran 12 tests containing 29 test cases.
+  1 failure, 0 errors."
+  {:arglists '([config m])}
+  #'reporter-dispatch)
+
 (defmethod clojure-test :default clojure-test--default [_ _])
 
 (defn- clojure-test-case-str [config result]
@@ -266,7 +300,7 @@
           (:file result)
           (:line result)))
 
-(defn clojure-test-fail [config result]
+(defn- clojure-test-fail [config result]
   (println "\nFAIL in" (clojure-test-case-str config result))
   (when-let [strings (->> (conj (:lazytest.runner/suite-history config) result)
                           (keep :doc)
@@ -278,7 +312,7 @@
   (println "expected:" (pr-str (:expected result)))
   (println "  actual:" (pr-str (:actual result))))
 
-(defn clojure-test-error [config result]
+(defn- clojure-test-error [config result]
   (println "\nERROR in" (clojure-test-case-str config result))
   (when-let [strings (->> (conj (:lazytest.runner/suite-history config) result)
                           (keep :doc)
@@ -322,12 +356,15 @@
     (flush)))
 
 ;; DEBUG
-;; Prints loudly about every step of the way. Incredibly noisy, not recommended.
 
-(defmulti debug {:arglists '([config m])} #'reporter-dispatch)
+(defmulti debug
+  "Prints loudly about every step of the way. Incredibly noisy, not recommended."
+  {:arglists '([config m])}
+  #'reporter-dispatch)
+
 (defmethod debug :default debug--default [_ _])
 
-(def type->name
+(def ^:private type->name
   {
    :begin-test-run "test run"
    :begin-test-ns "namespace suite"
@@ -341,13 +378,13 @@
    :end-test-case "test case"
    })
 
-(defn print-entering [s]
+(defn- print-entering [s]
   (println "Running" (str (type->name (:type s)) ":")
            (str (s/identifier s)
                 (when (and (:file s) (:line s))
                   (str " (" (:file s) ":" (:line s) ")")))))
 
-(defn print-leaving [s]
+(defn- print-leaving [s]
   (println "Done with" (str (type->name (:type s)) ":")
            (str (s/identifier s)
                 (when (and (:file s) (:line s))
@@ -363,11 +400,11 @@
 (defmethod debug :end-test-var debug--end-test-var [_config s] (print-leaving s))
 (defmethod debug :end-test-suite debug--end-test-suite [_config s] (print-leaving s))
 
-(defn print-entering-tc [tc]
+(defn- print-entering-tc [tc]
   (println "Running" (str (type->name (:type tc)) ":")
            (str (tc/identifier tc) " (" (:file tc) ":" (:line tc) ")")))
 
-(defn print-leaving-tc [tc]
+(defn- print-leaving-tc [tc]
   (println "Done with" (str (type->name (:type tc)) ":")
            (str (tc/identifier tc) " (" (:file tc) ":" (:line tc) ")")))
 
@@ -378,13 +415,15 @@
 (defmethod debug :fail debug--fail [_config result] (prn result))
 
 ;; QUIET
-;; Print nothing.
 
-(defmulti quiet {:arglists '([config m])} #'reporter-dispatch)
+(defmulti quiet
+  "Prints nothing."
+  {:arglists '([config m])}
+  #'reporter-dispatch)
 (defmethod quiet :default quiet--default [_ _])
 
 ;; SHORT
-;; Only prints errors and the summary.
 
 (def short
+  "Only prints errors and the summary."
   [focused results summary])

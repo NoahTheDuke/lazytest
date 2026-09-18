@@ -1,6 +1,6 @@
 # Setup and Teardown
 
-To handle set up and tear down of stateful architecture, Lazytest provides the context macros `before`, `before-each`, `after-each`, `after`, `around`, and `around-each`, along with the helper function `set-ns-context!`. You can call them directly in a `describe` block or add them to a `:context` vector in suite metadata, or you can write the function directly as a map with the macro names as keywords. (To read a more specific description of how this works, please read the section titled `Run Lifecycle Overview`.)
+To handle set up and tear down of stateful architecture, Lazytest provides the context macros [`before`][before], [`before-each`][before-each], [`after-each`][after-each], [`after`][after], [`around`][around], and [`around-each`][around-each], along with the helper function [`set-ns-context!`][set-ns-context]. You can call them directly in a [`describe`][describe] block or add them to a `:context` vector in suite metadata, or you can write the function directly as a map with the macro names as keywords. (To read a more specific description of how this works, please read [Run Lifecycle Overview](docs/deep-dives/run-lifecycle-overview.md).
 
 <!-- toc -->
 
@@ -58,23 +58,23 @@ To handle set up and tear down of stateful architecture, Lazytest provides the c
 
 ## Context functions run in two directions
 
-Every `around`, `before`, `around-each`, and `before-each` function is called in the order its defined, and every `after` and `after-each` is called in the opposite order it's defined. This is because `before/-each` and `after/-each` are intended to act like one half of an `around` or `around-each` call, which are designed like `clojure.core/with-open` and other similar functions. So `before` is called forward, and then `after` is called backward. This can be confusing, but I promise it's worthwhile.
+Every [`around`][around], [`before`][before], [`around-each`][around-each], and [`before-each`][before-each] function is called in the order its defined, and every [`after`][after] and [`after-each`][after-each] is called in the opposite order it's defined. This is because [`before`][before]/[`before-each`][before-each] and [`after`][after]/[`after-each`][after-each] are intended to act like one half of an [`around`][around] or [`around-each`][around-each] call, which are designed like [`clojure.core/with-open`][with-open] and other similar functions. So [`before`][before] is called forward, and then [`after`][after] is called backward. This can be confusing, but I promise it's worthwhile.
 
 ## Context functions work in two different modes
 
 ### Context functions that run once
 
-The `around`/`before`/`after` context functions are run only by the suite or test case they're defined for. So a `before` at the top of a test var will be run once before any child is evaluated, and a nested `around` will only wrap the evaluation of any children suites or test-cases, not parent or sibling suites. The same is true for test-cases: Any `around`/`before`/`after` context functions will be evaluated only once for that specific test-case.
+The [`around`][around]/[`before`][before]/[`after`][after] context functions are run only by the suite or test case they're defined for. So a [`before`][before] at the top of a test var will be run once before any child is evaluated, and a nested [`around`][around] will only wrap the evaluation of any children suites or test-cases, not parent or sibling suites. The same is true for test-cases: Any [`around`][around]/[`before`][before]/[`after`][after] context functions will be evaluated only once for that specific test-case.
 
 ### Context functions that run multiple times
 
-The `around-each`/`before-each`/`after-each` context functions are not run for the suite they're defined for, they're run by every nested test case, no matter how nested. A given test case gathers _all_ parent `*-each` context functions, and then executes them with `around-each` wrapping any `before-each` or `after-each` functions. As with `after`, `after-each` is evaluated in reverse declaration order.
+The [`around-each`][around-each]/[`before-each`][before-each]/[`after-each`][after-each] context functions are not run for the suite they're defined for, they're run by every nested test case, no matter how nested. A given test case gathers _all_ parent `*-each` context functions, and then executes them with [`around-each`][around-each] wrapping any [`before-each`][before-each] or [`after-each`][after-each] functions. As with [`after`][after], [`after-each`][after-each] is evaluated in reverse declaration order.
 
 ## Namespace-level context functions
 
 To set context functions for an entire namespace, use `set-ns-context!`. There is currently no way to define run-wide context functions.
 
-In `clojure.test`, `(use-fixtures :each ...)` will set the provided fixtures to wrap each test var. To achieve the same in Lazytest, define a var of the target context function and add it to the `defdescribe`'s `:context` block of each var in the namespace. This is necessarily more tedious than `use-fixtures`, but it is also more explicit and gracefully handles special cases (define multiple functions to handle subtle differences, use whichever is situationally helpful).
+In `clojure.test`, `(use-fixtures :each ...)` will set the provided fixtures to wrap each test var. To achieve the same in Lazytest, define a var of the target context function and add it to the [`defdescribe`][defdescribe]'s `:context` block of each var in the namespace. This is necessarily more tedious than [`use-fixtures`][use-fixtures], but it is also more explicit and gracefully handles special cases (define multiple functions to handle subtle differences, use whichever is situationally helpful).
 
 ```clojure lazytest/skip=true
 (defonce ^:dynamic *db-connection* nil)
@@ -90,17 +90,17 @@ In `clojure.test`, `(use-fixtures :each ...)` will set the provided fixtures to 
 ```
 
 > [!IMPORTANT]
-> To repeat myself, test cases (the objects created by `it`) are **not run** when a test function (`defdescribe`) is called or a test suite (`describe`) is evaluated. Each of these returns an object (a map, to be specific), and the `lazytest.runner` machinery traverses them and calls the test case function body only when appropriate. This means that you cannot write normal clojure code outside of `it` blocks, as it will work slightly differently than anticipated.
+> To repeat myself, test cases (the objects created by [`it`][it]) are **not run** when a test function ([`defdescribe`][defdescribe]) is called or a test suite ([`describe`][describe]) is evaluated. Each of these returns an object (a map, to be specific), and the `lazytest.runner` machinery traverses them and calls the test case function body only when appropriate. This means that you cannot write normal clojure code outside of [`it`][it] blocks, as it will work slightly differently than anticipated.
 >
-> If you want to create data that will be used by multiple test cases or test suites, I would recommend against merely `let`-binding it as it will be bound when the test suite is created, not when the test cases are executed (unless it's a bit of literal data, aka a number, a set, etc). Any variable that relies on a function call should either be wrapped in a `delay` (to prevent execution until within the context of a test case), or set to a `volatile` or `atom` and then assigned in a `before` block.
+> If you want to create data that will be used by multiple test cases or test suites, I would recommend against merely `let`-binding it as it will be bound when the test suite is created, not when the test cases are executed (unless it's a bit of literal data, aka a number, a set, etc). Any variable that relies on a function call should either be wrapped in a `delay` (to prevent execution until within the context of a test case), or set to a `volatile` or `atom` and then assigned in a [`before`][before] block.
 >
-> If you want to use something like `with-redefs` or `with-open` or `with-bindings` (macros that change a value only during the execution of a body), you _must_ put them into an `around` context block. Otherwise, the state they temporarily set will only exist during the evaluation/creation of the test suite, and will not exist when the test case is executed.
+> If you want to use something like [`with-redefs`][with-redefs] or [`with-open`][with-open] or [`with-bindings`][with-bindings] (macros that change a value only during the execution of a body), you _must_ put them into an [`around`][around] context block. Otherwise, the state they temporarily set will only exist during the evaluation/creation of the test suite, and will not exist when the test case is executed.
 
 ## Common Patterns
 
 To make this very clear, here are some patterns I've seen in `clojure.test` test suites, and how they might look in Lazytest.
 
-### `with-redefs` to stub a logger
+### [`with-redefs`][with-redefs] to stub a logger
 
 ```clojure lazytest/skip=true
 (ns cool.example-test
@@ -257,3 +257,15 @@ To make this very clear, here are some patterns I've seen in `clojure.test` test
     (describe "with strings"
       (expect-it "works" (c.e/state-func @state "bar")))))
 ```
+
+[after-each]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.core#after-each
+[after]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.core#after
+[around-each]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.core#around-each
+[around]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.core#around
+[before-each]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.core#before-each
+[before]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.core#before
+[describe]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.core#describe
+[set-ns-context!]: https://cljdoc.org/d/io.github.noahtheduke/lazytest/CURRENT/api/lazytest.core#set-ns-context!
+[with-bindings]: https://clojuredocs.org/clojure.core/with-bindings
+[with-open]: https://clojuredocs.org/clojure.core/with-open
+[with-redefs]: https://clojuredocs.org/clojure.core/with-redefs
